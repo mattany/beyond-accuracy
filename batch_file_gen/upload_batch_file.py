@@ -41,9 +41,9 @@ def get_batch_status(batch_id):
 if __name__ == "__main__":
     # print(client.files.list())
     # print(client.batches.list())
-    # print(upload_and_create(f"./batch_file_{0}.jsonl")) # TODO in progress
-    print(upload_and_create(f"./batch_file_{1}.jsonl"))
-    time.sleep(3600)
-    print(upload_and_create(f"./batch_file_{2}.jsonl"))
-    time.sleep(3600)
+    # print(upload_and_create(f"./batch_file_{0}.jsonl"))
+    # print(upload_and_create(f"./batch_file_{1}.jsonl"))
+    # time.sleep(3600)
+    # print(upload_and_create(f"./batch_file_{2}.jsonl"))
+    # time.sleep(3600)
     print(upload_and_create(f"./batch_file_{3}.jsonl"))

@@ -15,7 +15,7 @@ def extract_number(string):
         return None
 
 res = {}
-with open("outputs/output_0.jsonl", "r") as f:
+with open("outputs/output_2.jsonl", "r") as f:
     for i, line in enumerate(f.readlines()):
         json_line = json.loads(line)
         try:
@@ -24,5 +24,5 @@ with open("outputs/output_0.jsonl", "r") as f:
             res = {**res, **as_dict}
         except json.decoder.JSONDecodeError:
             print(f"error reading line {i}")
-with open("outputs/output_dict.jsonl", "w") as f:
+with open("outputs/output_dict_2.jsonl", "w") as f:
     f.write(json.dumps(res))

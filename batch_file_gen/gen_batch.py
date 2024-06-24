@@ -1,7 +1,7 @@
 import json
 
-batch_size = 10
-requests_per_batch = 200
+mini_batch_size = 10
+requests_per_file = 200
 question_batch_id = 0
 question_id = 0
 
@@ -33,8 +33,8 @@ def get_question_content(batch):
 
 with open("data/GPT_Questions.csv", "r") as f:
     lines = [_ for _ in f.readlines()]
-    for index in range(0, len(lines), batch_size):
-        batch_index = ((index // batch_size) + 1) // 200
+    for index in range(0, len(lines), mini_batch_size):
+        batch_index = ((index // mini_batch_size) + 1) // 200
         with open(f"batch_file_{batch_index}.jsonl", "a") as out_f:
             output_dict = {"custom_id": f"question-batch-{question_batch_id}", "method": "POST",
                            "url": "/v1/chat/completions",
@@ -43,7 +43,7 @@ with open("data/GPT_Questions.csv", "r") as f:
                                     "messages": [{"role": "system", "content": system_prompt
                                                   },
                                                  {"role": "user",
-                                                  "content": get_question_content(lines[index:index + batch_size])}],
+                                                  "content": get_question_content(lines[index:index + mini_batch_size])}],
                                     "max_tokens": 3000}}
             out_f.write(json.dumps(output_dict) + "\n")
             question_batch_id += 1
