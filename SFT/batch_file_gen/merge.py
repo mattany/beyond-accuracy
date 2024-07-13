@@ -62,7 +62,7 @@ def write_answers_to_csv(questions, answers, output_csv_path):
 
 if __name__ == "__main__":
     # Paths to your files
-    questions_csv_path = 'GPT_Questions.csv'
+    questions_csv_path = '../data/GPT_Questions.csv'
     output_csv_path = 'GPT_Answers.csv'
 
     # Read questions and answers

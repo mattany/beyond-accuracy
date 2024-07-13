@@ -54,7 +54,7 @@ def remove_quotes(line):
     return line
 
 # Read the questions from the CSV file
-with open("GPT_Questions.csv", "r", encoding="utf-8") as f:
+with open("../data/GPT_Questions.csv", "r", encoding="utf-8") as f:
     lines = [remove_quotes(line.strip()) for line in f.readlines()][1:]
 
     # Process lines in batches
