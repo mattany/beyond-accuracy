@@ -15,8 +15,7 @@ INPUT_CSV = f"{PROJECT_DIR}/SFT/data/ask_science.csv"
 OUTPUT_DIR = f"{PROJECT_DIR}/SFT/data/input_batches"
 SFT_INPUT_BATCH_PREFIX = "sft_input_batch_file_"
 # System prompt for generating high-quality scientific answers
-system_prompt = """
-You are tasked with writing high-quality scientific answers , given these criteria:
+SFT_SYSTEM_PROMPT = """You are tasked with writing high-quality scientific answers , given these criteria:
 1. The explanation has a structured flow from simple to complex concepts.
 2. Establish clear connections between various parts of the explanation.
 3. Achieve a good balance between introduction, scientific content, examples, and conclusion.
@@ -28,7 +27,8 @@ You are tasked with writing high-quality scientific answers , given these criter
 
 The answers should be short.
 """
-
+EXPLANATION_QUALITY_SYSTEM_PROMPT = """
+"""
 
 def get_question_content(batch):
     """
@@ -72,17 +72,15 @@ def delete_all_files_in_dir(directory):
     os.mkdir(directory)
 
 
-# clean up
-delete_all_files_in_dir(OUTPUT_DIR)
-
-def create_input_batch_files():
+def create_input_batch_files(output_dir, prefix, system_prompt):
+    delete_all_files_in_dir(output_dir)
     question_batch_id = 0
     for index in range(0, len(input_questions), mini_batch_size):
         batch_index = ((index // mini_batch_size) + 1) // requests_per_file
         content = get_question_content(input_questions[index:index + mini_batch_size])
 
         # Write to JSONL file
-        with open(f"{OUTPUT_DIR}/{SFT_INPUT_BATCH_PREFIX}{batch_index}.jsonl", "a") as out_f:
+        with open(f"{output_dir}/{prefix}{batch_index}.jsonl", "a") as out_f:
             output_dict = {"custom_id": f"question-batch-{question_batch_id}", "method": "POST",
                            "url": "/v1/chat/completions",
                            "body": {"model": "gpt-3.5-turbo",
@@ -94,4 +92,6 @@ def create_input_batch_files():
 
 
 if __name__ == "__main__":
-    create_input_batch_files()
+    create_input_batch_files(output_dir=OUTPUT_DIR, prefix=SFT_INPUT_BATCH_PREFIX, system_prompt=SFT_SYSTEM_PROMPT)
+
+
