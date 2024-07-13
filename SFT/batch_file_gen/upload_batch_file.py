@@ -27,7 +27,7 @@ def upload_batch_file(path_to_batch_file="./batch_file_test.jsonl"):
 
 
 
-def create_batch(file_id="file-CRClQmhbgiTs2zHsr9g6omdy"):
+def create_batch(file_id):
     """
     Creates a batch process using the uploaded file ID.
 

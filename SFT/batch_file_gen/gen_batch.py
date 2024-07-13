@@ -1,11 +1,19 @@
 import json
+import os
+import shutil
+
+import pandas as pd
+
+from SFT.batch_file_gen.config import PROJECT_DIR
 
 # Parameters
 mini_batch_size = 1
 requests_per_file = 200
-question_batch_id = 0
 question_id = 0
 
+INPUT_CSV = f"{PROJECT_DIR}/SFT/data/ask_science.csv"
+OUTPUT_DIR = f"{PROJECT_DIR}/SFT/data/input_batches"
+SFT_INPUT_BATCH_PREFIX = "sft_input_batch_file_"
 # System prompt for generating high-quality scientific answers
 system_prompt = """
 You are tasked with writing high-quality scientific answers , given these criteria:
@@ -53,24 +61,37 @@ def remove_quotes(line):
         return line[1:-1]
     return line
 
-# Read the questions from the CSV file
-with open("../data/GPT_Questions.csv", "r", encoding="utf-8") as f:
-    lines = [remove_quotes(line.strip()) for line in f.readlines()][1:]
 
-    # Process lines in batches
-    for index in range(0, len(lines), mini_batch_size):
-        batch_index = ((index // mini_batch_size) + 1) // 400
-        content = get_question_content(lines[index:index + mini_batch_size])
+# Read the questions from the CSV file
+input_questions = pd.read_csv(INPUT_CSV, sep="\t")["title"].tolist()
+
+
+def delete_all_files_in_dir(directory):
+    if os.path.exists(directory) and os.path.isdir(directory):
+        shutil.rmtree(directory)
+    os.mkdir(directory)
+
+
+# clean up
+delete_all_files_in_dir(OUTPUT_DIR)
+
+def create_input_batch_files():
+    question_batch_id = 0
+    for index in range(0, len(input_questions), mini_batch_size):
+        batch_index = ((index // mini_batch_size) + 1) // requests_per_file
+        content = get_question_content(input_questions[index:index + mini_batch_size])
 
         # Write to JSONL file
-        with open(f"batch_file_{batch_index}.jsonl", "a") as out_f:
+        with open(f"{OUTPUT_DIR}/{SFT_INPUT_BATCH_PREFIX}{batch_index}.jsonl", "a") as out_f:
             output_dict = {"custom_id": f"question-batch-{question_batch_id}", "method": "POST",
                            "url": "/v1/chat/completions",
                            "body": {"model": "gpt-3.5-turbo",
                                     "messages": [{"role": "system", "content": system_prompt},
-                                                 {"role": "user","content": get_question_content(lines[index:index + mini_batch_size])}],
+                                                 {"role": "user", "content": content}],
                                     "max_tokens": 256}}
             out_f.write(json.dumps(output_dict) + "\n")
             question_batch_id += 1
 
 
+if __name__ == "__main__":
+    create_input_batch_files()
