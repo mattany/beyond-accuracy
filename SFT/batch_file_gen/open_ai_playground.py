@@ -1,4 +1,7 @@
 from openai import OpenAI
+import textwrap
+
+from SFT.batch_file_gen.gen_batch import SFT_SYSTEM_PROMPT
 from config import OPENAI_ORG_ID, OPENAI_PROJECT_ID, OPENAI_API_KEY
 client = OpenAI(
   organization=OPENAI_ORG_ID,
@@ -6,19 +9,7 @@ client = OpenAI(
   api_key=OPENAI_API_KEY
 )
 import time
-system_prompt = """
-You are tasked with writing high-quality scientific answers , given these criteria:
-1. The explanation has a structured flow from simple to complex concepts.
-2. Establish clear connections between various parts of the explanation.
-3. Achieve a good balance between introduction, scientific content, examples, and conclusion.
-4. Assume the reader has minimal prior knowledge.
-5. Use examples.
-6. Avoid jargon.
-7. Ensure the language is unambiguous, concise, and with clearly defined terminology.
-8. Use of paragraphs will be preferred over bullet points and lists. 
-
-The answers should be short.
-"""
+system_prompt = SFT_SYSTEM_PROMPT
 
 question = "When dams are being built, how do they build it with all the water still there?"
 
@@ -34,5 +25,10 @@ completion = client.chat.completions.create(
 t = time.time() -t
 print(f'Time: {t} seconds')
 print(completion.usage)
-print(completion.choices[0].message.content)
+
+def format_text(text, line_length):
+    return textwrap.fill(text, width=line_length)
+
+
+print(format_text(completion.choices[0].message.content, line_length=256))
 
