@@ -1,8 +1,16 @@
+import os.path
+from time import sleep
+
 from openai import OpenAI
+
+from SFT.batch_file_gen.constants import GPT_OUTPUT_DIR, GPT_OUTPUT_FILE_PREFIX, GPT_INPUT_BATCH_DIR, \
+    GPT_INPUT_BATCH_PREFIX
 from config import OPENAI_ORG_ID, OPENAI_PROJECT_ID, OPENAI_API_KEY, PROJECT_DIR
-import asyncio
 import logging
 
+RECOVERY_PATH = f"{PROJECT_DIR}/SFT/batch_status.txt"
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 logger = logging.getLogger("main_logger")
 # Initialize OpenAI client with organization ID, project ID, and API key
@@ -76,66 +84,57 @@ def retrieve_batch(batch_id):
     return client.batches.retrieve(batch_id)
 
 
-async def upload_create_and_monitor_batch(path_to_batch_file):
-    batch_number = path_to_batch_file[-7:-6]
-    file_id = await asyncio.to_thread(upload_batch_file, path_to_batch_file)
-    batch_id = await asyncio.to_thread(create_batch, file_id=file_id)
+def upload_create_and_monitor_batch(path_to_batch_file, batch_index, batch_id):
+    batch_number = path_to_batch_file.split("_")[-1].split(".")[0]
+    file_id = upload_batch_file(path_to_batch_file)
+    batch_id = batch_id or create_batch(file_id=file_id)
     success = False
     while not success:
-        batch_info = await asyncio.to_thread(retrieve_batch, batch_id)
+        batch_info = retrieve_batch(batch_id)
         batch_status = batch_info.status
         if batch_status in {"validating", "in_progress", "finalizing"}:
             logger.info(f"batch {batch_number} is {batch_status}. Waiting 5 seconds.")
-            asyncio.to_thread(persist_batch_status_to_disk, batch_number, batch_status)
-            await asyncio.sleep(5)
+            persist_batch_status_to_disk(batch_number, batch_status, batch_id)
+            sleep(5)
         elif batch_status in {"failed", "cancelling", "cancelled", "expired"}:
             logger.warning(f"batch {batch_number} failed. Waiting 60 seconds and creating new batch.")
-            asyncio.to_thread(persist_batch_status_to_disk, batch_number, batch_status)
-            await asyncio.sleep(60)
+            persist_batch_status_to_disk(batch_number, batch_status, batch_id)
+            sleep(60)
             batch_id = create_batch(file_id=file_id)
         elif batch_status in {"completed"}:
             success = True
-            asyncio.to_thread(persist_batch_status_to_disk, batch_number, batch_status)
+            persist_batch_status_to_disk(batch_number, batch_status, batch_id)
+            output_file_id = batch_info.output_file_id
+            file_response = client.files.content(output_file_id)
+            os.makedirs(GPT_OUTPUT_DIR, exist_ok=True)
+            with open(os.path.join(GPT_OUTPUT_DIR, f"{GPT_OUTPUT_FILE_PREFIX}{batch_index}.jsonl"), "w") as f:
+                f.write(file_response.text)
             logger.info(f"batch {batch_number} success")
 
 
-def persist_batch_status_to_disk(batch_number, batch_status):
-    with open(f"{PROJECT_DIR}/SFT/batch_statuses/batch_{batch_number}_status.txt", "w") as f:
-        f.write(batch_status)
+def persist_batch_status_to_disk(batch_number, batch_status, batch_id):
+    with open(RECOVERY_PATH, "w") as f:
+        f.write(f"{batch_status} {batch_number} {batch_id}\n")
 
 
-async def main(output_dir, prefix, batch_amt):
-    tasks = []
-    arguments = [f"{output_dir}/{prefix}{batch_index}.jsonl" for batch_index in range(batch_amt)]
-    for arg in arguments:
-        tasks.append(asyncio.create_task(upload_create_and_monitor_batch(arg)))
+def main():
+
+    batch_amt = len([f for f in os.listdir(GPT_INPUT_BATCH_DIR) if os.path.isfile(os.path.join(GPT_INPUT_BATCH_DIR, f))])
+    batch_id = ""
+    batch_number = 0
+    if os.path.exists(RECOVERY_PATH):
+        with open(RECOVERY_PATH, "r") as f:
+            line = f.readline()
+            batch_status, batch_number, batch_id = line.split()
+            batch_number = int(batch_number)
+    arguments = [f"{GPT_INPUT_BATCH_DIR}/{GPT_INPUT_BATCH_PREFIX}{batch_index}.jsonl" for batch_index in range(batch_number, batch_amt, 1)]
+    for i, arg in enumerate(arguments):
+        if i == 0:
+            upload_create_and_monitor_batch(arg, batch_index=batch_number, batch_id=batch_id)
+        else:
+            upload_create_and_monitor_batch(arg, batch_index=batch_number + i, batch_id=None)
+
 
 
 if __name__ == "__main__":
-    # Print the list of uploaded files
-    print(client.files.list())
-
-    # Print the list of batches
-    print(client.batches.list())
-
-    # Upload and create batches sequentially due to API rate limits
-    # Uncomment one line at a time to upload and create batches
-
-    # print(upload_and_create(f"batch_files/batch_file_{0}.jsonl"))
-    # print(upload_and_create(f"batch_files/batch_file_{1}.jsonl"))
-    # print(upload_and_create(f"batch_files/batch_file_{2}.jsonl"))
-    # print(upload_and_create(f"batch_files/batch_file_{3}.jsonl"))
-    # print(upload_and_create(f"batch_files/batch_file_{4}.jsonl"))
-    # print(upload_and_create(f"batch_files/batch_file_{5}.jsonl"))
-    # print(upload_and_create(f"batch_files/batch_file_{6}.jsonl"))
-    # print(upload_and_create(f"batch_files/batch_file_{7}.jsonl"))
-    # print(upload_and_create(f"batch_files/batch_file_{8}.jsonl"))
-    # print(upload_and_create(f"batch_files/batch_file_{9}.jsonl"))
-    # print(upload_and_create(f"batch_files/batch_file_{10}.jsonl"))
-    # print(upload_and_create(f"batch_files/batch_file_{11}.jsonl"))
-    # print(upload_and_create(f"batch_files/batch_file_{12}.jsonl"))
-    # print(upload_and_create(f"batch_files/batch_file_{13}.jsonl"))
-    # print(upload_and_create(f"batch_files/batch_file_{14}.jsonl"))
-    # print(upload_and_create(f"batch_files/batch_file_{15}.jsonl"))
-    # print(upload_and_create(f"batch_files/batch_file_{16}.jsonl"))
-
+    main()

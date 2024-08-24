@@ -1,5 +1,9 @@
 import csv
 import json
+import os
+
+from SFT.batch_file_gen.constants import INPUT_CSV, GPT_OUTPUT_DIR, GPT_OUTPUT_FILE_PREFIX, OUTPUT_CSV
+
 
 def read_questions(csv_path):
     """
@@ -13,7 +17,7 @@ def read_questions(csv_path):
     """
     questions = {}
     with open(csv_path, mode='r', encoding='utf-8') as file:
-        reader = csv.DictReader(file)
+        reader = csv.DictReader(file, delimiter='\t')
         question_id = 0
         for row in reader:
             # Adjusting the index since question number in CSV = id + 1
@@ -21,7 +25,7 @@ def read_questions(csv_path):
             question_id += 1
     return questions
 
-def read_answers(n_file_paths):
+def read_answers():
     """
     Reads answers from JSONL files.
 
@@ -31,19 +35,21 @@ def read_answers(n_file_paths):
     Returns:
     dict: Dictionary where keys are question IDs and values are answers.
     """
-    answers = {}
-    for i in range(n_file_paths):
-        path = f'outputs\output_batch_file_{i}.jsonl'
+    gpt_answers = {}
+    batch_amt = len([f for f in os.listdir(GPT_OUTPUT_DIR) if os.path.isfile(os.path.join(GPT_OUTPUT_DIR, f))])
+    gpt_output_paths = [f"{GPT_OUTPUT_DIR}/{GPT_OUTPUT_FILE_PREFIX}{batch_index}.jsonl" for batch_index in range(batch_amt)]
+
+    for path in gpt_output_paths:
         with open(path, mode='r', encoding='utf-8') as file:
             for line in file:
                 data = json.loads(line)
                 custom_id = data['custom_id']
                 question_id = int(custom_id.split('-')[-1])
                 answer = data['response']['body']['choices'][0]['message']['content']
-                answers[question_id] = answer
-    return answers
+                gpt_answers[question_id] = answer
+    return gpt_answers
 
-def write_answers_to_csv(questions, answers, output_csv_path):
+def write_answers_to_csv(questions, answers):
     """
     Writes questions and their corresponding answers to a CSV file.
 
@@ -52,7 +58,7 @@ def write_answers_to_csv(questions, answers, output_csv_path):
     answers (dict): Dictionary of answers.
     output_csv_path (str): Path to the output CSV file.
     """
-    with open(output_csv_path, mode='w', newline='', encoding='utf-8') as file:
+    with open(OUTPUT_CSV, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerow(['Question', 'Answer'])
         for question_id, question in questions.items():
@@ -61,15 +67,11 @@ def write_answers_to_csv(questions, answers, output_csv_path):
 
 
 if __name__ == "__main__":
-    # Paths to your files
-    questions_csv_path = 'archive/version_1/inputs/GPT_Questions.csv'
-    output_csv_path = 'archive/version_1/GPT_Answers.csv'
-
     # Read questions and answers
-    questions = read_questions(questions_csv_path)
-    answers = read_answers(17)
+    questions = read_questions(INPUT_CSV)
+    answers = read_answers()
 
     # Write questions and answers to a new CSV file
-    write_answers_to_csv(questions, answers, output_csv_path)
+    write_answers_to_csv(questions, answers)
 
-    print(f"Answers written to {output_csv_path}")
+    print(f"Answers written to {OUTPUT_CSV}")
