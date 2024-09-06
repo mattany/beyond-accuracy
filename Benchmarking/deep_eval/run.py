@@ -1,31 +1,61 @@
+import asyncio
+
+import pandas as pc
+import pandas as pd
 from deepeval import assert_test
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 import textwrap
-from llama3_1_8b import CustomLlama3_8B
+from mlx_model import MLXModel
+from ollama_model import OllamaModel
+from prompt_templates import generate_prompt, system_prompt
 
-custom_llm = CustomLlama3_8B()
-generation = custom_llm.generate("""System Prompt: You are tasked with writing high-quality scientific answers, given these criteria:
-1. The explanation should have a structured flow from simple to complex concepts.
-2. Establish clear connections between various parts of the explanation.
-3. Assume the reader has minimal prior knowledge.
-4. Usage of didactic tools such as examples, metaphors, analogy, and humor is encouraged.
-5. If possible, try to paint mental images that will stay with the reader. e.g. "Consider each computer as a node and the Internet as a web."
-6. Avoid domain specific jargon and unfamiliar concepts.
-7. Ensure the language is unambiguous, concise, and with clearly defined terminology.
-8. Use of paragraphs will be preferred over bullet points and lists. 
+llama_3_1_8b_instruct = "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit"
+llama_3_8b_instruct = "mlx-community/Meta-Llama-3-8B-Instruct-4bit"
 
-The answers should be around two to three paragraphs long.
-Prompt: will the cables laying along the bottom of the sea ever deteriorate or even decompose?
-""")
-print("###################################################")
-wrapper = textwrap.TextWrapper(width=100, replace_whitespace=False, drop_whitespace=False)
+# custom_llm = MLXModel(llama_3_8b_instruct)
 
-wrapped_text = "\n".join([wrapper.fill(line) for line in generation.splitlines()])
-
-print(wrapped_text)
+custom_llm = OllamaModel(system_prompt=system_prompt)
 
 
+async def generate_answer(prompt):
+
+    # print(f"MODEL NAME: {custom_llm.get_model_name()}")
+    # prompt = "is it in theory possible to 3d print a joint?"
+    # prompt = 'Why is the sky blue?'
+    prompt_with_system = generate_prompt(prompt)
+    print(f"Awaiting prompt {prompt}")
+    generation = await custom_llm.a_generate(
+        prompt_with_system
+        # prompt
+    )
+    wrapper = textwrap.TextWrapper(width=100, replace_whitespace=False, drop_whitespace=False)
+
+    wrapped_text = "\n".join([wrapper.fill(line) for line in generation.splitlines()])
+    return wrapped_text
+    # print(wrapped_text)
+
+
+async def generate_answers_in_parallel(prompts):
+    tasks = [generate_answer(prompt) for prompt in prompts]
+    results = await asyncio.gather(*tasks)
+    return results
+
+async def main():
+    prompts = pd.read_csv()
+    prompts = [
+        "What is the capital of France?",
+        "Explain the theory of relativity.",
+        "Describe quantum mechanics in simple terms.",
+    ]
+
+    results = await generate_answers_in_parallel(prompts)
+
+    # Output the results
+    for i, result in enumerate(results):
+        # print(f"Prompt {i+1}: {prompts[i]}")
+        # print(f"Response: {result}\n")
+        print(result)
 # def test_answer_relevancy():
 #     answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
 #     test_case = LLMTestCase(
@@ -34,3 +64,6 @@ print(wrapped_text)
 #         actual_output="We offer a 30-day full refund at no extra cost."
 #     )
 #     assert_test(test_case, [answer_relevancy_metric])
+
+if __name__ == "__main__":
+    asyncio.run(main())

@@ -12,6 +12,9 @@ transformers = "^4.44.2"
 torch = "^2.4.1"
 accelerate = "^0.34.2"
 mlx-lm = "^0.18.1"
+ollama = "^0.3.2"
+pandas = "^2.2.2"
+asyncio = "^3.4.3"
 
 
 [build-system]
