@@ -11,7 +11,7 @@ from mlx_model import MLXModel
 from ollama_model import OllamaModel
 from prompt_templates import generate_prompt, system_prompt
 
-BATCH_SIZE = 64
+BATCH_SIZE = 1024
 llama_3_1_8b_instruct = "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit"
 llama_3_8b_instruct = "mlx-community/Meta-Llama-3-8B-Instruct-4bit"
 
