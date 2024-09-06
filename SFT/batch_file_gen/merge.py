@@ -46,7 +46,8 @@ def read_answers():
                 custom_id = data['custom_id']
                 question_id = int(custom_id.split('-')[-1])
                 answer = data['response']['body']['choices'][0]['message']['content']
-                gpt_answers[question_id] = answer
+                truncated = 1 if data['response']['body']['choices'][0]['finish_reason'] != 'stop' else 0
+                gpt_answers[question_id] = answer, truncated
     return gpt_answers
 
 def write_answers_to_csv(questions, answers):
@@ -60,10 +61,10 @@ def write_answers_to_csv(questions, answers):
     """
     with open(OUTPUT_CSV, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
-        writer.writerow(['Question', 'Answer'])
-        for question_id, question in questions.items():
-            answer = answers.get(question_id, "No answer available")
-            writer.writerow([question, answer])
+        writer.writerow(['Index', 'Question', 'Answer', 'Truncated'])
+        for i, (question_id, question) in enumerate(questions.items()):
+            answer, truncated = answers.get(question_id, "No answer available")
+            writer.writerow([i, question, answer, truncated])
 
 
 if __name__ == "__main__":
