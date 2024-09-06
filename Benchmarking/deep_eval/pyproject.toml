@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "deep-eval"
+version = "0.1.0"
+description = ""
+authors = ["Mattan Yeroushalmi <mattan.yeroushalmi@similarweb.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+deepeval = "^1.1.4"
+transformers = "^4.44.2"
+torch = "^2.4.1"
+accelerate = "^0.34.2"
+mlx-lm = "^0.18.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
