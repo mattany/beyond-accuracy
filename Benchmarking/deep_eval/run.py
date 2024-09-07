@@ -11,7 +11,7 @@ from mlx_model import MLXModel
 from ollama_model import OllamaModel
 from prompt_templates import generate_prompt, system_prompt
 
-BATCH_SIZE = 1024
+BATCH_SIZE = 32
 llama_3_1_8b_instruct = "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit"
 llama_3_8b_instruct = "mlx-community/Meta-Llama-3-8B-Instruct-4bit"
 
@@ -67,7 +67,14 @@ def create_batches(csv_file, batch_size):
 async def main():
     dataset_path = "/Users/mattan.yeroushalmi/studies/thesis/SFT/data/ask_science.csv"
     batches = create_batches(dataset_path, batch_size=BATCH_SIZE)
+    i = 0
     for batch in tqdm.tqdm(batches):
+        i += 1
+        if i <= 64:
+            
+            print(f"skipping batch {i}")
+       
+            continue
         # start_time = time.time()
         results = await generate_answers_in_parallel(batch)
         # end_time = time.time()
@@ -76,7 +83,7 @@ async def main():
         out_df = pd.DataFrame(results, columns=["index", "question", "answer"])
         out_df.to_csv(
             f"/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/DPO_data/llama3_18B_ask_science_answers.csv",
-            mode='a', header=True, index=False
+            mode='a', header=False, index=False
         )
     # Output the results
     # for i, result in enumerate(results):
