@@ -65,23 +65,3 @@ class OllamaModel(DeepEvalBaseLLM):
         return generation['response']
     def get_model_name(self):
         return self.model_name
-
-
-
-"""Let's start by considering a simple scenario. Imagine you're at the beach on a sunny day, and you
-look up at the sky. It appears blue, right? But have you ever wondered why that is? The reason lies
-in something called light scattering.
-
-When sunlight enters Earth's atmosphere, it encounters tiny molecules of gases such as nitrogen and
-oxygen. These molecules are like tiny balls bouncing around, and they scatter the light in all
-directions. Now, here's the important part: shorter (blue) wavelengths of light are scattered more
-than longer (red) wavelengths. This is because the smaller blue wavelengths are more easily
-deflected by the gas molecules. As a result, our eyes perceive the sky as blue because we're seeing
-the scattered blue light from all directions.
-
-The scattering effect becomes even more pronounced when you consider the vast number of particles in
-the atmosphere. It's like a giant game of cosmic billiards, where the tiny gas molecules act as the
-cue balls, bouncing off each other and scattering the light in every direction. This is why the sky
-appears blue during the daytime, especially in the morning and late afternoon when the sun is lower
-in the sky. So, to summarize, the combination of sunlight, atmospheric gases, and light scattering
-all come together to give us that beautiful blue sky we love so much!"""

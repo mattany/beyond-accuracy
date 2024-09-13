@@ -17,9 +17,10 @@ llama_3_8b_instruct = "mlx-community/Meta-Llama-3-8B-Instruct-4bit"
 
 # custom_llm = MLXModel(llama_3_8b_instruct)
 
-# custom_llm = OllamaModel(system_prompt=system_prompt, visual=True)
-custom_llm = OllamaModel(visual=False)
+custom_llm = OllamaModel(system_prompt=system_prompt, visual=True)
+# custom_llm = OllamaModel(visual=False)
 # custom_llm = OllamaModel(model_name="llama3.1:70b", system_prompt=system_prompt, visual=True)
+
 
 async def generate_answer(prompt, index=0, visual=True):
 
@@ -100,8 +101,9 @@ async def main():
 #     assert_test(test_case, [answer_relevancy_metric])
 
 async def test():
-    res = await generate_answer("What is the meaning of life?")
+    res = await generate_answer("how do centipedes/millipedes control all of their legs? is there some kind of simple pattern they use, or does it take a lot of brainpower?")
     print(res[1])
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    # asyncio.run(main())
+    asyncio.run(test())
