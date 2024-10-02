@@ -56,15 +56,42 @@ correctness_metric = GEval(
 
 content_units_metric = GEval(
     name="Content Units",
-    criteria="""The number of "content units" is defined as any standalone
+    criteria="""A "content unit" is defined as any standalone
 fact. For example, the sentence "Two facts motivate my research—first, diverse systems are healthier
 systems, and second, humans are rapidly altering diversity around the globe"
 would be coded as having two content units. Return the amount of content units in the answer.""",
-    # NOTE: you can only provide either criteria or evaluation_steps, and not both
-    evaluation_steps=[
-        "Check whether the facts in 'actual output' contradicts any facts in 'expected output'",
-        "You should also heavily penalize omission of detail",
-        "Vague language, or contradicting OPINIONS, are OK"
-    ],
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
 )
+
+connection_to_everyday_life_metric = GEval(
+    name="Connection to everyday life",
+    evaluation_steps="""Check the output contains an explicit connection to common knowledge, a previous event, or a news
+story that was not already embedded in the question.""",
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    strict_mode=True
+)
+
+humor_metric = GEval(
+    name="Humor",
+    criteria="The explanation includes explicit jokes or ironic language.",
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    strict_mode=True
+)
+
+analogy_metric = GEval(
+    name="Analogy",
+    criteria="""Analogies are defined as a systematic mapping between two situations:
+the source (familiar situation) and the target (novel situation). Determine whether the explanation includes analogies.""",
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    strict_mode=True
+)
+
+metaphor_metric = GEval(
+    name="Metaphor",
+    criteria="""Metaphors structure one concept in terms of another. Unlike
+analogies, metaphors do not necessarily map directly between source and
+target; similarities can be associative. Determine whether the explanation includes metaphors""",
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    strict_mode=True
+)
+
