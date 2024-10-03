@@ -1,4 +1,7 @@
 import os
+
+from tqdm import tqdm
+
 OPENAI_API_KEY = "sk-proj-4reyI857Dx1FXwMAjCtCT3BlbkFJVrdDBRixPZCAHIfntrKN"
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 #
@@ -37,15 +40,10 @@ def get_or_create_eval_dataset():
 ### eval df has the answer from llama 3.1, llama 2 7b, and the fine tuned llama 2 7b
 
 
-def get_or_create_score_column(eval_df, answer_column, output_column_suffix, metric_function, metric_name):
-    output_path = "~/studies/thesis/Benchmarking/deep_eval/data/eval_dataset_graded.csv"
-    try:
-        return pd.read_csv(output_path)
-    except FileNotFoundError:
-        pass
+def get_or_create_score_column(eval_df, output_df, answer_column, output_column_suffix, metric_function, metric_name):
     scores = []
     reasons = []
-    for index, row in eval_df.iterrows():
+    for index, row in tqdm(eval_df.iterrows()):
         test_case = LLMTestCase(
             input=row['question'],
             actual_output=row[answer_column]
@@ -57,7 +55,7 @@ def get_or_create_score_column(eval_df, answer_column, output_column_suffix, met
         scores.append(metric_function.score)
         reasons.append(metric_function.reason)
     eval_df[f"{metric_name}_{output_column_suffix}"] = scores
-    eval_df.to_csv(output_path, index=False)
+    eval_df.to_csv(output_df, index=False)
     return eval_df
     # print(row['question'])
     # print(row['answer'])
@@ -79,10 +77,9 @@ if __name__ == "__main__":
         for model, answer_column in model_map.items():
             base_model_graded_df = get_or_create_score_column(
                 eval_df,
-                answer_column='base_model_answer',
-                output_column_suffix='base_model',
-                metric_function=)
-            sft_model_graded_df = get_or_create_score_column(base_model_graded_df, answer_column='sft_model_answer', output_column_suffix='sft_model')
-            llama_3_graded_df = get_or_create_score_column(base_model_graded_df, answer_column='answer', output_column_suffix='llama3_1')
-
-    print(sft_model_graded_df.head())
+                output_df=f"~/studies/thesis/Benchmarking/deep_eval/data/eval_dataset_graded_{metric}_{model}.csv",
+                answer_column=answer_column,
+                output_column_suffix=model,
+                metric_function=metric_function,
+                metric_name=metric,
+            )

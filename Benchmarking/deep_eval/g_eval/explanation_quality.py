@@ -14,25 +14,25 @@ explanation_type_metric = GEval(
             "example": ""
         },
         {
-            "score": 0.25,
+            "score": 2.5,
             "type": "Definition",
             "description": "A short definition of a certain entity is present, without further explanation. Look for explanations that raise more questions rather than providing a sufficient explanation."
             "example": "The internet is a virtual network."
         },
         {
-            "score": 0.5,
+            "score": 5,
             "type": "Elucidating",
             "description": "A definition with an example/nonexample. Focus on providing clear, direct information and examples.",
             "example": "Antibiotics only work on bacteria, which means that they can only be used for diseases caused by microbes belonging to the bacteria family. Flu, on the other hand, is caused by viruses."
         },
         {
-            "score": 0.75,
+            "score": 7.5,
             "type": "Quasiscientific",
             "description": "An explanation that creates an image in the mind, often by using an analogy. Look for language that draws a visual or conceptual parallel. Phrases like 'consider as,' 'similar to,' or 'like a' indicate analogies.",
             "example": "Consider each computer as a node and the Internet as a web."
         },
         {
-            "score": 1.0,
+            "score": 10,
             "type": "Transformative",
             "description": "Any explanation whose starting point is what the audience might think, that points to problems with the existing conceptions, or that explains why the scientifically accepted theory is more plausible or fruitful. Look for statements that challenge common misconceptions or preconceived notions. Phrases like 'it may seem counterintuitive,' 'most people think,' or 'common belief' indicate challenges to existing views.",
             "example": "I believe that the Bible must be interpreted in the context in which it was written. When the original text was written, people did not have our understanding of the natural world. They needed an explanation for their existence in terms that they could understand. That took the form of God creating them. Today we have proof that species evolve from one another and there is no reason to think that we are so special that we should not follow the same rules as the rest of nature."
