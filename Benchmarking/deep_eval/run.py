@@ -49,6 +49,8 @@ def get_or_create_score_column(eval_df, output_df, answer_column, output_column_
             actual_output=row[answer_column]
         )
         metric_function.measure(test_case)
+        print("Question:", row['question'])
+        print(f"{answer_column}:", row[answer_column])
         print("result:", metric_function.score)
         print("reason:", metric_function.reason)
 
