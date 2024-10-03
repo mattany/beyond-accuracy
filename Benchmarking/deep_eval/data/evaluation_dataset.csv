@@ -109,21 +109,6 @@ The main concern is that evolutionary psychology often relies on untestable hypo
 Moreover, some critics argue that evolutionary psychology can be used to justify harmful practices such as the perpetuation of gender stereotypes or discrimination. By attributing certain behaviors solely to genetic predispositions, it can be used to justify pre-existing beliefs and reinforce existing social structures, rather than challenging them. Additionally, the field has been criticized for its limited scope, as it primarily focuses on behaviors related to mating and survival, while ignoring other important aspects of human life. 
 
 In essence, while evolutionary psychology can provide valuable insights into human behavior, its limitations and potential to be used in ways that reinforce existing power structures have
-
----------------------------------------------------------------------------
-OSError                                   Traceback (most recent call last)
-<ipython-input-47-ec2b174c2f64> in <cell line: 1>()
-----> 1 save_question_and_answers(test_df=eval_df, base_model=model, base_tokenizer=tokenizer, sft_model=sft_model, sft_tokenizer=sft_tokenizer)
-
-6 frames
-/usr/local/lib/python3.10/dist-packages/pandas/io/common.py in check_parent_directory(path)
-    614     parent = Path(path).parent
-    615     if not parent.is_dir():
---> 616         raise OSError(rf""Cannot save file into a non-existent directory: '{parent}'"")
-    617 
-    618 
-
-OSError: Cannot save file into a non-existent directory: '/content/drive/MyDrive/thesis/code/thesis/evaluation/data'"
 329,"what affect does the quantity of injuries have on healing time? for example, would a paper cut take longer to heal if i had a broken jaw at the same time?","Let's dive into the world of wound healing. Imagine your body as a construction site, where various teams work together to repair damaged structures (in this case, injuries). The quantity of injuries can significantly impact the overall project timeline – in this case, the healing time.
 
 When you have multiple injuries, like a paper cut and a broken jaw, it's like having multiple construction projects running simultaneously. Each injury requires its own team of workers (cells) to repair the damage. In the case of a paper cut, the wound is relatively small, and the repair crew can focus on fixing that specific area quickly. However, when you have a more complex injury like a broken jaw, it's like having a larger construction project with multiple teams working together to stabilize the structure before making repairs. This can slow down the overall healing process.

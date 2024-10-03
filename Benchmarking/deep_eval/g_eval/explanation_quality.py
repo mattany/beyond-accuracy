@@ -5,6 +5,8 @@ explanation_type_metric = GEval(
     name="Explanation Type",
     # criteria="Determine whether the actual output is factually correct based on the expected output.",
     criteria="""You are a science education researcher wishing to rate answers to scientific questions based on the quality of the answers. Given the below 5 numbered categories of explanation, assign a score matching the most advanced explanation type present in the answer.
+When scoring, do not consider correctness. Instead, follow the descriptions below to determine the score.
+If an answer contains multiple types of explanations, assign the highest score.
 {
     "explanation_types": {
         {
