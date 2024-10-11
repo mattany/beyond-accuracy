@@ -5,7 +5,7 @@ from openai import OpenAI
 
 from SFT.batch_file_gen.constants import GPT_OUTPUT_DIR, GPT_OUTPUT_FILE_PREFIX, GPT_INPUT_BATCH_DIR, \
     GPT_INPUT_BATCH_PREFIX
-from config import OPENAI_ORG_ID, OPENAI_PROJECT_ID, OPENAI_API_KEY, PROJECT_DIR
+from SFT.batch_file_gen.config import OPENAI_ORG_ID, OPENAI_PROJECT_ID, OPENAI_API_KEY, PROJECT_DIR
 import logging
 
 RECOVERY_PATH = f"{PROJECT_DIR}/SFT/batch_status.txt"
@@ -84,7 +84,7 @@ def retrieve_batch(batch_id):
     return client.batches.retrieve(batch_id)
 
 
-def upload_create_and_monitor_batch(path_to_batch_file, batch_index, batch_id):
+def upload_create_and_monitor_batch(path_to_batch_file, batch_index, batch_id, output_dir=GPT_OUTPUT_DIR):
     batch_number = path_to_batch_file.split("_")[-1].split(".")[0]
     file_id = upload_batch_file(path_to_batch_file)
     batch_id = batch_id or create_batch(file_id=file_id)
@@ -106,8 +106,8 @@ def upload_create_and_monitor_batch(path_to_batch_file, batch_index, batch_id):
             persist_batch_status_to_disk(batch_number, batch_status, batch_id)
             output_file_id = batch_info.output_file_id
             file_response = client.files.content(output_file_id)
-            os.makedirs(GPT_OUTPUT_DIR, exist_ok=True)
-            with open(os.path.join(GPT_OUTPUT_DIR, f"{GPT_OUTPUT_FILE_PREFIX}{batch_index}.jsonl"), "w") as f:
+            os.makedirs(output_dir, exist_ok=True)
+            with open(os.path.join(output_dir, f"{GPT_OUTPUT_FILE_PREFIX}{batch_index}.jsonl"), "w") as f:
                 f.write(file_response.text)
             logger.info(f"batch {batch_number} success")
 
@@ -117,9 +117,9 @@ def persist_batch_status_to_disk(batch_number, batch_status, batch_id):
         f.write(f"{batch_status} {batch_number} {batch_id}\n")
 
 
-def main():
+def run(gpt_input_batch_dir=GPT_INPUT_BATCH_DIR, prefix=GPT_INPUT_BATCH_PREFIX, output_dir=GPT_OUTPUT_DIR):
 
-    batch_amt = len([f for f in os.listdir(GPT_INPUT_BATCH_DIR) if os.path.isfile(os.path.join(GPT_INPUT_BATCH_DIR, f))])
+    batch_amt = len([f for f in os.listdir(gpt_input_batch_dir) if os.path.isfile(os.path.join(gpt_input_batch_dir, f))])
     batch_id = ""
     batch_number = 0
     if os.path.exists(RECOVERY_PATH):
@@ -127,14 +127,14 @@ def main():
             line = f.readline()
             batch_status, batch_number, batch_id = line.split()
             batch_number = int(batch_number)
-    arguments = [f"{GPT_INPUT_BATCH_DIR}/{GPT_INPUT_BATCH_PREFIX}{batch_index}.jsonl" for batch_index in range(batch_number, batch_amt, 1)]
+    arguments = [f"{gpt_input_batch_dir}/{prefix}{batch_index}.jsonl" for batch_index in range(batch_number, batch_amt, 1)]
     for i, arg in enumerate(arguments):
         if i == 0:
-            upload_create_and_monitor_batch(arg, batch_index=batch_number, batch_id=batch_id)
+            upload_create_and_monitor_batch(arg, batch_index=batch_number, batch_id=batch_id, output_dir=output_dir)
         else:
-            upload_create_and_monitor_batch(arg, batch_index=batch_number + i, batch_id=None)
+            upload_create_and_monitor_batch(arg, batch_index=batch_number + i, batch_id=None, output_dir=output_dir)
 
 
 
 if __name__ == "__main__":
-    main()
+    run()

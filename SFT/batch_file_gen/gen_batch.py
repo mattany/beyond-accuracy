@@ -4,7 +4,7 @@ import shutil
 
 import pandas as pd
 
-from constants import INPUT_CSV, GPT_INPUT_BATCH_DIR, GPT_INPUT_BATCH_PREFIX, SFT_SYSTEM_PROMPT
+from SFT.batch_file_gen.constants import INPUT_CSV, GPT_INPUT_BATCH_DIR, GPT_INPUT_BATCH_PREFIX, SFT_SYSTEM_PROMPT
 # Parameters
 mini_batch_size = 1   # Only 1 is supported currently
 requests_per_file = 200
@@ -45,8 +45,7 @@ def remove_quotes(line):
     return line
 
 
-# Read the questions from the CSV file
-input_questions = pd.read_csv(INPUT_CSV, sep="\t")["title"].tolist()
+
 
 
 def delete_all_files_in_dir(directory):
@@ -55,7 +54,7 @@ def delete_all_files_in_dir(directory):
     os.mkdir(directory)
 
 
-def create_input_batch_files(output_dir, prefix, system_prompt):
+def create_input_batch_files(input_questions, output_dir, prefix, system_prompt):
     delete_all_files_in_dir(output_dir)
     question_batch_id = 0
     for index in range(0, len(input_questions), mini_batch_size):
@@ -75,6 +74,8 @@ def create_input_batch_files(output_dir, prefix, system_prompt):
 
 
 if __name__ == "__main__":
-    create_input_batch_files(output_dir=GPT_INPUT_BATCH_DIR, prefix=GPT_INPUT_BATCH_PREFIX, system_prompt=SFT_SYSTEM_PROMPT)
+    # Read the questions from the CSV file
+    input_questions = pd.read_csv(INPUT_CSV, sep="\t")["title"].tolist()
+    create_input_batch_files(input_questions=input_questions, output_dir=GPT_INPUT_BATCH_DIR, prefix=GPT_INPUT_BATCH_PREFIX, system_prompt=SFT_SYSTEM_PROMPT)
 
 
