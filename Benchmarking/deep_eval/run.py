@@ -40,10 +40,10 @@ def get_or_create_eval_dataset():
 ### eval df has the answer from llama 3.1, llama 2 7b, and the fine tuned llama 2 7b
 
 
-def get_or_create_score_column(eval_df, output_df, answer_column, output_column_suffix, metric_function, metric_name):
+def get_or_create_score_column(eval_df, output_path, answer_column, output_column_suffix, metric_function, metric_name):
     scores = []
     reasons = []
-    for index, row in tqdm(eval_df.iterrows()):
+    for index, row in tqdm(eval_df.iterrows(), total=eval_df.shape[0]):
         test_case = LLMTestCase(
             input=row['question'],
             actual_output=row[answer_column]
@@ -57,7 +57,8 @@ def get_or_create_score_column(eval_df, output_df, answer_column, output_column_
         scores.append(metric_function.score)
         reasons.append(metric_function.reason)
     eval_df[f"{metric_name}_{output_column_suffix}"] = scores
-    eval_df.to_csv(output_df, index=False)
+    eval_df[f"{metric_name}_{output_column_suffix}_reason"] = reasons
+    eval_df.to_csv(output_path, index=False)
     return eval_df
     # print(row['question'])
     # print(row['answer'])
@@ -75,13 +76,15 @@ if __name__ == "__main__":
         'llama_2_sft': 'sft_model_answer',
         'llama_3_1_base': 'answer'
     }
-    for metric, metric_function in metrics.items():
-        for model, answer_column in model_map.items():
-            base_model_graded_df = get_or_create_score_column(
-                eval_df,
-                output_df=f"~/studies/thesis/Benchmarking/deep_eval/data/eval_dataset_graded_{metric}_{model}.csv",
-                answer_column=answer_column,
-                output_column_suffix=model,
-                metric_function=metric_function,
-                metric_name=metric,
-            )
+    for i in range(3):
+        for metric, metric_function in metrics.items():
+            for model, answer_column in model_map.items():
+                print("Evaluating", metric, "for", model)
+                eval_df = get_or_create_score_column(
+                    eval_df,
+                    output_path=f"~/studies/thesis/Benchmarking/deep_eval/data/eval_dataset_graded_{i}.csv",
+                    answer_column=answer_column,
+                    output_column_suffix=model,
+                    metric_function=metric_function,
+                    metric_name=metric,
+                )
