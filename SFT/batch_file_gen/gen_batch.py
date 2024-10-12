@@ -54,7 +54,7 @@ def delete_all_files_in_dir(directory):
     os.mkdir(directory)
 
 
-def create_input_batch_files(input_questions, output_dir, prefix, system_prompt):
+def create_input_batch_files(input_questions, output_dir, prefix, system_prompt, model="gpt-3.5-turbo-0125"):
     delete_all_files_in_dir(output_dir)
     question_batch_id = 0
     for index in range(0, len(input_questions), mini_batch_size):
