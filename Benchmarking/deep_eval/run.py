@@ -103,7 +103,7 @@ if __name__ == "__main__":
     metrics = {
         # 'jargon': JargonMetric()
         # 'metaphor': metaphor_metric
-        # 'explanation_type': explanation_type_metric,
+        'explanation_type': explanation_type_metric,
         # 'content_units': content_units_metric,
         # 'connection_to_everyday_life': connection_to_everyday_life_metric,
         # 'humor': humor_metric,
