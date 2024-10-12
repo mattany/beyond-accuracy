@@ -65,7 +65,7 @@ def create_input_batch_files(input_questions, output_dir, prefix, system_prompt,
         with open(f"{output_dir}/{prefix}{batch_index}.jsonl", "a") as out_f:
             output_dict = {"custom_id": f"question-batch-{question_batch_id}", "method": "POST",
                            "url": "/v1/chat/completions",
-                           "body": {"model": "gpt-3.5-turbo",
+                           "body": {"model": model,
                                     "messages": [{"role": "system", "content": system_prompt},
                                                  {"role": "user", "content": content}],
                                     "max_tokens": 256}}

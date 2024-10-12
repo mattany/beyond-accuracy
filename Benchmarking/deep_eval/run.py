@@ -45,7 +45,7 @@ from g_eval.explanation_quality import explanation_type_metric, correctness_metr
 # ### eval df has the answer from llama 3.1, llama 2 7b, and the fine tuned llama 2 7b
 
 
-def get_or_create_score_column(eval_df, output_path, answer_column, model_name, metric_function, metric_name):
+def update_or_insert_score_column(eval_df, output_path, answer_column, model_name, metric_function, metric_name):
     scores = []
     reasons = []
     for index, row in tqdm(eval_df.iterrows(), total=eval_df.shape[0]):
@@ -78,10 +78,10 @@ def get_or_create_score_column(eval_df, output_path, answer_column, model_name, 
 
 def generate_metric_report(metrics, evaluation_dataset):
     model_map = {
-        'llama_2_sft': 'sft_model_answer',
-        'llama_2_base': 'base_model_answer',
-        'llama_3_1': 'llama3_1_instruct_answer',
-        'gpt_3.5_turbo': 'gpt_3_5_outputs',
+        # 'llama_2_sft': 'sft_model_answer',
+        # 'llama_2_base': 'base_model_answer',
+        # 'llama_3_1': 'llama3_1_instruct_answer',
+        # 'gpt_3.5_turbo': 'gpt_3_5_outputs',
         'gpt_4o': 'gpt_4o_outputs',
     }
     eval_df = pd.read_csv(evaluation_dataset)
@@ -89,7 +89,7 @@ def generate_metric_report(metrics, evaluation_dataset):
     for metric, metric_function in metrics.items():
         for model, answer_column in model_map.items():
             print("Evaluating", metric, "for", model)
-            get_or_create_score_column(
+            update_or_insert_score_column(
                 eval_df,
                 output_path=f"/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/{metric}_evaluation_scores_run_0.csv",
                 answer_column=answer_column,
@@ -101,12 +101,12 @@ def generate_metric_report(metrics, evaluation_dataset):
 
 if __name__ == "__main__":
     metrics = {
-        # 'jargon': JargonMetric()
-        # 'metaphor': metaphor_metric
-        # 'explanation_type': explanation_type_metric,
+        'jargon': JargonMetric(),
+        'metaphor': metaphor_metric,
+        'explanation_type': explanation_type_metric,
         # 'content_units': content_units_metric,
-        # 'connection_to_everyday_life': connection_to_everyday_life_metric,
+        'connection_to_everyday_life': connection_to_everyday_life_metric,
         'humor': humor_metric,
-        # 'analogy': analogy_metric
+        'analogy': analogy_metric
     }
     generate_metric_report(metrics, evaluation_dataset="~/studies/thesis/Benchmarking/deep_eval/data/evaluation_dataset.csv")

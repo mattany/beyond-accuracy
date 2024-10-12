@@ -89,6 +89,7 @@ if __name__ == "__main__":
         # 'metaphor',
         # 'explanation_type',
         # 'analogy',
-        'humor'
+        # 'humor',
+        'connection_to_everyday_life'
     ]:
         plot_scores(metric, plot_type="strip")
