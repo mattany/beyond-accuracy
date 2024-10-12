@@ -1,6 +1,7 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Create the violin plot
 # plt.figure(figsize=(10, 6))
@@ -21,6 +22,9 @@ def plot_figure(metric_name, data, type="swarm"):
     # Overlay the swarm plot to show individual points
     elif type=="swarm":
         sns.swarmplot(x='Model', y='Score', data=data, color=".25")
+        sns.pointplot(x="Model", y="Score", data=data, estimator='mean', color='red', markers='o', scale=1.5, ci=None)
+        sns.pointplot(x="Model", y="Score", data=data, estimator='median', color='blue', markers='o', scale=1.5, ci=None)
+
     elif type=="sinaplot":
         sns.stripplot(x='Model', y='Score', data=data, jitter=True, color='black', alpha=0.6)
     else:
@@ -50,8 +54,44 @@ def plot_scores(metric_name, plot_type="swarm"):
     plt.show()
 
 
+def correlation_heatmap(metric_1, metric_2):
+    # Create sample data for two dataframes
+    np.random.seed(0)  # For reproducibility
+
+    df1 = pd.read_csv(f'/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/{metric_1}_evaluation_scores_run_0.csv')
+    score_columns = [col for col in df1.columns if 'score' in col]
+    df1 = df1[score_columns]
+    df1.columns = [col.split('__')[1] for col in df1.columns]
+
+    df2 = pd.read_csv(f'/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/{metric_2}_evaluation_scores_run_0.csv')
+    score_columns = [col for col in df2.columns if 'score' in col]
+    df2 = df2[score_columns]
+    df2.columns = [col.split('__')[1] for col in df2.columns]
+
+    # Calculate the correlation matrix
+    correlation_matrix = df1.corrwith(df2)
+
+    # Create a heatmap to visualize the correlation
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(correlation_matrix.values.reshape(1, -1), annot=True, cmap='coolwarm', cbar=True,
+                xticklabels=correlation_matrix.index, yticklabels=['Correlation'])
+
+    # Customize the plot
+    plt.title("Correlation Between Two DataFrames Across 5 Columns")
+    plt.xlabel("Columns")
+    plt.ylabel("Correlation")
+    plt.show()
+
 if __name__ == "__main__":
-    # plot_scores("jargon", plot_type="box")
-    # plot_scores("metaphor", plot_type="box")
-    plot_scores("explanation_type", plot_type="sinaplot")
-    # plot_scores("explanation_type", plot_type="box")
+    correlation_heatmap("jargon", "metaphor")
+    # for metric in [
+    #     # 'jargon',
+    #     # 'metaphor',
+    #     # 'explanation_type',
+    #     'analogy',
+    # ]:
+    #     plot_scores(metric, plot_type="swarm")
+    # # plot_scores("jargon", plot_type="box")
+    # # plot_scores("metaphor", plot_type="box")
+    # # plot_scores("explanation_type", plot_type="sinaplot")
+    # # plot_scores("explanation_type", plot_type="box")
