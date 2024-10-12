@@ -85,11 +85,11 @@ def correlation_heatmap(metric_1, metric_2):
 if __name__ == "__main__":
     # correlation_heatmap("humor", "metaphor")
     for metric in [
-        # 'jargon',
-        # 'metaphor',
-        # 'explanation_type',
-        # 'analogy',
-        # 'humor',
+        'jargon',
+        'metaphor',
+        'explanation_type',
+        'analogy',
+        'humor',
         'connection_to_everyday_life'
     ]:
         plot_scores(metric, plot_type="strip")

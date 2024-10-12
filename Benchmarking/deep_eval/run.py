@@ -82,7 +82,8 @@ def generate_metric_report(metrics, evaluation_dataset):
         # 'llama_2_base': 'base_model_answer',
         # 'llama_3_1': 'llama3_1_instruct_answer',
         # 'gpt_3.5_turbo': 'gpt_3_5_outputs',
-        'gpt_4o': 'gpt_4o_outputs',
+        # 'gpt_4o': 'gpt_4o_outputs',
+        'gpt_3_5_cot': 'gpt_3_5_cot',
     }
     eval_df = pd.read_csv(evaluation_dataset)
     # for i in range(3):
@@ -101,12 +102,12 @@ def generate_metric_report(metrics, evaluation_dataset):
 
 if __name__ == "__main__":
     metrics = {
-        'jargon': JargonMetric(),
-        'metaphor': metaphor_metric,
-        'explanation_type': explanation_type_metric,
+        # 'jargon': JargonMetric(),
+        # 'metaphor': metaphor_metric,
+        # 'explanation_type': explanation_type_metric,
         # 'content_units': content_units_metric,
         'connection_to_everyday_life': connection_to_everyday_life_metric,
-        'humor': humor_metric,
-        'analogy': analogy_metric
+        # 'humor': humor_metric,
+        # 'analogy': analogy_metric
     }
     generate_metric_report(metrics, evaluation_dataset="~/studies/thesis/Benchmarking/deep_eval/data/evaluation_dataset.csv")
