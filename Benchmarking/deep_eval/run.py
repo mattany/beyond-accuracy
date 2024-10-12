@@ -106,8 +106,7 @@ if __name__ == "__main__":
         # 'explanation_type': explanation_type_metric,
         # 'content_units': content_units_metric,
         # 'connection_to_everyday_life': connection_to_everyday_life_metric,
-        # 'humor': humor_metric,
-        'analogy': analogy_metric
-
+        'humor': humor_metric,
+        # 'analogy': analogy_metric
     }
     generate_metric_report(metrics, evaluation_dataset="~/studies/thesis/Benchmarking/deep_eval/data/evaluation_dataset.csv")

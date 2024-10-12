@@ -22,14 +22,14 @@ def plot_figure(metric_name, data, type="swarm"):
     # Overlay the swarm plot to show individual points
     elif type=="swarm":
         sns.swarmplot(x='Model', y='Score', data=data, color=".25")
-        sns.pointplot(x="Model", y="Score", data=data, estimator='mean', color='red', markers='o', scale=1.5, ci=None)
-        sns.pointplot(x="Model", y="Score", data=data, estimator='median', color='blue', markers='o', scale=1.5, ci=None)
-
-    elif type=="sinaplot":
+    elif type=="strip":
         sns.stripplot(x='Model', y='Score', data=data, jitter=True, color='black', alpha=0.6)
     else:
         assert False
     # Add a title and labels
+    sns.pointplot(x="Model", y="Score", data=data, estimator='mean', color='red', markers='o', scale=0.5, ci=None)
+    sns.pointplot(x="Model", y="Score", data=data, estimator='median', color='blue', markers='o', scale=0.5, ci=None)
+
     plt.title(f'{metric_name.capitalize()} Scores')
     plt.xlabel('Model')
     plt.ylabel('Score')
@@ -83,15 +83,12 @@ def correlation_heatmap(metric_1, metric_2):
     plt.show()
 
 if __name__ == "__main__":
-    correlation_heatmap("jargon", "metaphor")
-    # for metric in [
-    #     # 'jargon',
-    #     # 'metaphor',
-    #     # 'explanation_type',
-    #     'analogy',
-    # ]:
-    #     plot_scores(metric, plot_type="swarm")
-    # # plot_scores("jargon", plot_type="box")
-    # # plot_scores("metaphor", plot_type="box")
-    # # plot_scores("explanation_type", plot_type="sinaplot")
-    # # plot_scores("explanation_type", plot_type="box")
+    # correlation_heatmap("humor", "metaphor")
+    for metric in [
+        # 'jargon',
+        # 'metaphor',
+        # 'explanation_type',
+        # 'analogy',
+        'humor'
+    ]:
+        plot_scores(metric, plot_type="strip")
