@@ -70,14 +70,12 @@ connection_to_everyday_life_metric = GEval(
     evaluation_steps="""Check the output contains an explicit connection to common knowledge, a previous event, or a news
 story that was not already embedded in the question.""",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
-    strict_mode=True
 )
 
 humor_metric = GEval(
     name="Humor",
     criteria="The explanation includes explicit jokes or ironic language.",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
-    strict_mode=True
 )
 
 analogy_metric = GEval(
@@ -85,15 +83,13 @@ analogy_metric = GEval(
     criteria="""Analogies are defined as a systematic mapping between two situations:
 the source (familiar situation) and the target (novel situation). Determine whether the explanation includes analogies.""",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
-    strict_mode=True
 )
 
 metaphor_metric = GEval(
     name="Metaphor",
     criteria="""Metaphors structure one concept in terms of another. Unlike
 analogies, metaphors do not necessarily map directly between source and
-target; similarities can be associative. Determine whether the explanation includes metaphors""",
+target; similarities can be associative. Determine whether the explanation includes metaphors or not. Do not take correctness into account.""",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
-    strict_mode=True
 )
 
