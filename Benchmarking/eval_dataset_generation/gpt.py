@@ -3,13 +3,13 @@ import json
 from SFT.batch_file_gen.gen_batch import create_input_batch_files
 from SFT.batch_file_gen.upload_batch_file import run as get_results_from_gpt
 import pandas as pd
-
-# GPT_BATCH_DIR = "/output_batches/gpt_4o/"
+from config import PROJECT_DIR
+# GPT_BATCH_DIR = f"{PROJECT_DIR}/Benchmarking/eval_dataset_generation/output_batches/gpt_4o/"
 # GPT_OUTPUT_DIR = "/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/eval_dataset_generation/gpt4o_outputs"
 # MODEL = "gpt-4o-2024-08-06"
 # MODEL_NAME = "gpt_4o"
 
-GPT_BATCH_DIR = "/output_batches/gpt_4/"
+GPT_BATCH_DIR = f"{PROJECT_DIR}/Benchmarking/eval_dataset_generation/output_batches/gpt_4/"
 GPT_OUTPUT_DIR = "/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/eval_dataset_generation/gpt4_outputs"
 MODEL = "gpt-4-turbo-2024-04-09"
 MODEL_NAME = "gpt_4"
