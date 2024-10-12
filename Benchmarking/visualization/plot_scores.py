@@ -43,6 +43,7 @@ def plot_scores(metric_name, plot_type="swarm"):
     df = pd.read_csv(f'/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/{metric_name}_evaluation_scores_run_0.csv')
     score_columns = [col for col in df.columns if 'score' in col]
     df = df[score_columns]
+    df = df.reindex(sorted(df.columns), axis=1)
     # Reshape the DataFrame from wide to long format for Seaborn
     # Assuming the column names are in the format '<metric1_type>_score__<model_name>'
     df_long = df.melt(var_name='Model', value_name='Score')
@@ -85,11 +86,12 @@ def correlation_heatmap(metric_1, metric_2):
 if __name__ == "__main__":
     # correlation_heatmap("humor", "metaphor")
     for metric in [
-        'jargon',
-        'metaphor',
-        'explanation_type',
-        'analogy',
-        'humor',
-        'connection_to_everyday_life'
+        # 'jargon',
+        # 'metaphor',
+        # 'explanation_type',
+        # 'analogy',
+        # 'humor',
+        # 'connection_to_everyday_life',
+        'content_units'
     ]:
         plot_scores(metric, plot_type="strip")
