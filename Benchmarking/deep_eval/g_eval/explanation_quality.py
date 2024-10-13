@@ -46,13 +46,7 @@ If an answer contains multiple types of explanations, assign the highest score.
 
 correctness_metric = GEval(
     name="Correctness",
-    # criteria="Determine whether the actual output is factually correct based on the expected output.",
-    # NOTE: you can only provide either criteria or evaluation_steps, and not both
-    evaluation_steps=[
-        "Check whether the facts in 'actual output' contradicts any facts in 'expected output'",
-        "You should also heavily penalize omission of detail",
-        "Vague language, or contradicting OPINIONS, are OK"
-    ],
+    criteria="Determine whether the actual output is factually correct based on the expected output.",
     evaluation_params=[LLMTestCaseParams.EXPECTED_OUTPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
 )
 
