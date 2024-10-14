@@ -33,6 +33,8 @@ def update_or_insert_score_column(eval_df, output_path, answer_column, model_nam
                 actual_output=row[answer_column],
             )
         metric_function.measure(test_case)
+        print(f"EVAL STEPS: {metric_function.evaluation_steps}")
+
         print("Question:", row['question'])
         print(f"{answer_column}:", row[answer_column])
         print("result:", metric_function.score)
@@ -55,7 +57,7 @@ def update_or_insert_score_column(eval_df, output_path, answer_column, model_nam
     # print("\n")
 
 
-def generate_metric_report(metrics, evaluation_dataset, model_map, reference_models=None, models_to_evaluate=None):
+def generate_metric_report(metrics, evaluation_dataset, model_map, reference_models=None, models_to_evaluate=None, run_number=0):
     if not models_to_evaluate:
         models_to_evaluate = model_map.keys()
     eval_df = pd.read_csv(evaluation_dataset)
@@ -69,7 +71,7 @@ def generate_metric_report(metrics, evaluation_dataset, model_map, reference_mod
                     print("Evaluating", metric, "for", model, "with reference model", reference_model)
                     update_or_insert_score_column(
                         eval_df,
-                        output_path=f"/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/{metric}_evaluation_scores_run_0.csv",
+                        output_path=f"/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/{metric}_reference:{reference_model}_evaluation_scores_run_{run_number}.csv",
                         answer_column=answer_column,
                         model_name=model,
                         metric_function=metric_function,
@@ -80,7 +82,7 @@ def generate_metric_report(metrics, evaluation_dataset, model_map, reference_mod
                 print("Evaluating", metric, "for", model)
                 update_or_insert_score_column(
                     eval_df,
-                    output_path=f"/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/{metric}_evaluation_scores_run_0.csv",
+                    output_path=f"/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/{metric}_evaluation_scores_run_{run_number}.csv",
                     answer_column=answer_column,
                     model_name=model,
                     metric_function=metric_function,
@@ -90,50 +92,51 @@ def generate_metric_report(metrics, evaluation_dataset, model_map, reference_mod
 
 if __name__ == "__main__":
     # RAG
-    generate_metric_report(
-        metrics={
-            'correctness': correctness_metric
-        },
-        evaluation_dataset=f'{PROJECT_DIR}/Benchmarking/deep_eval/RAG/data/joined_answers.csv',
-        model_map={
-            'gpt_4_turbo': 'gpt_4_turbo',
-            'gpt_4o': 'gpt_4o_1',
-            'gpt_4o_validation': 'gpt_4o_2',
-            'llama_2_base': 'llama_2',
-            'llama_2_sft': 'llama_2_sft',
-        },
-        reference_models=['gpt_4o'],
-        models_to_evaluate=['llama_2_sft', 'gpt_4o_validation', 'gpt_4_turbo', 'llama_2_base']
-    )
-
-    # TEST SET
     # generate_metric_report(
     #     metrics={
-    #         ## BARAM TSABARI METRICS
-    #         # 'jargon': JargonMetric(),
-    #         # 'explanation_type': explanation_type_metric,
-    #         # 'metaphor': metaphor_metric,
-    #         # 'content_units': content_units_metric,
-    #         # 'connection_to_everyday_life': connection_to_everyday_life_metric,
-    #         # 'humor': humor_metric,
-    #         # 'analogy': analogy_metric
-    #         ## ZEMLA METRICS
-    #         # 'internal_coherence': internal_coherence_metric,
-    #         # 'completeness': completeness_metric,
-    #         # 'alternatives': alternatives_metric,
-    #         # 'articulation': articulation_metric,
-    #         # 'perceived_truth': perceived_truth_metric
-    #         ## CORRECTNESS METRICS
     #         'correctness': correctness_metric
     #     },
-    #     evaluation_dataset="~/studies/thesis/Benchmarking/deep_eval/data/evaluation_dataset.csv",
+    #     evaluation_dataset=f'{PROJECT_DIR}/Benchmarking/deep_eval/RAG/data/joined_answers.csv',
     #     model_map={
-    #         'llama_2_sft': 'sft_model_answer',
-    #         'llama_2_base': 'base_model_answer',
-    #         'llama_3_1': 'llama3_1_instruct_answer',
-    #         'gpt_3.5_turbo': 'gpt_3_5_outputs',
-    #         'gpt_4o': 'gpt_4o_outputs',
-    #         'gpt_3_5_cot': 'gpt_3_5_cot',
-    #         'gpt_4': 'gpt_4_outputs'
-    #     }
+    #         'gpt_4_turbo': 'gpt_4_turbo',
+    #         'gpt_4o': 'gpt_4o_1',
+    #         'gpt_4o_validation': 'gpt_4o_2',
+    #         'llama_2_base': 'llama_2',
+    #         'llama_2_sft': 'llama_2_sft',
+    #     },
+    #     reference_models=['llama_2_base'],
+    #     models_to_evaluate=['llama_2_sft', 'gpt_4o_validation', 'llama_2_base', 'gpt_4o', 'gpt_4_turbo']
     # )
+
+    # TEST SET
+    generate_metric_report(
+        metrics={
+            ## BARAM TSABARI METRICS
+            # 'jargon': JargonMetric(),
+            'explanation_type': explanation_type_metric,
+            # 'metaphor': metaphor_metric,
+            # 'content_units': content_units_metric,
+            # 'connection_to_everyday_life': connection_to_everyday_life_metric,
+            # 'humor': humor_metric,
+            # 'analogy': analogy_metric
+            ## ZEMLA METRICS
+            # 'internal_coherence': internal_coherence_metric,
+            # 'completeness': completeness_metric,
+            # 'alternatives': alternatives_metric,
+            # 'articulation': articulation_metric,
+            # 'perceived_truth': perceived_truth_metric
+            ## CORRECTNESS METRICS
+            # 'correctness': correctness_metric
+        },
+        evaluation_dataset="~/studies/thesis/Benchmarking/deep_eval/data/evaluation_dataset.csv",
+        model_map={
+            'llama_2_sft': 'sft_model_answer',
+            'llama_2_base': 'base_model_answer',
+            'llama_3_1': 'llama3_1_instruct_answer',
+            'gpt_3.5_turbo': 'gpt_3_5_outputs',
+            'gpt_4o': 'gpt_4o_outputs',
+            'gpt_3_5_cot': 'gpt_3_5_cot',
+            'gpt_4': 'gpt_4_outputs'
+        },
+        run_number=1
+    )

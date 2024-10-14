@@ -2,7 +2,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
-
+from config import PROJECT_DIR
 # Create the violin plot
 # plt.figure(figsize=(10, 6))
 # sns.violinplot(x='Model', y='Score', inner='box', data=df_long)
@@ -35,23 +35,41 @@ def plot_figure(metric_name, data, type="swarm"):
     plt.ylabel('Score')
 
 
-
-
 # Load the data from CSV
 # Update the file path as needed
-def plot_scores(metric_name, plot_type="swarm"):
-    df = pd.read_csv(f'/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/{metric_name}_evaluation_scores_run_0.csv')
+def plot_scores(metric_name, plot_type="swarm", hide_models=None, run_number=0):
+    df = pd.read_csv(f'/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/{metric_name}_evaluation_scores_run_{run_number}.csv')
     score_columns = [col for col in df.columns if 'score' in col]
     df = df[score_columns]
     df = df.reindex(sorted(df.columns), axis=1)
+
     # Reshape the DataFrame from wide to long format for Seaborn
     # Assuming the column names are in the format '<metric1_type>_score__<model_name>'
     df_long = df.melt(var_name='Model', value_name='Score')
 
     # Optionally, you can clean up the 'Model' column to make it just model names
     df_long['Model'] = df_long['Model'].str.replace(r'^.*_score__', '', regex=True)
+    if hide_models:
+        df_long = df_long.where(~df_long['Model'].isin(hide_models)).dropna()
     plot_figure(metric_name=metric_name, data=df_long, type=plot_type)
     # Display the plot
+    plt.show()
+
+
+def correlation_heatmap_between_columns(metric_name):
+    df = pd.read_csv(f'{PROJECT_DIR}/Benchmarking/deep_eval/data/{metric_name}_evaluation_scores_run_0.csv')
+    score_columns = [col for col in df.columns if 'score' in col]
+    df = df[score_columns]
+    df.columns = [col.split('__')[1] for col in df.columns]
+    # Compute the correlation matrix
+    correlation_matrix = df.corr()
+
+    # Plot the heatmap
+    plt.figure(figsize=(8, 6))  # Optional: Adjusts the size of the plot
+    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', vmin=-1, vmax=1)
+
+    # Display the plot
+    plt.title(f'Correlation Matrix Heatmap for {metric_name}')
     plt.show()
 
 
@@ -83,15 +101,30 @@ def correlation_heatmap(metric_1, metric_2):
     plt.ylabel("Correlation")
     plt.show()
 
+
 if __name__ == "__main__":
     # correlation_heatmap("humor", "metaphor")
+    # correlation_heatmap_between_columns("completeness")
     for metric in [
         # 'jargon',
         # 'metaphor',
-        # 'explanation_type',
+        'explanation_type',
         # 'analogy',
         # 'humor',
         # 'connection_to_everyday_life',
-        'content_units'
+        # 'content_units',
+        # 'correctness_reference:gpt_4o',
+        # 'correctness_reference:gpt_4o_validation',
+        # 'correctness_reference:llama_2_base',
+        # 'alternatives',
+        # 'articulation',
+        # 'completeness',
+        # 'internal_coherence',
+        # 'perceived_truth'
     ]:
-        plot_scores(metric, plot_type="strip")
+        plot_scores(metric, plot_type="strip", hide_models=[
+            # 'gpt_4',
+            # 'gpt_3_5_turbo',
+            # 'gpt_3_5_cot',
+            # 'gpt_4o',
+        ], run_number=1)
