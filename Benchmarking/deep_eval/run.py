@@ -12,7 +12,7 @@ from g_eval.zemla_metrics import internal_coherence_metric, completeness_metric,
     articulation_metric, perceived_truth_metric
 # from g_eval.zemla_metrics import completeness_metric
 from g_eval.explanation_quality import explanation_type_metric, correctness_metric, metaphor_metric, \
-    content_units_metric, connection_to_everyday_life_metric, humor_metric, analogy_metric
+    content_units_metric, connection_to_everyday_life_metric, humor_metric, analogy_metric, metaphor_metric_explicit
 
 
 def update_or_insert_score_column(eval_df, output_path, answer_column, model_name, metric_function, metric_name, reference_column=None):
@@ -113,8 +113,9 @@ if __name__ == "__main__":
         metrics={
             ## BARAM TSABARI METRICS
             # 'jargon': JargonMetric(),
-            'explanation_type': explanation_type_metric,
+            # 'explanation_type': explanation_type_metric,
             # 'metaphor': metaphor_metric,
+            'metaphor_explicit': metaphor_metric_explicit,
             # 'content_units': content_units_metric,
             # 'connection_to_everyday_life': connection_to_everyday_life_metric,
             # 'humor': humor_metric,
@@ -138,5 +139,5 @@ if __name__ == "__main__":
             'gpt_3_5_cot': 'gpt_3_5_cot',
             'gpt_4': 'gpt_4_outputs'
         },
-        run_number=1
+        run_number=0
     )

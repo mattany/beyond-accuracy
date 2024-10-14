@@ -142,20 +142,21 @@ if __name__ == "__main__":
     # correlation_heatmap_between_columns("completeness")
     for metric in [
         'jargon',
-        'metaphor',
+        # 'metaphor_explicit',
         'explanation_type',
         'analogy',
         'humor',
         'connection_to_everyday_life',
         'content_units',
-        'correctness_reference:gpt_4o',
-        'correctness_reference:gpt_4o_validation',
-        'correctness_reference:llama_2_base',
+        'internal_coherence',
+        'completeness',
         'alternatives',
         'articulation',
-        'completeness',
-        'internal_coherence',
         'perceived_truth'
+
+        # 'correctness_reference:gpt_4o',
+        # 'correctness_reference:gpt_4o_validation',
+        # 'correctness_reference:llama_2_base',
     ]:
         plot_scores(metric, plot_type="strip", hide_models=[
             # 'gpt_4',
@@ -164,4 +165,4 @@ if __name__ == "__main__":
             # 'gpt_4o',
         ], run_number=0)
         # winrate_matrix('explanation_type', run_number=1)
-        winrate_matrix(metric, run_number=0)
+        # winrate_matrix(metric, run_number=0)

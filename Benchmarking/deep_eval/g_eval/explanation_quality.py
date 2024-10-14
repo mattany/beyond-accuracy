@@ -89,3 +89,19 @@ target; similarities can be associative. Determine whether the explanation inclu
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
 )
 
+metaphor_metric_explicit = GEval(
+    name="Metaphor Explicit",
+    criteria="""Metaphors structure one concept in terms of another. Unlike
+analogies, metaphors do not necessarily map directly between source and
+target; similarities can be associative. Determine whether the explanation includes metaphors or not. Do not take correctness into account.""",
+    evaluation_steps=[
+      """1. Consider the following definition of metaphors: Metaphors structure one concept in terms of another. Unlike
+analogies, metaphors do not necessarily map directly between source and
+target; similarities can be associative.
+      """,
+    "2. Based on the above definition, determine whether the explanation includes metaphors or not. Do not take correctness into account.",
+    "3. Return a score of 10 if at least one metaphor is present in the answer, and 0 if no metaphors are present in the answer.",
+    "4. If you aren't sure whether the answer contains a metaphor or not, return a score of 5.",
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+)
