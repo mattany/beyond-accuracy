@@ -73,6 +73,41 @@ def correlation_heatmap_between_columns(metric_name):
     plt.show()
 
 
+def winrate_matrix(metric_name, run_number=0):
+    df = pd.read_csv(f'{PROJECT_DIR}/Benchmarking/deep_eval/data/{metric_name}_evaluation_scores_run_{run_number}.csv')
+    score_columns = [col for col in df.columns if 'score' in col]
+    df = df[score_columns]
+    df.columns = [col.split('__')[1] for col in df.columns]
+
+    def calculate_filtered_winrate(df):
+        # Create a 3D boolean array for win/loss by comparing columns
+        win_matrix = df.values[:, :, None] > df.values[:, None, :]
+
+        # Create a mask for non-ties (i.e., exclude where values are equal)
+        non_ties = df.values[:, :, None] != df.values[:, None, :]
+
+        # Calculate winrate only where there are no ties
+        winrate_matrix = (win_matrix & non_ties).sum(axis=0) / non_ties.sum(axis=0)
+
+        return pd.DataFrame(winrate_matrix, index=df.columns, columns=df.columns)
+
+    # Calculate the winrate matrix after filtering out ties
+    winrate_matrix = calculate_filtered_winrate(df)
+
+    # Plot the winrate matrix as a heatmap using seaborn
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(winrate_matrix, annot=True, cmap='coolwarm', cbar=True, linewidths=0.5, fmt=".2f")
+
+    # Add labels and title
+    plt.title(f'{metric_name.capitalize()} Filtered Winrate Matrix Heatmap (Excluding Ties)')
+    plt.xlabel('Compared Against')
+    plt.ylabel('Column')
+
+    # Show the plot
+    plt.tight_layout()
+    plt.show()
+
+
 def correlation_heatmap(metric_1, metric_2):
     # Create sample data for two dataframes
     np.random.seed(0)  # For reproducibility
@@ -106,25 +141,27 @@ if __name__ == "__main__":
     # correlation_heatmap("humor", "metaphor")
     # correlation_heatmap_between_columns("completeness")
     for metric in [
-        # 'jargon',
-        # 'metaphor',
+        'jargon',
+        'metaphor',
         'explanation_type',
-        # 'analogy',
-        # 'humor',
-        # 'connection_to_everyday_life',
-        # 'content_units',
-        # 'correctness_reference:gpt_4o',
-        # 'correctness_reference:gpt_4o_validation',
-        # 'correctness_reference:llama_2_base',
-        # 'alternatives',
-        # 'articulation',
-        # 'completeness',
-        # 'internal_coherence',
-        # 'perceived_truth'
+        'analogy',
+        'humor',
+        'connection_to_everyday_life',
+        'content_units',
+        'correctness_reference:gpt_4o',
+        'correctness_reference:gpt_4o_validation',
+        'correctness_reference:llama_2_base',
+        'alternatives',
+        'articulation',
+        'completeness',
+        'internal_coherence',
+        'perceived_truth'
     ]:
         plot_scores(metric, plot_type="strip", hide_models=[
             # 'gpt_4',
             # 'gpt_3_5_turbo',
             # 'gpt_3_5_cot',
             # 'gpt_4o',
-        ], run_number=1)
+        ], run_number=0)
+        # winrate_matrix('explanation_type', run_number=1)
+        winrate_matrix(metric, run_number=0)
