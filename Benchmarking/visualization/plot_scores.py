@@ -105,6 +105,7 @@ def winrate_matrix(metric_name, run_number=0):
 
     # Show the plot
     plt.tight_layout()
+    plt.savefig(f'{PROJECT_DIR}/Benchmarking/visualization/images/heatmaps/{metric_name}_winrate_matrix.png')
     plt.show()
 
 
@@ -142,7 +143,7 @@ if __name__ == "__main__":
     # correlation_heatmap_between_columns("completeness")
     for metric in [
         'jargon',
-        # 'metaphor_explicit',
+        'metaphor_explicit',
         'explanation_type',
         'analogy',
         'humor',
@@ -158,11 +159,11 @@ if __name__ == "__main__":
         # 'correctness_reference:gpt_4o_validation',
         # 'correctness_reference:llama_2_base',
     ]:
-        plot_scores(metric, plot_type="strip", hide_models=[
-            # 'gpt_4',
-            # 'gpt_3_5_turbo',
-            # 'gpt_3_5_cot',
-            # 'gpt_4o',
-        ], run_number=0)
-        # winrate_matrix('explanation_type', run_number=1)
+        # plot_scores(metric, plot_type="strip", hide_models=[
+        #     # 'gpt_4',
+        #     # 'gpt_3_5_turbo',
+        #     # 'gpt_3_5_cot',
+        #     # 'gpt_4o',
+        # ], run_number=0)
+        winrate_matrix(metric_name=metric, run_number=0)
         # winrate_matrix(metric, run_number=0)
