@@ -3,10 +3,8 @@ from deepeval.test_case import LLMTestCaseParams
 
 explanation_type_metric = GEval(
     name="Explanation Type",
-    # criteria="Determine whether the actual output is factually correct based on the expected output.",
-    criteria="""You are a science education researcher wishing to rate answers to scientific questions based on the quality of the answers. Given the below 5 numbered categories of explanation, assign a score matching the most advanced explanation type present in the answer.
-When scoring, do not consider correctness. Instead, follow the descriptions below to determine the score.
-If an answer contains multiple types of explanations, assign the highest score.
+    evaluation_steps=[
+        """1.Given the below 5 numbered categories of explanation, assign a score matching the most advanced explanation type present in the answer.
 {
     "explanation_types": {
         {
@@ -40,7 +38,11 @@ If an answer contains multiple types of explanations, assign the highest score.
             "example": "I believe that the Bible must be interpreted in the context in which it was written. When the original text was written, people did not have our understanding of the natural world. They needed an explanation for their existence in terms that they could understand. That took the form of God creating them. Today we have proof that species evolve from one another and there is no reason to think that we are so special that we should not follow the same rules as the rest of nature."
         }
     }
-}""",
+}
+""",
+        "2. When scoring, do not consider correctness. Instead, follow the descriptions in step 1 to determine the score.",
+        "3. If an answer contains multiple types of explanations, assign the score based on the best explanation type in the answer.",
+    ],
     evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
 )
 
