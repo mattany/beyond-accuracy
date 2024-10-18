@@ -1,18 +1,22 @@
 import os
+
+from readability.exceptions import ReadabilityException
 from tqdm import tqdm
 from Jargon.jargon_metric import JargonMetric
 from config import PROJECT_DIR
+from readability_metrics.readablity_metrics import flesch_kincaid, flesch_reading_ease, dale_chall, ari
 
 OPENAI_API_KEY = "sk-proj-4reyI857Dx1FXwMAjCtCT3BlbkFJVrdDBRixPZCAHIfntrKN"
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
-
+GEVAL_RETRIES = 3
 import pandas as pd
 from deepeval.test_case import LLMTestCase
 from g_eval.zemla_metrics import internal_coherence_metric, completeness_metric, alternatives_metric, \
-    articulation_metric, perceived_truth_metric
+    articulation_metric, perceived_truth_metric, completeness_metric_explicit
 # from g_eval.zemla_metrics import completeness_metric
 from g_eval.explanation_quality import explanation_type_metric, correctness_metric, metaphor_metric, \
-    content_units_metric, connection_to_everyday_life_metric, humor_metric, analogy_metric, metaphor_metric_explicit
+    content_units_metric, connection_to_everyday_life_metric, humor_metric, analogy_metric, metaphor_metric_explicit, \
+    content_units_metric_explicit
 
 
 def update_or_insert_score_column(eval_df, output_path, answer_column, model_name, metric_function, metric_name, reference_column=None):
@@ -32,12 +36,22 @@ def update_or_insert_score_column(eval_df, output_path, answer_column, model_nam
                 input=row['question'],
                 actual_output=row[answer_column],
             )
-        metric_function.measure(test_case)
-        print(f"EVAL STEPS: {metric_function.evaluation_steps}")
+        for i in range(GEVAL_RETRIES):
+            try:
+                metric_function.measure(test_case)
+                break
+            except ValueError:
+                print(f"Try #{i + 1}. Encountered invalid JSON. Retrying...")
+                continue
+            except ReadabilityException as e:
+                print(f"Ran into readability exception: {e}. Continuing")
+                break
 
-        print("Question:", row['question'])
-        print(f"{answer_column}:", row[answer_column])
-        print("result:", metric_function.score)
+        # print(f"EVAL STEPS: {metric_function.evaluation_steps}")
+
+        # print("Question:", row['question'])
+        # print(f"{answer_column}:", row[answer_column])
+        # print("result:", metric_function.score)
         scores.append(metric_function.score)
 
         if getattr(metric_function, 'reason'):
@@ -71,7 +85,7 @@ def generate_metric_report(metrics, evaluation_dataset, model_map, reference_mod
                     print("Evaluating", metric, "for", model, "with reference model", reference_model)
                     update_or_insert_score_column(
                         eval_df,
-                        output_path=f"/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/{metric}_reference:{reference_model}_evaluation_scores_run_{run_number}.csv",
+                        output_path=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/{metric}_reference:{reference_model}_evaluation_scores_run_{run_number}.csv",
                         answer_column=answer_column,
                         model_name=model,
                         metric_function=metric_function,
@@ -82,12 +96,24 @@ def generate_metric_report(metrics, evaluation_dataset, model_map, reference_mod
                 print("Evaluating", metric, "for", model)
                 update_or_insert_score_column(
                     eval_df,
-                    output_path=f"/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/{metric}_evaluation_scores_run_{run_number}.csv",
+                    output_path=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/{metric}_evaluation_scores_run_{run_number}.csv",
                     answer_column=answer_column,
                     model_name=model,
                     metric_function=metric_function,
                     metric_name=metric
                 )
+
+
+def check_reasons(model_map, model, metric, run_number=0):
+    scores_df = pd.read_csv(f'{PROJECT_DIR}/Benchmarking/deep_eval/data/{metric}_evaluation_scores_run_{run_number}.csv')
+    qa_df = pd.read_csv(f'{PROJECT_DIR}/Benchmarking/deep_eval/data/evaluation_dataset.csv')
+    score_col = f"{metric}_score__{model}"
+    reason_col = f"{metric}_reason__{model}"
+    output_df = scores_df[[score_col, reason_col]].join(
+        qa_df
+        .rename(columns={model_map[model]: model})[['question', model]]
+    )
+    output_df.to_csv(f'{PROJECT_DIR}/Benchmarking/deep_eval/data/model_metric_specific/{model}_{metric}_evaluation_scores_run_{run_number}_with_reasons.csv', index=False)
 
 
 if __name__ == "__main__":
@@ -97,7 +123,7 @@ if __name__ == "__main__":
     #         'correctness': correctness_metric
     #     },
     #     evaluation_dataset=f'{PROJECT_DIR}/Benchmarking/deep_eval/RAG/data/joined_answers.csv',
-    #     model_map={
+    #     MODEL_MAP={
     #         'gpt_4_turbo': 'gpt_4_turbo',
     #         'gpt_4o': 'gpt_4o_1',
     #         'gpt_4o_validation': 'gpt_4o_2',
@@ -109,35 +135,50 @@ if __name__ == "__main__":
     # )
 
     # TEST SET
+    MODEL_MAP = {
+        'llama_2_sft': 'sft_model_answer',
+        'llama_2_base': 'base_model_answer',
+        'llama_3_1': 'llama3_1_instruct_answer',
+        'gpt_3.5_turbo': 'gpt_3_5_outputs',
+        'gpt_4o': 'gpt_4o_outputs',
+        'gpt_3_5_cot': 'gpt_3_5_cot',
+        'gpt_4': 'gpt_4_outputs'
+    }
     generate_metric_report(
         metrics={
             ## BARAM TSABARI METRICS
             # 'jargon': JargonMetric(),
             # 'explanation_type': explanation_type_metric,
             # 'metaphor': metaphor_metric,
-            'metaphor_explicit': metaphor_metric_explicit,
+            # 'metaphor_explicit': metaphor_metric_explicit,
             # 'content_units': content_units_metric,
+            # 'content_units_explicit': content_units_metric_explicit,
+
             # 'connection_to_everyday_life': connection_to_everyday_life_metric,
             # 'humor': humor_metric,
             # 'analogy': analogy_metric
             ## ZEMLA METRICS
             # 'internal_coherence': internal_coherence_metric,
             # 'completeness': completeness_metric,
+            # 'completeness_explicit': completeness_metric_explicit
             # 'alternatives': alternatives_metric,
             # 'articulation': articulation_metric,
+            # 'flesch_kincaid': flesch_kincaid,
+            # 'flesch_reading_ease': flesch_reading_ease,
+            # 'dale_chall': dale_chall,
+            'ari': ari
             # 'perceived_truth': perceived_truth_metric
             ## CORRECTNESS METRICS
             # 'correctness': correctness_metric
         },
         evaluation_dataset="~/studies/thesis/Benchmarking/deep_eval/data/evaluation_dataset.csv",
-        model_map={
-            'llama_2_sft': 'sft_model_answer',
-            'llama_2_base': 'base_model_answer',
-            'llama_3_1': 'llama3_1_instruct_answer',
-            'gpt_3.5_turbo': 'gpt_3_5_outputs',
-            'gpt_4o': 'gpt_4o_outputs',
-            'gpt_3_5_cot': 'gpt_3_5_cot',
-            'gpt_4': 'gpt_4_outputs'
-        },
+        model_map=MODEL_MAP,
         run_number=0
     )
+
+    # check_reasons(
+    #     model_map=MODEL_MAP,
+    #     model='llama_2_sft',
+    #     metric='completeness_explicit',
+    #     run_number=0
+    # )
