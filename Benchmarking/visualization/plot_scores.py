@@ -52,6 +52,8 @@ def plot_scores(metric_name, plot_type="swarm", hide_models=None, run_number=0):
     if hide_models:
         df_long = df_long.where(~df_long['Model'].isin(hide_models)).dropna()
     plot_figure(metric_name=metric_name, data=df_long, type=plot_type)
+    plt.savefig(f'{PROJECT_DIR}/Benchmarking/visualization/images/plots/{metric_name}_{plot_type}_plot.png')
+
     # Display the plot
     plt.show()
 
@@ -142,28 +144,34 @@ if __name__ == "__main__":
     # correlation_heatmap("humor", "metaphor")
     # correlation_heatmap_between_columns("completeness")
     for metric in [
-        'jargon',
-        'metaphor_explicit',
-        'explanation_type',
-        'analogy',
-        'humor',
-        'connection_to_everyday_life',
-        'content_units',
-        'internal_coherence',
-        'completeness',
-        'alternatives',
-        'articulation',
-        'perceived_truth'
+        # 'jargon',
+        # 'metaphor_explicit',
+        # 'explanation_type',
+        # 'analogy',
+        # 'humor',
+        # 'connection_to_everyday_life',
+        # 'content_units',
+        # 'internal_coherence',
+        # 'completeness',
+        # 'completeness_explicit',
+        # 'content_units_explicit',
+        # 'content_units'
+        # 'alternatives',
+        # 'articulation',
+        # 'flesch_kincaid',
+        # 'flesch_reading_ease',
+        # 'dale_chall',
+        'ari',
+        # 'perceived_truth'
 
         # 'correctness_reference:gpt_4o',
         # 'correctness_reference:gpt_4o_validation',
         # 'correctness_reference:llama_2_base',
     ]:
-        # plot_scores(metric, plot_type="strip", hide_models=[
-        #     # 'gpt_4',
-        #     # 'gpt_3_5_turbo',
-        #     # 'gpt_3_5_cot',
-        #     # 'gpt_4o',
-        # ], run_number=0)
-        winrate_matrix(metric_name=metric, run_number=0)
-        # winrate_matrix(metric, run_number=0)
+        plot_scores(metric, plot_type="strip", hide_models=[
+            # 'gpt_4',
+            # 'gpt_3_5_turbo',
+            # 'gpt_3_5_cot',
+            # 'gpt_4o',
+        ], run_number=0)
+        # winrate_matrix(metric_name=metric, run_number=0)
