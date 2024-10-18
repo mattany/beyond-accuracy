@@ -61,6 +61,17 @@ would be coded as having two content units. Return the amount of content units i
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
 )
 
+content_units_metric_explicit = GEval(
+    name="Content Units Explicit",
+    evaluation_steps=[
+        'A standalone fact is a fact that does not depend on other facts. Identify and extract all standalone facts from the Actual Output.',
+        'Count each standalone fact as a separate content unit.',
+        'Pay no attention to other dimensions such as factual correctness.',
+        'Return the amount of content units present in the Actual Output.',
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+)
+
 connection_to_everyday_life_metric = GEval(
     name="Connection to everyday life",
     evaluation_steps="""Check the output contains an explicit connection to common knowledge, a previous event, or a news
