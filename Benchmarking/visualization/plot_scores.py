@@ -144,25 +144,25 @@ if __name__ == "__main__":
     # correlation_heatmap("humor", "metaphor")
     # correlation_heatmap_between_columns("completeness")
     for metric in [
-        # 'jargon',
-        # 'metaphor_explicit',
-        # 'explanation_type',
-        # 'analogy',
-        # 'humor',
-        # 'connection_to_everyday_life',
-        # 'content_units',
-        # 'internal_coherence',
-        # 'completeness',
-        # 'completeness_explicit',
-        # 'content_units_explicit',
-        # 'content_units'
-        # 'alternatives',
-        # 'articulation',
-        # 'flesch_kincaid',
-        # 'flesch_reading_ease',
-        # 'dale_chall',
+        'jargon',
+        'metaphor_explicit',
+        'explanation_type',
+        'analogy',
+        'humor',
+        'connection_to_everyday_life',
+        'content_units',
+        'internal_coherence',
+        'completeness',
+        'completeness_explicit',
+        'content_units_explicit',
+        'content_units'
+        'alternatives',
+        'articulation',
+        'flesch_kincaid',
+        'flesch_reading_ease',
+        'dale_chall',
         'ari',
-        # 'perceived_truth'
+        'perceived_truth'
 
         # 'correctness_reference:gpt_4o',
         # 'correctness_reference:gpt_4o_validation',
