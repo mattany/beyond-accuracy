@@ -2,7 +2,9 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
-from config import PROJECT_DIR
+from config import PROJECT_DIR, RUN_ID
+
+
 # Create the violin plot
 # plt.figure(figsize=(10, 6))
 # sns.violinplot(x='Model', y='Score', inner='box', data=df_long)
@@ -38,7 +40,7 @@ def plot_figure(metric_name, data, type="swarm"):
 # Load the data from CSV
 # Update the file path as needed
 def plot_scores(metric_name, plot_type="swarm", hide_models=None, run_number=0):
-    df = pd.read_csv(f'/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/{metric_name}_evaluation_scores_run_{run_number}.csv')
+    df = pd.read_csv(f'{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{run_number}/{metric_name}_evaluation_scores.csv')
     score_columns = [col for col in df.columns if 'score' in col]
     df = df[score_columns]
     df = df.reindex(sorted(df.columns), axis=1)
@@ -59,7 +61,7 @@ def plot_scores(metric_name, plot_type="swarm", hide_models=None, run_number=0):
 
 
 def correlation_heatmap_between_columns(metric_name):
-    df = pd.read_csv(f'{PROJECT_DIR}/Benchmarking/deep_eval/data/{metric_name}_evaluation_scores_run_0.csv')
+    df = pd.read_csv(f'{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{RUN_ID}/{metric_name}_evaluation_scores.csv')
     score_columns = [col for col in df.columns if 'score' in col]
     df = df[score_columns]
     df.columns = [col.split('__')[1] for col in df.columns]
@@ -115,12 +117,12 @@ def correlation_heatmap(metric_1, metric_2):
     # Create sample data for two dataframes
     np.random.seed(0)  # For reproducibility
 
-    df1 = pd.read_csv(f'/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/{metric_1}_evaluation_scores_run_0.csv')
+    df1 = pd.read_csv(f'{PROJECT_DIR}/Benchmarking/deep_eval/data/{metric_1}_evaluation_scores_run_0.csv')
     score_columns = [col for col in df1.columns if 'score' in col]
     df1 = df1[score_columns]
     df1.columns = [col.split('__')[1] for col in df1.columns]
 
-    df2 = pd.read_csv(f'/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/{metric_2}_evaluation_scores_run_0.csv')
+    df2 = pd.read_csv(f'{PROJECT_DIR}/Benchmarking/deep_eval/data/{metric_2}_evaluation_scores_run_0.csv')
     score_columns = [col for col in df2.columns if 'score' in col]
     df2 = df2[score_columns]
     df2.columns = [col.split('__')[1] for col in df2.columns]
@@ -145,24 +147,22 @@ if __name__ == "__main__":
     # correlation_heatmap_between_columns("completeness")
     for metric in [
         'jargon',
-        'metaphor_explicit',
         'explanation_type',
-        'analogy',
-        'humor',
-        'connection_to_everyday_life',
-        'content_units',
-        'internal_coherence',
-        'completeness',
-        'completeness_explicit',
+        'metaphor_explicit',
         'content_units_explicit',
-        'content_units'
-        'alternatives',
-        'articulation',
-        'flesch_kincaid',
-        'flesch_reading_ease',
-        'dale_chall',
-        'ari',
-        'perceived_truth'
+        'humor_explicit',
+        'analogy_explicit',
+        'connection_to_everyday_life',
+        'internal_coherence_explicit',
+        # 'completeness_explicit',
+        # 'alternatives_explicit',
+        # 'articulation_explicit',
+        # 'perceived_truth_explicit',
+        # 'flesch_kincaid',
+        # 'flesch_reading_ease',
+        # 'dale_chall',
+        # 'ari',
+        # 'perceived_truth'
 
         # 'correctness_reference:gpt_4o',
         # 'correctness_reference:gpt_4o_validation',
@@ -173,5 +173,5 @@ if __name__ == "__main__":
             # 'gpt_3_5_turbo',
             # 'gpt_3_5_cot',
             # 'gpt_4o',
-        ], run_number=0)
+        ], run_number=3)
         # winrate_matrix(metric_name=metric, run_number=0)

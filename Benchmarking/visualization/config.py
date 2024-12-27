@@ -1,1 +1,2 @@
-PROJECT_DIR = "/Users/mattan.yeroushalmi/studies/thesis"
+PROJECT_DIR = "/Users/mattan/thesis"
+RUN_ID = 3
