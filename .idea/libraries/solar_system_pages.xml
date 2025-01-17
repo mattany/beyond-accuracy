@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="solar_system_pages">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/RAG/SolarSystem_pages/solar_system_pages.zip!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
