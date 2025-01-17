@@ -1152,3 +1152,8 @@
 /.idea/vcs.xml
 /SFT/.idea/vcs.xml
 /SFT/.idea/SFT.iml
+/.idea/*
+/SFT/batch_file_gen/config.py
+/Benchmarking/*/config.py
+
+
