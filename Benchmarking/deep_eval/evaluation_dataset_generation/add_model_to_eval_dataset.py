@@ -1,4 +1,6 @@
 import os
+from time import sleep
+
 import pandas as pd
 from pathlib import Path
 # from langchain_openai import ChatOpenAI
@@ -38,8 +40,12 @@ Question: {question}""")
 
 # === Create a Runnable that maps prompts to model ===
 chain = prompt | llm
-responses = chain.batch([{"question": q} for q in questions])
-
+batch_size = 5
+rate_limit_duration = 60
+responses = []
+for i in tqdm(range(0, len(questions), batch_size)):
+    responses += chain.batch([{"question": q} for q in questions[i:i+batch_size]])
+    sleep(rate_limit_duration)
 # === Extract responses from Message objects ===
 df[model_name] = [resp.content for resp in responses]
 print([resp.content for resp in responses])
