@@ -72,7 +72,7 @@ story that was not already embedded in the question.""",
 humor_metric_explicit = GEval(
     name="Humor Explicit",
     evaluation_steps=["1. Determine if the explanation includes explicit jokes or ironic language.",
-                      "2. Return a score of 10 if jokes or ironic language are present in the answer, and 0 otherwise."
+                      "2. Return a score of 10 if jokes or ironic language are present in the answer, and 0 otherwise.",
                       "3. If you aren't sure whether the answer contains jokes or ironic language, return a score of 5."],
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT]
 )
