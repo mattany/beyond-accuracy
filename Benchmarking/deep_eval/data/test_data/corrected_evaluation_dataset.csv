@@ -1,4 +1,4 @@
-index,full_dataset_index,question,base_model_answer,sft_model_answer,gpt_3_5_outputs,gpt_4o_outputs,llama3_1_instruct_answer,gpt_3_5_cot,gpt_4_outputs,llama70B,llama70B_SFT,llama3_1_sft,o1,claude-3-7-sonnet-20250219
+index,full_dataset_index,question,llama-2-7b,SciComma-2-7b,gpt_3_5_outputs,gpt_4o_outputs,llama3_1_instruct_answer,gpt_3_5_cot,gpt_4_outputs,llama-3.3-70b,SciComma-3.3-70B,SciComma-3.1-8B,o1,claude-3-7-sonnet-20250219
 0,84,"joey chestnut ate 70 hotdogs in 10 minute today. what is your bodies reaction to 19,600 calories in that short of timespan?","Joey Chestnut's hot dog-eating feat is truly impressive! In just 10 minutes, he consumed 70 hot dogs, which is equivalent to approximately 19,600 calories.
 
 While it's difficult to accurately predict the exact physiological response to such a large caloric intake in such a short period of time, it's safe to say that it would likely cause a significant spike in blood sugar and insulin levels. This could lead to a range of symptoms, including:
