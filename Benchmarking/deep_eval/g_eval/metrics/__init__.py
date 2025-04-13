@@ -8,7 +8,11 @@ from explanation_quality_metrics import (
     correctness_metric_explicit
 )
 from zemla_metrics import (
-a
+    internal_coherence_metric_explicit,
+    completeness_metric_explicit,
+    alternatives_metric_explicit,
+    articulation_metric_explicit,
+    perceived_truth_metric_explicit
 )
 from jargon_metric import (
     jargon_metric
