@@ -1,7 +1,9 @@
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCaseParams
 
-explanation_type_metric = GEval(
+from g_eval.metrics.constants import g_eval_default_params
+
+explanation_type_metric_explicit = GEval(
     name="Explanation Type",
     evaluation_steps=[
         """1.Given the below 5 numbered categories of explanation, assign a score matching the most advanced explanation type present in the answer.
@@ -44,6 +46,7 @@ explanation_type_metric = GEval(
         "3. If an answer contains multiple types of explanations, assign the score based on the best explanation type in the answer.",
     ],
     evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
 )
 
 content_units_metric_explicit = GEval(
@@ -55,9 +58,10 @@ content_units_metric_explicit = GEval(
         '4. Return the amount of content units present in the Actual Output.',
     ],
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
 )
 
-connection_to_everyday_life_metric = GEval(
+connection_to_everyday_life_metric_explicit = GEval(
     name="Connection to everyday life",
     evaluation_steps=[
         """1.Check the output contains an explicit connection to common knowledge, a previous event, or a news
@@ -65,6 +69,7 @@ story that was not already embedded in the question.""",
     "2. Return a score of 10 if the above holds, and a score of 0 otherwise."
     ],
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
 )
 
 
@@ -74,7 +79,8 @@ humor_metric_explicit = GEval(
     evaluation_steps=["1. Determine if the explanation includes explicit jokes or ironic language.",
                       "2. Return a score of 10 if jokes or ironic language are present in the answer, and 0 otherwise.",
                       "3. If you aren't sure whether the answer contains jokes or ironic language, return a score of 5."],
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT]
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
 )
 
 
@@ -90,6 +96,7 @@ the source (familiar situation) and the target (novel situation).
     "4. If you aren't sure whether the answer contains a analogy or not, return a score of 5.",
     ],
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
 )
 
 metaphor_metric_explicit = GEval(
@@ -104,6 +111,7 @@ target; similarities can be associative.
     "4. If you aren't sure whether the answer contains a metaphor or not, return a score of 5.",
     ],
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
 )
 
 correctness_metric_explicit = GEval(
@@ -113,44 +121,45 @@ correctness_metric_explicit = GEval(
         "2. Return a grade on a scale from 0 to 10 where 0 is completely false, and 10 is completely true.",
     ],
     evaluation_params=[LLMTestCaseParams.EXPECTED_OUTPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
 )
 
 
 ### Deprecated Metrics ###
 
-analogy_metric = GEval(
-    name="Analogy",
-    criteria="""Analogies are defined as a systematic mapping between two situations:
-the source (familiar situation) and the target (novel situation). Determine whether the explanation includes analogies.""",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
-)
-
-
-metaphor_metric = GEval(
-    name="Metaphor",
-    criteria="""Metaphors structure one concept in terms of another. Unlike
-analogies, metaphors do not necessarily map directly between source and
-target; similarities can be associative. Determine whether the explanation includes metaphors or not. Do not take correctness into account.""",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
-)
-
-correctness_metric = GEval(
-    name="Correctness",
-    criteria="Determine whether the actual output is factually correct based on the expected output.",
-    evaluation_params=[LLMTestCaseParams.EXPECTED_OUTPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
-)
-
-content_units_metric = GEval(
-    name="Content Units",
-    criteria="""A "content unit" is defined as any standalone
-fact. For example, the sentence "Two facts motivate my research—first, diverse systems are healthier
-systems, and second, humans are rapidly altering diversity around the globe"
-would be coded as having two content units. Return the amount of content units in the answer.""",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
-)
-
-humor_metric = GEval(
-    name="Humor",
-    criteria="The explanation includes explicit jokes or ironic language.",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
-)
+# analogy_metric = GEval(
+#     name="Analogy",
+#     criteria="""Analogies are defined as a systematic mapping between two situations:
+# the source (familiar situation) and the target (novel situation). Determine whether the explanation includes analogies.""",
+#     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+# )
+#
+#
+# metaphor_metric = GEval(
+#     name="Metaphor",
+#     criteria="""Metaphors structure one concept in terms of another. Unlike
+# analogies, metaphors do not necessarily map directly between source and
+# target; similarities can be associative. Determine whether the explanation includes metaphors or not. Do not take correctness into account.""",
+#     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+# )
+#
+# correctness_metric = GEval(
+#     name="Correctness",
+#     criteria="Determine whether the actual output is factually correct based on the expected output.",
+#     evaluation_params=[LLMTestCaseParams.EXPECTED_OUTPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+# )
+#
+# content_units_metric = GEval(
+#     name="Content Units",
+#     criteria="""A "content unit" is defined as any standalone
+# fact. For example, the sentence "Two facts motivate my research—first, diverse systems are healthier
+# systems, and second, humans are rapidly altering diversity around the globe"
+# would be coded as having two content units. Return the amount of content units in the answer.""",
+#     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+# )
+#
+# humor_metric = GEval(
+#     name="Humor",
+#     criteria="The explanation includes explicit jokes or ironic language.",
+#     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+# )

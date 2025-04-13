@@ -1,6 +1,4 @@
-from deepeval.test_case import LLMTestCaseParams
-
-from readability_metrics.readability import ReadabilityMetric
+from g_eval.classes import ReadabilityMetric
 
 # r = Readability(text)
 #
