@@ -3,10 +3,9 @@ import os
 from readability.exceptions import ReadabilityException
 from tqdm import tqdm
 from Jargon.jargon_metric import JargonMetric
-from config import PROJECT_DIR
+from config import PROJECT_DIR, OPENAI_API_KEY
 from readability_metrics.readablity_metrics import flesch_kincaid, flesch_reading_ease, dale_chall, ari
 
-OPENAI_API_KEY = "sk-proj-4reyI857Dx1FXwMAjCtCT3BlbkFJVrdDBRixPZCAHIfntrKN"
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 GEVAL_RETRIES = 3
 import pandas as pd
