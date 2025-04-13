@@ -14,8 +14,11 @@ model_columns = [col for col in df.columns if col not in non_model_columns]
 comparison_rows = []
 pair_metadata_rows = []
 random.seed(42)
+limit = 20
 # Loop through each row in the dataset
 for i, row in df.iterrows():
+    if i >= limit:
+        break
     question = row['question']
     question_index = row['index']
 
@@ -51,7 +54,7 @@ for i, row in df.iterrows():
             "model_a": model_a,
             "model_b": model_b
         })
-
+random.shuffle(comparison_rows)
 # Convert to DataFrames
 comparison_df = pd.DataFrame(comparison_rows)
 metadata_df = pd.DataFrame(pair_metadata_rows)
