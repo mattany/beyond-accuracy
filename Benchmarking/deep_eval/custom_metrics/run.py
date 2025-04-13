@@ -43,7 +43,6 @@ async def get_metric_scores_for_model(
 ):
     scores = {}
     reasons = {}
-    pbar.set_description(f"Progress for model {model_name}")
     tasks = [
         evaluate_row(
             index,
@@ -103,6 +102,7 @@ async def evaluate_row(
         else:
             print(f"Warning: row #{index} failed for model {model_name}")
         if pbar:
+            pbar.set_description(f"added result for model {model_name}")
             pbar.update(1)
 
 
@@ -143,10 +143,8 @@ async def generate_metric_report(
 ):
     eval_df = pd.read_csv(evaluation_dataset)
     for metric, metric_function in metrics.items():
-        semaphore = asyncio.Semaphore(100)
-        pbar = tqdm(
-            total=len(models_to_evaluate) * len(eval_df)
-        )
+        semaphore = asyncio.Semaphore(80)
+        pbar = tqdm(total=len(models_to_evaluate) * len(eval_df))
         tasks = [
             get_metric_scores_for_model(
                 eval_df,
@@ -173,11 +171,11 @@ async def generate_metric_report(
                 result["scores"],
                 result["reasons"],
             )
-            print(f"adding reuslt for model {model_name}")
             scores = [scores_dict.get(i, None) for i in range(len(eval_df))]
             reasons = [reasons_dict.get(i, None) for i in range(len(eval_df))]
             output_df[f"{model_name}__score"] = scores
-            output_df[f"{model_name}__reason"] = reasons
+            if any(reasons):
+                output_df[f"{model_name}__reason"] = reasons
         output_df.to_csv(output_path, index=False)
 
 
@@ -236,25 +234,25 @@ if __name__ == "__main__":
         generate_metric_report(
             metrics={
                 ## BARAM TSABARI METRICS
-                "jargon": jargon_metric,
-                # "explanation_type": explanation_type_metric_explicit,
-                # "metaphor_explicit": metaphor_metric_explicit,
-                # "content_units_explicit": content_units_metric_explicit,
-                # "humor_explicit": humor_metric_explicit,
-                # "analogy_explicit": analogy_metric_explicit,
-                # "connection_to_everyday_life": connection_to_everyday_life_metric_explicit,
+                # "jargon": jargon_metric,
+                "explanation_type": explanation_type_metric_explicit,
+                "metaphor_explicit": metaphor_metric_explicit,
+                "content_units_explicit": content_units_metric_explicit,
+                "humor_explicit": humor_metric_explicit,
+                "analogy_explicit": analogy_metric_explicit,
+                "connection_to_everyday_life": connection_to_everyday_life_metric_explicit,
                 # ## ZEMLA METRICS
-                # "internal_coherence_explicit": internal_coherence_metric_explicit,
-                # "completeness_explicit": completeness_metric_explicit,
-                # "alternatives_explicit": alternatives_metric_explicit,
-                # "articulation_explicit": articulation_metric_explicit,
-                # "perceived_truth_explicit": perceived_truth_metric_explicit,
+                "internal_coherence_explicit": internal_coherence_metric_explicit,
+                "completeness_explicit": completeness_metric_explicit,
+                "alternatives_explicit": alternatives_metric_explicit,
+                "articulation_explicit": articulation_metric_explicit,
+                "perceived_truth_explicit": perceived_truth_metric_explicit,
                 # ## READING EASE
                 # "flesch_kincaid": flesch_kincaid,
                 # "flesch_reading_ease": flesch_reading_ease,
                 # "dale_chall": dale_chall,
                 # "ari": ari,
-                # ## CORRECTNESS METRICS
+                ## CORRECTNESS METRICS
                 # "correctness_explicit": correctness_metric_explicit,
             },
             evaluation_dataset="~/thesis/Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv",
