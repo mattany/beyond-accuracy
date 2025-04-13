@@ -143,7 +143,7 @@ async def generate_metric_report(
 ):
     eval_df = pd.read_csv(evaluation_dataset)
     for metric, metric_function in metrics.items():
-        semaphore = asyncio.Semaphore(80)
+        semaphore = asyncio.Semaphore(40)
         pbar = tqdm(total=len(models_to_evaluate) * len(eval_df))
         tasks = [
             get_metric_scores_for_model(
@@ -235,11 +235,11 @@ if __name__ == "__main__":
             metrics={
                 ## BARAM TSABARI METRICS
                 # "jargon": jargon_metric,
-                "explanation_type": explanation_type_metric_explicit,
-                "metaphor_explicit": metaphor_metric_explicit,
-                "content_units_explicit": content_units_metric_explicit,
-                "humor_explicit": humor_metric_explicit,
-                "analogy_explicit": analogy_metric_explicit,
+                # "explanation_type": explanation_type_metric_explicit,
+                # "metaphor_explicit": metaphor_metric_explicit,
+                # "content_units_explicit": content_units_metric_explicit,
+                # "humor_explicit": humor_metric_explicit,
+                # "analogy_explicit": analogy_metric_explicit,
                 "connection_to_everyday_life": connection_to_everyday_life_metric_explicit,
                 # ## ZEMLA METRICS
                 "internal_coherence_explicit": internal_coherence_metric_explicit,
@@ -257,7 +257,7 @@ if __name__ == "__main__":
             },
             evaluation_dataset="~/thesis/Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv",
             models_to_evaluate=models,
-            run_number=4,
+            run_number=5,
         )
     )
 
