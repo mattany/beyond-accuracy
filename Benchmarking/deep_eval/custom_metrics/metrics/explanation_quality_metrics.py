@@ -1,7 +1,7 @@
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCaseParams
 
-from g_eval.metrics.constants import g_eval_default_params
+from custom_metrics.metrics.constants import g_eval_default_params
 
 explanation_type_metric_explicit = GEval(
     name="Explanation Type",

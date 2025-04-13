@@ -8,7 +8,7 @@ os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 GEVAL_RETRIES = 3
 import pandas as pd
 from deepeval.test_case import LLMTestCase
-from g_eval.metrics import (
+from custom_metrics.metrics import (
     # baram tsabari metrics
     explanation_type_metric_explicit,
     connection_to_everyday_life_metric_explicit,
@@ -32,111 +32,136 @@ from g_eval.metrics import (
 )
 
 
-def update_or_insert_score_column(
-    eval_df,
-    output_path,
-    answer_column,
-    model_name,
-    metric_function,
-    metric_name,
-    reference_column=None,
+async def get_metric_scores_for_model(
+    eval_df, model_name, metric_function, semaphore, reference_column=None
 ):
-    scores = []
-    reasons = []
-    if reference_column:
-        metric_name = f"{metric_name}_with_reference_{reference_column}"
-    for index, row in tqdm(eval_df.iterrows(), total=eval_df.shape[0]):
-        if reference_column:
-            test_case = LLMTestCase(
-                input=row["question"],
-                actual_output=row[answer_column],
-                expected_output=row[reference_column],
+    async with semaphore:
+        scores = {}
+        reasons = {}
+        inner_semaphore = asyncio.Semaphore(20)
+        tasks = [
+            evaluate_row(
+                index,
+                metric_function,
+                model_name,
+                reasons,
+                reference_column,
+                row,
+                scores,
+                inner_semaphore,
             )
-        else:
-            test_case = LLMTestCase(
-                input=row["question"],
-                actual_output=row[answer_column],
-            )
+            for index, row in tqdm(eval_df.iterrows(), total=eval_df.shape[0])
+        ]
+        await asyncio.gather(*tasks)
+        return {"model_name": model_name, "scores": scores, "reasons": reasons}
+
+
+async def evaluate_row(
+    index,
+    metric_function,
+    model_name,
+    reasons,
+    reference_column,
+    row,
+    scores,
+    semaphore,
+):
+    async with semaphore:
+        test_case = LLMTestCase(
+            input=row["question"],
+            actual_output=row[model_name],
+            expected_output=row[reference_column] if reference_column else None,
+        )
+        success = False
         for i in range(GEVAL_RETRIES):
             try:
-                metric_function.measure(test_case)
+                await metric_function.a_measure(test_case)
+                success = True
                 break
             except ValueError:
-                print(f"Try #{i + 1}. Encountered invalid JSON. Retrying...")
+                print(
+                    f"Question index: {index}. Try #{i + 1}. Encountered invalid JSON. Retrying..."
+                )
                 continue
             except ReadabilityException as e:
-                print(f"Ran into readability exception: {e}. Continuing")
+                print(
+                    f"Question index: {index}. Try #{i + 1}. Ran into readability exception: {e}. Continuing"
+                )
                 break
+        if success:
+            scores[index] = metric_function.score
+            if getattr(metric_function, "reason"):
+                print("reason:", metric_function.reason)
+                reasons[index] = metric_function.reason
 
-        # print(f"EVAL STEPS: {metric_function.evaluation_steps}")
 
-        # print("Question:", row['question'])
-        # print(f"{answer_column}:", row[answer_column])
-        # print("result:", metric_function.score)
-        scores.append(metric_function.score)
-
-        if getattr(metric_function, "reason"):
-            print("reason:", metric_function.reason)
-            reasons.append(metric_function.reason)
-    if os.path.exists(output_path):
-        output_df = pd.read_csv(output_path)
-    else:
-        output_df = pd.DataFrame()
-    output_df[f"{model_name}__score"] = scores
-    if reasons:
-        output_df[f"{model_name}__reason"] = reasons
-    output_df.to_csv(output_path, index=False)
-    return eval_df
-    # print(row['question'])
-    # print(row['answer'])
-    # print("\n")
+# async def generate_metric_report_with_reference_models(
+#     metrics,
+#     evaluation_dataset,
+#     models,
+#     reference_models=None,
+#     models_to_evaluate=None,
+#     run_number=0,
+# ):
+#     if not models_to_evaluate:
+#         models_to_evaluate = models
+#     eval_df = pd.read_csv(evaluation_dataset)
+#     for metric, metric_function in metrics.items():
+#         for model in models_to_evaluate:
+#             for reference_model in reference_models:
+#                 if reference_model == model:
+#                     continue
+#                 print(
+#                     f"Evaluating {metric} for model with reference model {reference_model}"
+#                 )
+#                 await update_or_insert_score_column(
+#                     eval_df,
+#                     output_path=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{run_number}/{metric}_reference-{reference_model}_evaluation_scores.csv",
+#                     model_name=model,
+#                     metric_function=metric_function,
+#                     semaphore=False,
+#                     reference_column=models[reference_model],
+#                 )
 
 
 async def generate_metric_report(
     metrics,
     evaluation_dataset,
-    model_map,
-    reference_models=None,
-    models_to_evaluate=None,
+    models_to_evaluate,
     run_number=0,
 ):
-    if not models_to_evaluate:
-        models_to_evaluate = model_map.keys()
     eval_df = pd.read_csv(evaluation_dataset)
     for metric, metric_function in metrics.items():
-        for model in models_to_evaluate:
-            answer_column = model_map[model]
-            if reference_models:
-                for reference_model in reference_models:
-                    if reference_model == model:
-                        continue
-                    print(
-                        "Evaluating",
-                        metric,
-                        "for",
-                        model,
-                        "with reference model",
-                        reference_model,
-                    )
-                    update_or_insert_score_column(
-                        eval_df,
-                        output_path=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{run_number}/{metric}_reference-{reference_model}_evaluation_scores.csv",
-                        answer_column=answer_column,
-                        model_name=model,
-                        metric_function=metric_function,
-                        metric_name=metric,
-                        reference_column=model_map[reference_model],
-                    )
-            else:
-                print("Evaluating", metric, "for", model)
-                update_or_insert_score_column(
-                    eval_df,
-                    output_path=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{run_number}/{metric}_evaluation_scores.csv",
-                    answer_column=answer_column,
-                    model_name=model,
-                    metric_function=metric_function,
-                    metric_name=metric,
-                )
+        semaphore = asyncio.Semaphore(4)
+        tasks = [
+            get_metric_scores_for_model(
+                eval_df,
+                model_name=model,
+                metric_function=metric_function,
+                semaphore=semaphore,
+            )
+            for model in models_to_evaluate
+        ]
+        results = await asyncio.gather(*tasks)
+        output_path = (
+            f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{run_number}/{metric}.csv"
+        )
+        if os.path.exists(output_path):
+            output_df = pd.read_csv(output_path)
+        else:
+            output_df = pd.DataFrame()
+        for result in results:
+            model_name, scores_dict, reasons_dict = (
+                result["model_name"],
+                result["scores"],
+                result["resons"],
+            )
+            print(f"adding reuslt for model {model_name}")
+            scores = [scores_dict.get(i, None) for i in range(len(eval_df))]
+            reasons = [reasons_dict.get(i, None) for i in range(len(eval_df))]
+            output_df[f"{model_name}__score"] = scores
+            output_df[f"{model_name}__reason"] = reasons
+        output_df.to_csv(output_path, index=False)
 
 
 def check_reasons(model_map, model, metric, run_number=0):
@@ -193,41 +218,30 @@ if __name__ == "__main__":
     asyncio.run(
         generate_metric_report(
             metrics={
-                ## DEPRECATED
-                # 'metaphor': metaphor_metric,
-                # 'content_units': content_units_metric,
-                # 'humor': humor_metric,
-                # 'analogy': analogy_metric,
-                # 'completeness': completeness_metric,
-                # 'internal_coherence': internal_coherence_metric,
-                # 'alternatives': alternatives_metric,
-                # 'articulation': articulation_metric,
-                # 'correctness': correctness_metric
-                # 'perceived_truth': perceived_truth_metric,
                 ## BARAM TSABARI METRICS
                 "jargon": jargon_metric,
-                "explanation_type": explanation_type_metric_explicit,
-                "metaphor_explicit": metaphor_metric_explicit,
-                "content_units_explicit": content_units_metric_explicit,
-                "humor_explicit": humor_metric_explicit,
-                "analogy_explicit": analogy_metric_explicit,
-                "connection_to_everyday_life": connection_to_everyday_life_metric_explicit,
-                ## ZEMLA METRICS
-                "internal_coherence_explicit": internal_coherence_metric_explicit,
-                "completeness_explicit": completeness_metric_explicit,
-                "alternatives_explicit": alternatives_metric_explicit,
-                "articulation_explicit": articulation_metric_explicit,
-                "perceived_truth_explicit": perceived_truth_metric_explicit,
-                ## READING EASE
-                "flesch_kincaid": flesch_kincaid,
-                "flesch_reading_ease": flesch_reading_ease,
-                "dale_chall": dale_chall,
-                "ari": ari,
-                ## CORRECTNESS METRICS
-                "correctness_explicit": correctness_metric_explicit,
+                # "explanation_type": explanation_type_metric_explicit,
+                # "metaphor_explicit": metaphor_metric_explicit,
+                # "content_units_explicit": content_units_metric_explicit,
+                # "humor_explicit": humor_metric_explicit,
+                # "analogy_explicit": analogy_metric_explicit,
+                # "connection_to_everyday_life": connection_to_everyday_life_metric_explicit,
+                # ## ZEMLA METRICS
+                # "internal_coherence_explicit": internal_coherence_metric_explicit,
+                # "completeness_explicit": completeness_metric_explicit,
+                # "alternatives_explicit": alternatives_metric_explicit,
+                # "articulation_explicit": articulation_metric_explicit,
+                # "perceived_truth_explicit": perceived_truth_metric_explicit,
+                # ## READING EASE
+                # "flesch_kincaid": flesch_kincaid,
+                # "flesch_reading_ease": flesch_reading_ease,
+                # "dale_chall": dale_chall,
+                # "ari": ari,
+                # ## CORRECTNESS METRICS
+                # "correctness_explicit": correctness_metric_explicit,
             },
             evaluation_dataset="~/thesis/Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv",
-            model_map=MODEL_MAP,
+            models_to_evaluate=models,
             run_number=4,
         )
     )

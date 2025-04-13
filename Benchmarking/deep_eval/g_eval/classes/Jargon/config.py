@@ -1,1 +1,0 @@
-BASE_PATH = "/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/Jargon/"

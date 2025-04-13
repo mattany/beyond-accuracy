@@ -1,6 +1,6 @@
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCaseParams
-from constants import g_eval_default_params
+from custom_metrics.metrics.constants import g_eval_default_params
 
 internal_coherence_metric_explicit = GEval(
     name="Internal Coherence Explicit",

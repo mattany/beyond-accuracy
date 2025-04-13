@@ -11,7 +11,7 @@ from colorama import Fore, Style, init
 # Initialize colorama
 init(autoreset=True)
 
-from Jargon.config import BASE_PATH
+from custom_metrics.classes.Jargon.config import JARGON_BASE_PATH
 logger = logging.getLogger("main_logger")
 common_word_threshold = 1000
 mid_frequency_word_threshold = 50
@@ -119,9 +119,9 @@ def analyze_text(text: str, words: dict[str, int], names: list[str], verbose=Tru
 
 
 def calculate_grade(text: str):
-    names = pd.read_csv(BASE_PATH + "names.csv", header=None)[0].tolist()
+    names = pd.read_csv(JARGON_BASE_PATH + "names.csv", header=None)[0].tolist()
     # WORDS = "2024DataUKUS2020-2023.csv"
     WORDS = "DataUKUS2018-2021.csv"
-    words = pd.read_csv(BASE_PATH + WORDS, header=None).set_index(0)[1].to_dict()
-    return analyze_text(text, words, names)
+    words = pd.read_csv(JARGON_BASE_PATH + WORDS, header=None).set_index(0)[1].to_dict()
+    return analyze_text(text, words, names, verbose=False)
 

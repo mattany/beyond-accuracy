@@ -1,7 +1,7 @@
 
 import pandas as pd
 import logging
-from Jargon.jargon_util import calculate_grade
+from custom_metrics.classes.Jargon.jargon_util import calculate_grade
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 

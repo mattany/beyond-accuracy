@@ -1,4 +1,4 @@
-from g_eval.classes import ReadabilityMetric
+from custom_metrics.classes import ReadabilityMetric
 
 # r = Readability(text)
 #
