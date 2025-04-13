@@ -23,7 +23,7 @@ class WordFrequency(Enum):
     COMMON = 2
 
 
-def analyze_word(word: str, words: dict[str, int], names: list[str]) -> WordFrequency:
+def analyze_word(word: str, words: dict[str, int], names: set[str]) -> WordFrequency:
     if word in names:
         return WordFrequency.COMMON
 
@@ -101,7 +101,7 @@ def print_colored_words(words, frequencies):
 
 
 
-def analyze_text(text: str, words: dict[str, int], names: list[str], verbose=True) -> float:
+def analyze_text(text: str, words: dict[str, int], names: set[str], verbose=True) -> float:
     sanitized_text: list[str] = sanitize_words(text)
     frequency = {
         WordFrequency.RARE: 0,
@@ -118,10 +118,6 @@ def analyze_text(text: str, words: dict[str, int], names: list[str], verbose=Tru
     return calculate_score(len(sanitized_text), frequency)
 
 
-def calculate_grade(text: str):
-    names = pd.read_csv(JARGON_BASE_PATH + "names.csv", header=None)[0].tolist()
-    # WORDS = "2024DataUKUS2020-2023.csv"
-    WORDS = "DataUKUS2018-2021.csv"
-    words = pd.read_csv(JARGON_BASE_PATH + WORDS, header=None).set_index(0)[1].to_dict()
-    return analyze_text(text, words, names, verbose=False)
+def calculate_grade(text: str, names: set[str], words: dict[str, int]):
+    return analyze_text(text, words, set(names), verbose=False)
 

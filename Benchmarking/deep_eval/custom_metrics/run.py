@@ -33,27 +33,33 @@ from custom_metrics.metrics import (
 
 
 async def get_metric_scores_for_model(
-    eval_df, model_name, metric_function, semaphore, reference_column=None
+    eval_df,
+    model_name,
+    metric_function,
+    semaphore,
+    reference_column=None,
+    pbar=None,
+    position=None,
 ):
-    async with semaphore:
-        scores = {}
-        reasons = {}
-        inner_semaphore = asyncio.Semaphore(20)
-        tasks = [
-            evaluate_row(
-                index,
-                metric_function,
-                model_name,
-                reasons,
-                reference_column,
-                row,
-                scores,
-                inner_semaphore,
-            )
-            for index, row in tqdm(eval_df.iterrows(), total=eval_df.shape[0])
-        ]
-        await asyncio.gather(*tasks)
-        return {"model_name": model_name, "scores": scores, "reasons": reasons}
+    scores = {}
+    reasons = {}
+    pbar.set_description(f"Progress for model {model_name}")
+    tasks = [
+        evaluate_row(
+            index,
+            metric_function,
+            model_name,
+            reasons,
+            reference_column,
+            row,
+            scores,
+            semaphore,
+            pbar,
+        )
+        for index, row in eval_df.iterrows()
+    ]
+    await asyncio.gather(*tasks)
+    return {"model_name": model_name, "scores": scores, "reasons": reasons}
 
 
 async def evaluate_row(
@@ -65,6 +71,7 @@ async def evaluate_row(
     row,
     scores,
     semaphore,
+    pbar=None,
 ):
     async with semaphore:
         test_case = LLMTestCase(
@@ -93,6 +100,10 @@ async def evaluate_row(
             if getattr(metric_function, "reason"):
                 print("reason:", metric_function.reason)
                 reasons[index] = metric_function.reason
+        else:
+            print(f"Warning: row #{index} failed for model {model_name}")
+        if pbar:
+            pbar.update(1)
 
 
 # async def generate_metric_report_with_reference_models(
@@ -132,15 +143,20 @@ async def generate_metric_report(
 ):
     eval_df = pd.read_csv(evaluation_dataset)
     for metric, metric_function in metrics.items():
-        semaphore = asyncio.Semaphore(4)
+        semaphore = asyncio.Semaphore(100)
+        pbar = tqdm(
+            total=len(models_to_evaluate) * len(eval_df)
+        )
         tasks = [
             get_metric_scores_for_model(
                 eval_df,
                 model_name=model,
                 metric_function=metric_function,
                 semaphore=semaphore,
+                pbar=pbar,
+                position=i + 1,
             )
-            for model in models_to_evaluate
+            for i, model in enumerate(models_to_evaluate)
         ]
         results = await asyncio.gather(*tasks)
         output_path = (
@@ -149,12 +165,13 @@ async def generate_metric_report(
         if os.path.exists(output_path):
             output_df = pd.read_csv(output_path)
         else:
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
             output_df = pd.DataFrame()
         for result in results:
             model_name, scores_dict, reasons_dict = (
                 result["model_name"],
                 result["scores"],
-                result["resons"],
+                result["reasons"],
             )
             print(f"adding reuslt for model {model_name}")
             scores = [scores_dict.get(i, None) for i in range(len(eval_df))]
