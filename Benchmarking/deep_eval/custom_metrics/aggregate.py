@@ -37,12 +37,11 @@ def aggregate_over_model_question(
         full_path = os.path.join(directory, file_name)
         df = pd.read_csv(full_path)
 
-        # Remove reason columns if they exist
+        # Filter to score columns only (exclude "reason" columns)
         score_columns = [
             col for col in df.columns if not col.lower().endswith("reason")
         ]
-
-        df_scores = df[score_columns]
+        df_scores = df[score_columns].copy()
         is_lower_better = file_name in lower_is_better_metrics
         df_normalized = normalize_df(df_scores, is_lower_better)
         normalized_dfs.append(df_normalized)
@@ -53,7 +52,7 @@ def aggregate_over_model_question(
         raise ValueError(f"Mismatch in shapes across CSVs: {shape_set}")
 
     # Average the scores
-    aggregated_df = sum(normalized_dfs) / len(normalized_dfs)
+    aggregated_df = pd.concat(normalized_dfs).groupby(level=0).mean()
     output_path = os.path.join(directory, "aggregate_scores.csv")
     aggregated_df.to_csv(output_path, index=False)
     print(f"Aggregate scores written to {output_path}")
@@ -115,5 +114,5 @@ if __name__ == "__main__":
     aggregate_over_model_question(
         directory=csv_path,
         ignore_files=["normalized_means.csv"],
-        lower_is_better_metrics=lower_is_better_metrics
+        lower_is_better_metrics=lower_is_better_metrics,
     )
