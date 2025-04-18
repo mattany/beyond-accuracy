@@ -1,0 +1,64 @@
+import pandas as pd
+import itertools
+from config import PROJECT_DIR, RUN_NUMBER
+
+
+def generate_pairwise_comparisons(scores_path, answers_path, output_path):
+    # Load aggregate scores
+    scores_df = pd.read_csv(scores_path, index_col="Index")
+
+    # Load model answers
+    answers_df = pd.read_csv(answers_path, index_col="index")
+
+    # Extract question text and model names
+    prompt_column = "question"
+    model_columns = [col for col in answers_df.columns if col not in [prompt_column, 'full_dataset_index']]
+
+    rows = []
+
+    for idx, row in answers_df.iterrows():
+        prompt = row[prompt_column]
+        question_id = idx
+
+        for model1, model2 in itertools.combinations(model_columns, 2):
+            score1 = scores_df.at[question_id, f"{model1}__score"]
+            score2 = scores_df.at[question_id, f"{model2}__score"]
+
+            if pd.isna(score1) or pd.isna(score2):
+                continue  # skip pairs with missing scores
+
+            if score1 == score2:
+                continue  # skip ties (or you could include both directions if needed)
+
+            # Choose the higher scoring model as chosen
+            if score1 > score2:
+                chosen_model, rejected_model = model1, model2
+                chosen_score, rejected_score = score1, score2
+            else:
+                chosen_model, rejected_model = model2, model1
+                chosen_score, rejected_score = score2, score1
+
+            rows.append(
+                {
+                    "prompt": prompt,
+                    "chosen": row[chosen_model],
+                    "rejected": row[rejected_model],
+                    "chosen_model": chosen_model,
+                    "rejected_model": rejected_model,
+                    "question_id": question_id,
+                    "chosen_model_score": chosen_score,
+                    "rejected_model_score": rejected_score,
+                }
+            )
+
+    result_df = pd.DataFrame(rows)
+    result_df.to_csv(output_path, index=False)
+    print(f"Pairwise comparison dataset written to {output_path}")
+
+
+if __name__ == "__main__":
+    generate_pairwise_comparisons(
+        scores_path=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{RUN_NUMBER}/aggregations/aggregate_scores.csv",
+        answers_path=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv",
+        output_path=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{RUN_NUMBER}/aggregations/preference_dataset_with_metadata.csv",
+    )

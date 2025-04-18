@@ -199,7 +199,65 @@ def correlation_heatmap(metric_1, metric_2):
     plt.show()
 
 
+def display_means(run_number, prefix=""):
+    # Read the means.csv
+    df = pd.read_csv(
+        f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{run_number}/{prefix}means.csv"
+    )
+
+    # Separate out the metric labels and the numeric data
+    metrics = df["metric"]
+    data = df.drop(columns=["metric"])
+
+    # Calculate the average score for each metric (row-wise mean)
+    metric_averages = data.mean(axis=1)
+
+
+
+    # Create a DataFrame with metric names and their average values
+    avg_df = pd.DataFrame({
+        "metric": metrics,
+        "average": metric_averages
+    })
+
+    # Sort metrics by average value
+    avg_df_sorted = avg_df.sort_values(by="average", ascending=True)
+
+    # Split the metrics into 4 groups
+    groups = np.array_split(avg_df_sorted, 4)
+
+    # Create a separate figure for each group
+    for group_index, group in enumerate(groups, start=1):
+        group_metrics = group["metric"].values
+        group_indices = df["metric"].isin(group_metrics)
+        group_data = data[group_indices]
+
+        # Compute the average score for each column (across the selected metrics in this group)
+        column_means = group_data.mean(axis=0)
+
+        # Sort the columns by average score in descending order (best to worst)
+        sorted_columns = column_means.sort_values(ascending=False).index.tolist()
+        sorted_data = group_data[sorted_columns]
+
+        # Plot
+        plt.figure(figsize=(10, 6))
+        x_positions = range(len(sorted_columns))
+
+        for i, row in sorted_data.iterrows():
+            plt.scatter(x_positions, row.values, label=metrics[i])
+
+        # Labeling
+        plt.xticks(x_positions, sorted_columns, rotation=45, verticalalignment="top", horizontalalignment="right")
+        plt.xlabel("Columns (Sorted by Average Score)")
+        plt.ylabel("Mean Values")
+        plt.title(f"Strip Plot of Means (Group {group_index})")
+        plt.legend(title="Metric", bbox_to_anchor=(1.05, 1), loc="upper left")
+        plt.tight_layout()
+        plt.show()
+
+
 if __name__ == "__main__":
+    display_means(run_number=5, prefix="normalized_")
     # correlation_heatmap("humor", "metaphor")
     # correlation_heatmap_between_columns("completeness")
     for metric in [
@@ -224,15 +282,16 @@ if __name__ == "__main__":
         # 'correctness_reference:gpt_4o_validation',
         # 'correctness_reference:llama_2_base',
     ]:
-        plot_scores(
-            metric,
-            plot_type="strip",
-            hide_models=[
-                # 'gpt_4',
-                # 'gpt_3_5_turbo',
-                # 'gpt_3_5_cot',
-                # 'gpt_4o',
-            ],
-            run_number=5,
-        )
+        pass
+        # plot_scores(
+        #     metric,
+        #     plot_type="strip",
+        #     hide_models=[
+        #         # 'gpt_4',
+        #         # 'gpt_3_5_turbo',
+        #         # 'gpt_3_5_cot',
+        #         # 'gpt_4o',
+        #     ],
+        #     run_number=5,
+        # )
         # winrate_matrix(metric_name=metric, run_number=0)

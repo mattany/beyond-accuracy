@@ -53,7 +53,7 @@ def aggregate_over_model_question(
 
     # Average the scores
     aggregated_df = pd.concat(normalized_dfs).groupby(level=0).mean()
-    output_path = os.path.join(directory, "aggregate_scores.csv")
+    output_path = os.path.join(directory, "aggregations/aggregate_scores.csv")
     aggregated_df.index.name = "Index"
     aggregated_df.to_csv(output_path, index=True)
     print(f"Aggregate scores written to {output_path}")
@@ -61,7 +61,7 @@ def aggregate_over_model_question(
 
 def aggregate_over_model_metric(directory, lower_is_better_metrics):
     def process_csvs():
-        output_file = os.path.join(directory, "normalized_means.csv")
+        output_file = os.path.join(directory, "aggregations/normalized_means.csv")
         # Delete normalized_means.csv if it exists
         if os.path.exists(output_file):
             os.remove(output_file)
@@ -106,6 +106,7 @@ def aggregate_over_model_metric(directory, lower_is_better_metrics):
 
 
 if __name__ == "__main__":
+    os.makedirs(f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{run_number}/aggregations", exist_ok=True)
     csv_path = f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{run_number}"
     lower_is_better_metrics = ["ari", "dale_chall", "flesch_kincaid"]
     # aggregate_over_model_metric(
@@ -114,6 +115,6 @@ if __name__ == "__main__":
     # )
     aggregate_over_model_question(
         directory=csv_path,
-        ignore_files=["normalized_means.csv", "aggregate_scores.csv"],
+        ignore_files=[],
         lower_is_better_metrics=lower_is_better_metrics,
     )
