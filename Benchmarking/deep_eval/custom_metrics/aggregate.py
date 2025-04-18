@@ -55,6 +55,11 @@ def aggregate_over_model_question(
     aggregated_df = pd.concat(normalized_dfs).groupby(level=0).mean()
     output_path = os.path.join(directory, "aggregations/aggregate_scores.csv")
     aggregated_df.index.name = "Index"
+    suffix = "__score"
+    aggregated_df.columns = [
+        col[: -len(suffix)] if col.endswith(suffix) else col for col in aggregated_df.columns
+    ]
+
     aggregated_df.to_csv(output_path, index=True)
     print(f"Aggregate scores written to {output_path}")
 
@@ -106,7 +111,10 @@ def aggregate_over_model_metric(directory, lower_is_better_metrics):
 
 
 if __name__ == "__main__":
-    os.makedirs(f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{run_number}/aggregations", exist_ok=True)
+    os.makedirs(
+        f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{run_number}/aggregations",
+        exist_ok=True,
+    )
     csv_path = f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{run_number}"
     lower_is_better_metrics = ["ari", "dale_chall", "flesch_kincaid"]
     # aggregate_over_model_metric(
