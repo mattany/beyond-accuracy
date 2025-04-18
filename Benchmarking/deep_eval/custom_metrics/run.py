@@ -234,12 +234,12 @@ if __name__ == "__main__":
         generate_metric_report(
             metrics={
                 ## BARAM TSABARI METRICS
-                # "jargon": jargon_metric,
-                # "explanation_type": explanation_type_metric_explicit,
-                # "metaphor_explicit": metaphor_metric_explicit,
-                # "content_units_explicit": content_units_metric_explicit,
-                # "humor_explicit": humor_metric_explicit,
-                # "analogy_explicit": analogy_metric_explicit,
+                "jargon": jargon_metric,
+                "explanation_type": explanation_type_metric_explicit,
+                "metaphor_explicit": metaphor_metric_explicit,
+                "content_units_explicit": content_units_metric_explicit,
+                "humor_explicit": humor_metric_explicit,
+                "analogy_explicit": analogy_metric_explicit,
                 "connection_to_everyday_life": connection_to_everyday_life_metric_explicit,
                 # ## ZEMLA METRICS
                 "internal_coherence_explicit": internal_coherence_metric_explicit,
