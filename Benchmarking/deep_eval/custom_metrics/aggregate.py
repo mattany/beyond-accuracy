@@ -54,7 +54,8 @@ def aggregate_over_model_question(
     # Average the scores
     aggregated_df = pd.concat(normalized_dfs).groupby(level=0).mean()
     output_path = os.path.join(directory, "aggregate_scores.csv")
-    aggregated_df.to_csv(output_path, index=False)
+    aggregated_df.index.name = "Index"
+    aggregated_df.to_csv(output_path, index=True)
     print(f"Aggregate scores written to {output_path}")
 
 
@@ -113,6 +114,6 @@ if __name__ == "__main__":
     # )
     aggregate_over_model_question(
         directory=csv_path,
-        ignore_files=["normalized_means.csv"],
+        ignore_files=["normalized_means.csv", "aggregate_scores.csv"],
         lower_is_better_metrics=lower_is_better_metrics,
     )
