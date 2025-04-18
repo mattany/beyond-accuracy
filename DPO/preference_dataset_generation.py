@@ -3,7 +3,7 @@ import itertools
 from config import PROJECT_DIR, RUN_NUMBER
 
 
-def generate_pairwise_comparisons(scores_path, answers_path, output_path):
+def generate_pairwise_comparisons(scores_path, answers_path, output_path, include_metadata=True):
     # Load aggregate scores
     scores_df = pd.read_csv(scores_path, index_col="Index")
 
@@ -37,19 +37,21 @@ def generate_pairwise_comparisons(scores_path, answers_path, output_path):
             else:
                 chosen_model, rejected_model = model2, model1
                 chosen_score, rejected_score = score2, score1
-
-            rows.append(
-                {
-                    "prompt": prompt,
-                    "chosen": row[chosen_model],
-                    "rejected": row[rejected_model],
+            row_data = {
+                "prompt": prompt,
+                "chosen": row[chosen_model],
+                "rejected": row[rejected_model],
+            }
+            if include_metadata:
+                row_data = {
+                    **row_data,
                     "chosen_model": chosen_model,
                     "rejected_model": rejected_model,
                     "question_id": question_id,
                     "chosen_model_score": chosen_score,
                     "rejected_model_score": rejected_score,
                 }
-            )
+            rows.append(row_data)
 
     result_df = pd.DataFrame(rows)
     result_df.to_csv(output_path, index=False)
@@ -60,5 +62,6 @@ if __name__ == "__main__":
     generate_pairwise_comparisons(
         scores_path=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{RUN_NUMBER}/aggregations/aggregate_scores.csv",
         answers_path=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv",
-        output_path=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{RUN_NUMBER}/aggregations/preference_dataset_with_metadata.csv",
+        output_path=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{RUN_NUMBER}/aggregations/preference_dataset.csv",
+        include_metadata=False
     )
