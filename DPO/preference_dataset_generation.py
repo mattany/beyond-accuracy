@@ -3,7 +3,7 @@ import itertools
 from config import PROJECT_DIR, RUN_NUMBER
 
 
-def generate_pairwise_comparisons(scores_path, answers_path, output_path, include_metadata=True):
+def generate_pairwise_comparisons(scores_path, answers_path, output_path, include_metadata=True, top_k=None):
     # Load aggregate scores
     scores_df = pd.read_csv(scores_path, index_col="Index")
 
@@ -19,10 +19,15 @@ def generate_pairwise_comparisons(scores_path, answers_path, output_path, includ
     for idx, row in answers_df.iterrows():
         prompt = row[prompt_column]
         question_id = idx
+        top_k_models = None
+        if top_k:
+            top_k_models = scores_df.iloc[question_id].sort_values(ascending=False)[:top_k].index
 
         for model1, model2 in itertools.combinations(model_columns, 2):
-            score1 = scores_df.at[question_id, f"{model1}__score"]
-            score2 = scores_df.at[question_id, f"{model2}__score"]
+            if model1 not in top_k_models and model2 not in top_k_models:
+                continue
+            score1 = scores_df.at[question_id, model1]
+            score2 = scores_df.at[question_id, model2]
 
             if pd.isna(score1) or pd.isna(score2):
                 continue  # skip pairs with missing scores
@@ -62,6 +67,6 @@ if __name__ == "__main__":
     generate_pairwise_comparisons(
         scores_path=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{RUN_NUMBER}/aggregations/aggregate_scores.csv",
         answers_path=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv",
-        output_path=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{RUN_NUMBER}/aggregations/preference_dataset.csv",
-        include_metadata=False
+        output_path=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{RUN_NUMBER}/aggregations/preference_dataset_top_3.csv",
+        top_k=3
     )
