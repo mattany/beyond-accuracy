@@ -199,8 +199,8 @@ def create_boolean_dataset(run_dir, eval_dataset_path, output_path, threshold=0.
 if __name__ == "__main__":
     run_dir = "Benchmarking/deep_eval/data/run_5"
     eval_dataset_path = "Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv"
-    output_path_1 = "Benchmarking/deep_eval/data/boolean_dataset_1.csv"
-    output_path_2 = "Benchmarking/deep_eval/data/side_by_side_dataset.csv"
+    output_path_1 = "Benchmarking/deep_eval/data/test_data/boolean_metrics/boolean_dataset_1.csv"
+    output_path_2 = "Benchmarking/deep_eval/data/test_data/boolean_metrics/side_by_side_dataset.csv"
     
     # Set random seed for reproducibility
     random_seed = 42
