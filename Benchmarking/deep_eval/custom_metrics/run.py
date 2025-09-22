@@ -179,22 +179,22 @@ async def generate_metric_report(
         output_df.to_csv(output_path, index=False)
 
 
-def check_reasons(model_map, model, metric, run_number=0):
-    scores_df = pd.read_csv(
-        f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{run_number}/{metric}_evaluation_scores_run.csv"
-    )
-    qa_df = pd.read_csv(
-        f"{PROJECT_DIR}/Benchmarking/deep_eval/data/evaluation_dataset.csv"
-    )
-    score_col = f"{metric}_score__{model}"
-    reason_col = f"{metric}_reason__{model}"
-    output_df = scores_df[[score_col, reason_col]].join(
-        qa_df.rename(columns={model_map[model]: model})[["question", model]]
-    )
-    output_df.to_csv(
-        f"{PROJECT_DIR}/Benchmarking/deep_eval/data/model_metric_specific/run_{run_number}/{model}_{metric}_evaluation_scores_with_reasons.csv",
-        index=False,
-    )
+# def check_reasons(model_map, model, metric, run_number=0):
+#     scores_df = pd.read_csv(
+#         f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{run_number}/{metric}_evaluation_scores_run.csv"
+#     )
+#     qa_df = pd.read_csv(
+#         f"{PROJECT_DIR}/Benchmarking/deep_eval/data/evaluation_dataset.csv"
+#     )
+#     score_col = f"{metric}_score__{model}"
+#     reason_col = f"{metric}_reason__{model}"
+#     output_df = scores_df[[score_col, reason_col]].join(
+#         qa_df.rename(columns={model_map[model]: model})[["question", model]]
+#     )
+#     output_df.to_csv(
+#         f"{PROJECT_DIR}/Benchmarking/deep_eval/data/model_metric_specific/run_{run_number}/{model}_{metric}_evaluation_scores_with_reasons.csv",
+#         index=False,
+#     )
 
 
 if __name__ == "__main__":
@@ -217,18 +217,19 @@ if __name__ == "__main__":
 
     # TEST SET
     models = [
-        "llama-2-7b",
-        "SciComma-2-7b",
-        "gpt-3.5-turbo-0125",
-        "gpt-4o",
-        "llama3.1-instruct",
-        "gpt-3.5-turbo-0125_cot",
-        "gpt-4",
-        "llama-3.3-70b",
-        "SciComma-3.3-70B",
-        "SciComma-3.1-8B",
-        "o1",
-        "claude-3-7-sonnet-20250219",
+        # "llama-2-7b",
+        # "SciComma-2-7b",
+        # "gpt-3.5-turbo-0125",
+        # "gpt-4o",
+        # "llama3.1-instruct",
+        # "gpt-3.5-turbo-0125_cot",
+        # "gpt-4",
+        # "llama-3.3-70b",
+        # "SciComma-3.3-70B",
+        # "SciComma-3.1-8B",
+        # "o1",
+        # "claude-3-7-sonnet-20250219",
+        "scicomma-3.1-dpo"
     ]
     asyncio.run(
         generate_metric_report(
@@ -248,14 +249,14 @@ if __name__ == "__main__":
                 "articulation_explicit": articulation_metric_explicit,
                 "perceived_truth_explicit": perceived_truth_metric_explicit,
                 # ## READING EASE
-                # "flesch_kincaid": flesch_kincaid,
-                # "flesch_reading_ease": flesch_reading_ease,
-                # "dale_chall": dale_chall,
-                # "ari": ari,
+                "flesch_kincaid": flesch_kincaid,
+                "flesch_reading_ease": flesch_reading_ease,
+                "dale_chall": dale_chall,
+                "ari": ari,
                 ## CORRECTNESS METRICS
                 # "correctness_explicit": correctness_metric_explicit,
             },
-            evaluation_dataset="~/thesis/Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv",
+            evaluation_dataset=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv",
             models_to_evaluate=models,
             run_number=5,
         )
