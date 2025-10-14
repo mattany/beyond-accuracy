@@ -1,0 +1,26 @@
+{
+    "misinformation_internal": {
+        "codah": 0.69,
+        "squad": 0.23,
+        "adv": 0.58,
+        "hotpot": 0.29,
+        "avg": 0.4475
+    },
+    "misinformation_external": {
+        "scifact": 0.47665056360708535,
+        "covid": 0.5891768292682926,
+        "healthver": 0.3333333333333333,
+        "climate": 0.3333333333333333,
+        "avg": 0.43312351488551115
+    },
+    "hallucination": {
+        "halu_qa": 0.49,
+        "halu_summ": 0.54,
+        "halu_dial": 0.41,
+        "mc": 0.517,
+        "avg": 0.48924999999999996
+    },
+    "sycophancy_persona": 0.039,
+    "sycophancy_preference": 0.508,
+    "advfact": 0.6794258373205742
+}
