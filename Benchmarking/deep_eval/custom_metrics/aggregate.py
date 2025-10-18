@@ -20,9 +20,14 @@ def normalize_df(df, is_lower_better):
     if min_val == max_val:
         return df  # Avoid division by zero; leave unchanged
     if is_lower_better:
+        if min_val >= 0 and max_val < 1:
+            normalized = 1 - numeric_df
         normalized = 1 - ((numeric_df - min_val) / (max_val - min_val))
     else:
-        normalized = (numeric_df - min_val) / (max_val - min_val)
+        if min_val >= 0 and max_val < 1:
+            normalized = numeric_df
+        else:
+            normalized = (numeric_df - min_val) / (max_val - min_val)
     df.loc[:, normalized.columns] = normalized
     return df
 
@@ -85,7 +90,7 @@ def aggregate_over_model_metric(directory, lower_is_better_metrics):
             try:
                 df = pd.read_csv(filepath)
                 df = normalize_df(
-                    df, is_lower_better=filename in lower_is_better_metrics
+                    df, is_lower_better=filename[:-4] in lower_is_better_metrics
                 )
                 all_normalized_dfs.append(df)
                 means = df.mean(numeric_only=True, skipna=True)
@@ -98,6 +103,33 @@ def aggregate_over_model_metric(directory, lower_is_better_metrics):
             means_df = pd.DataFrame(rows)
             cols = ["metric"] + [col for col in means_df.columns if col != "metric"]
             means_df = means_df[cols]
+            
+            # Define the desired order of metrics
+            metric_order = [
+                "metaphor_explicit",
+                "humor_explicit",
+                "content_units_explicit",
+                "connection_to_everyday_life",
+                "explanation_type",
+                "analogy_explicit",
+                "jargon",
+                "alternatives_explicit",
+                "internal_coherence_explicit",
+                "perceived_truth_explicit",
+                "articulation_explicit",
+                "completeness_explicit",
+                "flesch_reading_ease",
+                "flesch_kincaid",
+                "dale_chall",
+                "ari"
+            ]
+            
+            # Set the metric column as categorical with the specified order
+            means_df['metric'] = pd.Categorical(means_df['metric'], categories=metric_order, ordered=True)
+            
+            # Sort by the metric column
+            means_df = means_df.sort_values('metric')
+            
             means_df.to_csv(output_file, index=False)
             print(f"Wrote normalized means to {output_file}")
 
@@ -134,7 +166,7 @@ def aggregate_final_model_scores(directory: str, ignore_files: list[str], lower_
         df_scores = df[score_columns].copy()
         
         # Normalize the scores
-        is_lower_better = file_name in lower_is_better_metrics
+        is_lower_better = file_name[:-4] in lower_is_better_metrics
         df_normalized = normalize_df(df_scores, is_lower_better)
         
         # Add metric name as identifier and collect all scores
@@ -206,7 +238,7 @@ def aggregate_categorical_model_scores(directory: str, ignore_files: list[str], 
         df_scores = df[score_columns].copy()
         
         # Normalize the scores
-        is_lower_better = file_name in lower_is_better_metrics
+        is_lower_better = file_name[:-4] in lower_is_better_metrics
         df_normalized = normalize_df(df_scores, is_lower_better)
         
         # Determine metric category
