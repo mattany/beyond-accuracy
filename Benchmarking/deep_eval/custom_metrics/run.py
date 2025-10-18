@@ -229,7 +229,12 @@ if __name__ == "__main__":
         # "SciComma-3.1-8B",
         # "o1",
         # "claude-3-7-sonnet-20250219",
-        "scicomma-3.1-dpo"
+        "Meta-Llama-3.1-8B-Instruct-bnb-4bit",
+        "Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt",
+        "SciComma-3.1-8B_y",
+        "SciComma-3.1-8B_prompt",
+        "scicomma-3.1-dpo",
+        "scicomma-3.1-dpo_prompt"
     ]
     asyncio.run(
         generate_metric_report(
@@ -258,7 +263,7 @@ if __name__ == "__main__":
             },
             evaluation_dataset=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv",
             models_to_evaluate=models,
-            run_number=5,
+            run_number=6,
         )
     )
 
