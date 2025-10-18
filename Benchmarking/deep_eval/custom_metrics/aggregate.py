@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-run_number = 7
+run_number = 6
 
 
 def normalize_df(df, is_lower_better):
@@ -44,7 +44,7 @@ def aggregate_over_model_question(
             col for col in df.columns if not col.lower().endswith("reason")
         ]
         df_scores = df[score_columns].copy()
-        is_lower_better = file_name in lower_is_better_metrics
+        is_lower_better = file_name[:-4] in lower_is_better_metrics
         df_normalized = normalize_df(df_scores, is_lower_better)
         normalized_dfs.append(df_normalized)
 
