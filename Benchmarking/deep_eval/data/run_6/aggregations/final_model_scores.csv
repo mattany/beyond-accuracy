@@ -1,0 +1,7 @@
+model,final_score
+SciComma-3.1-8B_prompt__score,0.6369923714339498
+scicomma-3.1-dpo_prompt__score,0.6310268852110772
+scicomma-3.1-dpo__score,0.6246730872820507
+Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt__score,0.6181609130894656
+SciComma-3.1-8B_y__score,0.5704653534495425
+Meta-Llama-3.1-8B-Instruct-bnb-4bit__score,0.528160845536409
