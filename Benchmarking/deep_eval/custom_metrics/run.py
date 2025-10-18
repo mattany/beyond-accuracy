@@ -3,6 +3,7 @@ import asyncio
 from readability.exceptions import ReadabilityException
 from tqdm import tqdm
 from config import PROJECT_DIR, OPENAI_API_KEY
+import logging
 
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 GEVAL_RETRIES = 3
@@ -31,6 +32,12 @@ from custom_metrics.metrics import (
     ari,
 )
 
+
+# Suppress DEBUG logs from deepeval
+logging.getLogger("httpcore").setLevel(logging.INFO)
+logging.getLogger("httpx").setLevel(logging.INFO)
+logging.getLogger("openai").setLevel(logging.INFO)
+logging.getLogger("main_logger").setLevel(logging.INFO)
 
 async def get_metric_scores_for_model(
     eval_df,
@@ -263,7 +270,7 @@ if __name__ == "__main__":
             },
             evaluation_dataset=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv",
             models_to_evaluate=models,
-            run_number=6,
+            run_number=7,
         )
     )
 

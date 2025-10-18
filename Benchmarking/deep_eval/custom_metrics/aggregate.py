@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-run_number = 5
+run_number = 7
 
 
 def normalize_df(df, is_lower_better):
@@ -370,25 +370,25 @@ if __name__ == "__main__":
         directory=csv_path,
         lower_is_better_metrics={"ari", "dale_chall", "flesch_kincaid"},
     )
-    # aggregate_over_model_question(
-    #     directory=csv_path,
-    #     ignore_files=[],
-    #     lower_is_better_metrics=lower_is_better_metrics,
-    # )
+    aggregate_over_model_question(
+        directory=csv_path,
+        ignore_files=[],
+        lower_is_better_metrics=lower_is_better_metrics,
+    )
     
     # Generate final model scores
-    # aggregate_final_model_scores(
-    #     directory=csv_path,
-    #     ignore_files=[],
-    #     lower_is_better_metrics=lower_is_better_metrics,
-    # )
+    aggregate_final_model_scores(
+        directory=csv_path,
+        ignore_files=[],
+        lower_is_better_metrics=lower_is_better_metrics,
+    )
     
     # Generate categorical model scores
-    # aggregate_categorical_model_scores(
-    #     directory=csv_path,
-    #     ignore_files=[],
-    #     lower_is_better_metrics=lower_is_better_metrics,
-    # )
+    aggregate_categorical_model_scores(
+        directory=csv_path,
+        ignore_files=[],
+        lower_is_better_metrics=lower_is_better_metrics,
+    )
     #
     # Generate plots
     print("\nGenerating plots...")
