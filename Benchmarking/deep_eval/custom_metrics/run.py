@@ -226,10 +226,10 @@ if __name__ == "__main__":
     models = [
         # "llama-2-7b",
         # "SciComma-2-7b",
-        "gpt-3.5-turbo-0125",
+        # "gpt-3.5-turbo-0125",
         # "gpt-4o",
         # "llama3.1-instruct",
-        "gpt-3.5-turbo-0125_cot",
+        # "gpt-3.5-turbo-0125_cot",
         # "gpt-4",
         # "llama-3.3-70b",
         # "SciComma-3.3-70B",
@@ -242,6 +242,9 @@ if __name__ == "__main__":
         # "SciComma-3.1-8B_prompt",
         # "scicomma-3.1-dpo",
         # "scicomma-3.1-dpo_prompt"
+        "scicomma-3.1-dpo_real_256",
+        "scicomma-3.1-dpo_real_512",
+        "scicomma-3.1-dpo_real_512_short"
     ]
     asyncio.run(
         generate_metric_report(
@@ -270,7 +273,7 @@ if __name__ == "__main__":
             },
             evaluation_dataset=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv",
             models_to_evaluate=models,
-            run_number=6,
+            run_number=8,
         )
     )
 
