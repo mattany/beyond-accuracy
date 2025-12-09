@@ -1,13 +1,12 @@
 import pandas as pd
-input_path = "/Users/mattan.yeroushalmi/studies/thesis/scripts/generations"
-df = pd.read_csv(f"{input_path}/all_models_joined.csv")
+input_path = "/Users/mattan.yeroushalmi/studies/thesis/scripts/generations_2/"
+df = pd.read_csv(f"{input_path}/output_dpo_v2_512 tokens_short prompt.csv")
 main_df = pd.read_csv("/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv")
 
 
 df = df.rename(columns={
     "Question": "question",
-    "SciComma-3.1-8B-DPO": "scicomma-3.1-dpo",
-    "SciComma-3.1-8B-DPO_prompt": "scicomma-3.1-dpo_prompt",
+    "Answer": "scicomma-3.1-dpo_real_512_short",
 })
 
 # Ensure both question columns have the same data type (string)
