@@ -242,9 +242,10 @@ if __name__ == "__main__":
         # "SciComma-3.1-8B_prompt",
         # "scicomma-3.1-dpo",
         # "scicomma-3.1-dpo_prompt"
-        "scicomma-3.1-dpo_real_256",
-        "scicomma-3.1-dpo_real_512",
-        "scicomma-3.1-dpo_real_512_short"
+        # "scicomma-3.1-dpo_real_256",
+        # "scicomma-3.1-dpo_real_512",
+        # "scicomma-3.1-dpo_real_512_short",
+        "scicomma-3.1-dpo_full"
     ]
     asyncio.run(
         generate_metric_report(
