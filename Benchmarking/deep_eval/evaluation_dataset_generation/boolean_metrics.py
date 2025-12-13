@@ -20,6 +20,76 @@ def binarize_metric(scores, threshold=0.5):
     """Convert metric scores to binary values based on threshold."""
     return (scores >= threshold).astype(int)
 
+def greedy_balanced_select(df, metrics, num_samples=30, target_per_metric=15, prioritize_rare=True):
+    """
+    Select rows to balance each metric independently at ~target/target split.
+    
+    Args:
+        df: DataFrame with binary metric columns
+        metrics: List of metric column names
+        num_samples: Total number of samples to select
+        target_per_metric: Target count for each metric value (0 and 1)
+        prioritize_rare: If True, weight rare metrics higher to ensure better balance
+    
+    Returns:
+        DataFrame with selected rows
+    """
+    selected_indices = []
+    counts = {m: {0: 0, 1: 0} for m in metrics}
+    
+    # Calculate metric weights based on prevalence (rare metrics get higher weight)
+    if prioritize_rare:
+        prevalence = {m: df[m].mean() for m in metrics}
+        # Weight inversely proportional to min(prevalence, 1-prevalence)
+        # This gives high weight to rare metrics (either rare 1s or rare 0s)
+        weights = {}
+        for m in metrics:
+            rarity = min(prevalence[m], 1 - prevalence[m])
+            # Higher weight for rarer metrics, minimum weight of 1
+            weights[m] = max(1.0, 1.0 / (rarity + 0.01))
+        print(f"Metric weights (higher = rarer): {weights}")
+    else:
+        weights = {m: 1.0 for m in metrics}
+    
+    candidates = df.copy()
+    
+    for iteration in range(num_samples):
+        best_idx = None
+        best_score = float('inf')
+        
+        for idx in candidates.index:
+            # Simulate adding this row
+            temp_counts = {m: counts[m].copy() for m in metrics}
+            for m in metrics:
+                val = int(candidates.loc[idx, m])
+                temp_counts[m][val] += 1
+            
+            # Calculate weighted deviation from target
+            # Penalize being below target more heavily for the "1" class of rare metrics
+            score = 0
+            for m in metrics:
+                deviation_ones = abs(temp_counts[m][1] - target_per_metric)
+                deviation_zeros = abs(temp_counts[m][0] - target_per_metric)
+                
+                # Extra penalty if we're below target for rare metric's "1" class
+                if temp_counts[m][1] < target_per_metric:
+                    deviation_ones *= 1.5  # Penalize being short on positive examples
+                
+                score += weights[m] * (deviation_ones + deviation_zeros)
+            
+            if score < best_score:
+                best_score = score
+                best_idx = idx
+        
+        # Add best candidate
+        selected_indices.append(best_idx)
+        for m in metrics:
+            val = int(candidates.loc[best_idx, m])
+            counts[m][val] += 1
+        candidates = candidates.drop(best_idx)
+    
+    return df.loc[selected_indices]
+
 def create_side_by_side_dataset(run_dir, eval_dataset_path, output_path, threshold=0.5, num_questions=30, random_seed=42):
     """
     Create a dataset comparing base model answers with finetuned (SciComma) model answers.
@@ -195,16 +265,92 @@ def create_boolean_dataset(run_dir, eval_dataset_path, output_path, threshold=0.
     
     # Save to CSV
     final_df.to_csv(output_path, index=False)
+
+def create_balanced_dataset(run_dir, eval_dataset_path, output_path, threshold=0.5, num_samples=30, random_seed=42):
+    """
+    Create a dataset with binarized metrics and per-metric balanced sampling.
+    
+    Uses greedy selection to achieve ~15/15 split for each metric independently.
+    
+    Args:
+        run_dir: Directory containing metric CSV files
+        eval_dataset_path: Path to the evaluation dataset
+        output_path: Where to save the output CSV
+        threshold: Threshold for binarizing metrics (default 0.5)
+        num_samples: Total number of samples to select (default 30)
+        random_seed: Seed for reproducibility (default 42)
+    """
+    # Set random seed for reproducibility
+    random.seed(random_seed)
+    np.random.seed(random_seed)
+    
+    # Load evaluation dataset
+    eval_df = pd.read_csv(eval_dataset_path)
+    
+    # Load metrics
+    metrics = ['humor_explicit', 'metaphor_explicit', 'analogy_explicit', 'connection_to_everyday_life']
+    metric_data = {}
+    
+    # Get all model scores for each metric
+    for metric in metrics:
+        scores_df = load_metric_data(run_dir, metric)
+        metric_data[metric] = {
+            'raw_scores': {model: scores_df[model] for model in scores_df.columns},
+            'binary_scores': {model: binarize_metric(scores_df[model], threshold) for model in scores_df.columns}
+        }
+    
+    # Create rows for all question-model combinations
+    rows = []
+    models = scores_df.columns  # Using models from the last loaded metric
+    
+    for idx in range(len(eval_df)):
+        for model in models:
+            row = {
+                'question_id': idx,
+                'question': eval_df.iloc[idx]['question'],
+                'answer': eval_df.iloc[idx][model],
+                'model': model
+            }
+            # Add both raw and binary metric values
+            for metric in metrics:
+                row[metric] = metric_data[metric]['binary_scores'][model][idx]
+            for metric in metrics:
+                row[f"{metric}_score"] = metric_data[metric]['raw_scores'][model][idx]
+            rows.append(row)
+    
+    # Create combined dataframe
+    combined_df = pd.DataFrame(rows)
+    
+    # Calculate sum of binary metrics for each row
+    combined_df['metric_sum'] = combined_df[metrics].sum(axis=1)
+    
+    # Use greedy balanced selection
+    target_per_metric = num_samples // 2  # 15 for 30 samples
+    final_df = greedy_balanced_select(combined_df, metrics, num_samples=num_samples, target_per_metric=target_per_metric)
+    
+    # Shuffle the final result
+    final_df = final_df.sample(frac=1, random_state=random_seed)
+    
+    # Print balance statistics
+    print(f"Selected {len(final_df)} samples with per-metric balance:")
+    for metric in metrics:
+        ones = final_df[metric].sum()
+        zeros = len(final_df) - ones
+        print(f"  {metric}: {ones} with, {zeros} without")
+    
+    # Save to CSV
+    final_df.to_csv(output_path, index=False)
+    print(f"Saved to {output_path}")
     
 if __name__ == "__main__":
-    run_dir = "Benchmarking/deep_eval/data/run_5"
+    run_dir = "Benchmarking/deep_eval/data/run_6"
     eval_dataset_path = "Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv"
     output_path_1 = "Benchmarking/deep_eval/data/test_data/boolean_metrics/boolean_dataset_1.csv"
     output_path_2 = "Benchmarking/deep_eval/data/test_data/boolean_metrics/side_by_side_dataset.csv"
+    output_path_balanced = "Benchmarking/deep_eval/data/test_data/boolean_metrics/balanced_dataset.csv"
     
     # Set random seed for reproducibility
     random_seed = 42
     
-    # Create both datasets
-    create_boolean_dataset(run_dir, eval_dataset_path, output_path_1, random_seed=random_seed)
-    create_side_by_side_dataset(run_dir, eval_dataset_path, output_path_2, random_seed=random_seed)
+    # Create balanced dataset with per-metric balance
+    create_balanced_dataset(run_dir, eval_dataset_path, output_path_balanced, random_seed=random_seed)
