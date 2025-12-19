@@ -1,4 +1,8 @@
 import os
+import sys
+# Add parent directory to path to allow importing config
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import pandas as pd
 from config import PROJECT_DIR
 import numpy as np
@@ -301,7 +305,25 @@ def aggregate_categorical_model_scores(directory: str, ignore_files: list[str], 
     print(result_df.to_string(index=False, float_format='%.4f'))
 
 
-def _plot_single_category(df, score_column, title, output_path, color='steelblue'):
+def calculate_category_errors(directory: str, lower_is_better_metrics: list[str]):
+    """
+    Get pre-computed confidence intervals for the Baram-Tsabari category from the 
+    bootstrap aggregated results file.
+    Returns DataFrame: [model, ci_lower, ci_upper]
+    """
+    bootstrap_path = os.path.join(directory, "bootstrap", "bootstrap_aggregated_model_scores.csv")
+    if not os.path.exists(bootstrap_path):
+        print(f"Warning: Bootstrap aggregated results not found at {bootstrap_path}. Error bars will be missing.")
+        return None
+        
+    df = pd.read_csv(bootstrap_path)
+    
+    # The file contains: Model, Aggregated_Score, Aggregated_SE, CI_Lower, CI_Upper
+    # We return the data needed for plotting error bars
+    return df[['Model', 'Aggregated_Score', 'CI_Lower', 'CI_Upper']]
+
+
+def _plot_single_category(df, score_column, title, output_path, color='steelblue', error_df=None):
     """
     Helper function to create a single bar plot for a category.
     """
@@ -312,8 +334,29 @@ def _plot_single_category(df, score_column, title, output_path, color='steelblue
         print(f"No data available for {title}")
         return
     
+    # Prepare error bars if available (only for Baram Tsabari)
+    yerr = None
+    if error_df is not None and "baram_tsabari" in score_column:
+        # error_df contains: Model, Aggregated_Score, CI_Lower, CI_Upper
+        # yerr should be the distance from bar top to CI bounds
+        errors = []
+        for model in plot_data['model']:
+            # Match model name (remove __score suffix if present)
+            model_clean = model.replace('__score', '')
+            match = error_df[error_df['Model'] == model_clean]
+            if not match.empty:
+                agg_score = match.iloc[0]['Aggregated_Score']
+                ci_upper = match.iloc[0]['CI_Upper']
+                # Error bar = CI_Upper - Score (half-width of CI)
+                errors.append(ci_upper - agg_score)
+            else:
+                errors.append(0)
+        yerr = errors
+    
     plt.figure(figsize=(12, 8))
-    bars = plt.bar(range(len(plot_data)), plot_data[score_column], color=color, alpha=0.7)
+    # Increased capsize to 10 and added error_kw for visibility
+    bars = plt.bar(range(len(plot_data)), plot_data[score_column], yerr=yerr, capsize=10, 
+                  error_kw={'elinewidth': 2, 'capthick': 2}, color=color, alpha=0.7)
     
     # Customize the plot
     plt.xlabel('Models', fontsize=12)
@@ -326,7 +369,9 @@ def _plot_single_category(df, score_column, title, output_path, color='steelblue
     # Add value labels on bars
     for i, bar in enumerate(bars):
         height = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width()/2., height + 0.01,
+        # Adjust label position if error bar is present
+        y_pos = height + (yerr[i] if yerr else 0) + 0.01
+        plt.text(bar.get_x() + bar.get_width()/2., y_pos,
                 f'{height:.3f}', ha='center', va='bottom', fontsize=9)
     
     plt.tight_layout()
@@ -348,6 +393,9 @@ def plot_categorical_scores(directory: str):
     
     df = pd.read_csv(input_path)
     
+    # Calculate errors
+    error_df = calculate_category_errors(directory, lower_is_better_metrics=["ari", "dale_chall", "flesch_kincaid"])
+    
     # Create plots directory
     plots_dir = os.path.join(directory, "aggregations/plots")
     os.makedirs(plots_dir, exist_ok=True)
@@ -362,7 +410,9 @@ def plot_categorical_scores(directory: str):
     # Plot each category
     for score_col, title, color in categories:
         output_path = os.path.join(plots_dir, f"{score_col.replace('_score', '')}_scores.png")
-        _plot_single_category(df, score_col, title, output_path, color)
+        
+        # Pass error_df for all categories; _plot_single_category will only use it for baram_tsabari
+        _plot_single_category(df, score_col, title, output_path, color, error_df)
 
 
 def plot_total_scores(directory: str):
@@ -392,6 +442,9 @@ def plot_total_scores(directory: str):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        run_number = sys.argv[1]
+    
     os.makedirs(
         f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{run_number}/aggregations",
         exist_ok=True,
