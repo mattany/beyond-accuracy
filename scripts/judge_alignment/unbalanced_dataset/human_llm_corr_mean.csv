@@ -1,0 +1,5 @@
+metric,corr_mean_human_vs_LLM
+Analogy,0.5534006170129874
+Metaphor,0.5233535981451466
+Humor,0.9999802456288267
+Connection,-0.09620222506423903
