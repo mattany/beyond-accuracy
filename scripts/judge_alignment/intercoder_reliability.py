@@ -269,22 +269,19 @@ def compute_majority_vote_labels(df: pd.DataFrame) -> pd.DataFrame:
 
 def plot_intercoder_reliability(icr_df: pd.DataFrame, output_path: Path) -> None:
     """
-    Create a grouped bar chart showing percent agreement, Fleiss' kappa,
-    and Gwet's AC1 for each metric.
+    Create a grouped bar chart showing percent agreement and Gwet's AC1 for each metric.
     """
-    fig, ax = plt.subplots(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(10, 6))
 
     metrics = icr_df["metric"].tolist()
     x = np.arange(len(metrics))
-    width = 0.25
+    width = 0.35
 
     percent_agreement = icr_df["percent_agreement"].values
-    kappa = icr_df["kappa"].values
     ac1 = icr_df["ac1"].values
 
-    bars1 = ax.bar(x - width, percent_agreement, width, label="Percent Agreement", color="#4C72B0")
-    bars2 = ax.bar(x, kappa, width, label="Fleiss' Kappa", color="#DD8452")
-    bars3 = ax.bar(x + width, ac1, width, label="Gwet's AC1", color="#55A868")
+    bars1 = ax.bar(x - width / 2, percent_agreement, width, label="Percent Agreement", color="#4C72B0")
+    bars2 = ax.bar(x + width / 2, ac1, width, label="Gwet's AC1", color="#55A868")
 
     ax.set_xlabel("Metric", fontsize=12)
     ax.set_ylabel("Score", fontsize=12)
@@ -299,15 +296,11 @@ def plot_intercoder_reliability(icr_df: pd.DataFrame, output_path: Path) -> None
     for bar in bars1:
         height = bar.get_height()
         ax.annotate(f"{height:.2f}", xy=(bar.get_x() + bar.get_width() / 2, height),
-                    xytext=(0, 3), textcoords="offset points", ha="center", va="bottom", fontsize=8)
+                    xytext=(0, 3), textcoords="offset points", ha="center", va="bottom", fontsize=9)
     for bar in bars2:
         height = bar.get_height()
         ax.annotate(f"{height:.2f}", xy=(bar.get_x() + bar.get_width() / 2, height),
-                    xytext=(0, 3), textcoords="offset points", ha="center", va="bottom", fontsize=8)
-    for bar in bars3:
-        height = bar.get_height()
-        ax.annotate(f"{height:.2f}", xy=(bar.get_x() + bar.get_width() / 2, height),
-                    xytext=(0, 3), textcoords="offset points", ha="center", va="bottom", fontsize=8)
+                    xytext=(0, 3), textcoords="offset points", ha="center", va="bottom", fontsize=9)
 
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
@@ -322,54 +315,43 @@ def plot_human_llm_correlations(
     corr_mean_df: pd.DataFrame, corr_maj_df: pd.DataFrame, output_path: Path
 ) -> None:
     """
-    Create a grouped bar chart showing Human–LLM correlations
-    (Pearson, Spearman, Kendall's tau) for mean and majority-vote human labels.
+    Create a grouped bar chart showing Spearman correlations between
+    human labels and LLM scores for mean and majority-vote human labels.
     """
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    fig, ax = plt.subplots(figsize=(10, 6))
 
     metrics = corr_mean_df["metric"].tolist()
     x = np.arange(len(metrics))
-    width = 0.25
+    width = 0.35
 
-    colors = {"pearson": "#4C72B0", "spearman": "#55A868", "kendall": "#DD8452"}
+    spearman_mean = corr_mean_df["spearman_mean"].values
+    spearman_majority = corr_maj_df["spearman_majority"].values
 
-    for ax, (label_type, corr_df, title) in zip(
-        axes,
-        [
-            ("mean", corr_mean_df, "Mean Human Label"),
-            ("majority", corr_maj_df, "Majority-vote Label"),
-        ],
-    ):
-        pearson = corr_df[f"pearson_{label_type}"].values
-        spearman = corr_df[f"spearman_{label_type}"].values
-        kendall = corr_df[f"kendall_{label_type}"].values
+    bars1 = ax.bar(x - width / 2, spearman_mean, width, label="Mean Human Label", color="#4C72B0")
+    bars2 = ax.bar(x + width / 2, spearman_majority, width, label="Majority-vote Label", color="#55A868")
 
-        bars1 = ax.bar(x - width, pearson, width, label="Pearson", color=colors["pearson"])
-        bars2 = ax.bar(x, spearman, width, label="Spearman", color=colors["spearman"])
-        bars3 = ax.bar(x + width, kendall, width, label="Kendall's τ", color=colors["kendall"])
+    ax.set_xlabel("Metric", fontsize=12)
+    ax.set_ylabel("Spearman Correlation", fontsize=12)
+    ax.set_title("Human–LLM Agreement (Spearman ρ)", fontsize=14, fontweight="bold")
+    ax.set_xticks(x)
+    ax.set_xticklabels(metrics, fontsize=11)
+    ax.set_ylim(-0.3, 1.15)
+    ax.axhline(y=0, color="gray", linestyle="-", linewidth=0.5)
+    ax.legend(loc="upper right", fontsize=10)
 
-        ax.set_xlabel("Metric", fontsize=12)
-        ax.set_ylabel("Correlation", fontsize=12)
-        ax.set_title(f"Human–LLM Correlations ({title})", fontsize=13, fontweight="bold")
-        ax.set_xticks(x)
-        ax.set_xticklabels(metrics, fontsize=10)
-        ax.set_ylim(-0.3, 1.15)
-        ax.axhline(y=0, color="gray", linestyle="-", linewidth=0.5)
-        ax.legend(loc="upper right", fontsize=9)
+    # Add value labels on bars
+    for bars in [bars1, bars2]:
+        for bar in bars:
+            height = bar.get_height()
+            if np.isnan(height):
+                continue
+            va = "bottom" if height >= 0 else "top"
+            offset = 3 if height >= 0 else -3
+            ax.annotate(f"{height:.2f}", xy=(bar.get_x() + bar.get_width() / 2, height),
+                        xytext=(0, offset), textcoords="offset points", ha="center", va=va, fontsize=9)
 
-        # Add value labels on bars
-        for bars in [bars1, bars2, bars3]:
-            for bar in bars:
-                height = bar.get_height()
-                if np.isnan(height):
-                    continue
-                va = "bottom" if height >= 0 else "top"
-                offset = 3 if height >= 0 else -3
-                ax.annotate(f"{height:.2f}", xy=(bar.get_x() + bar.get_width() / 2, height),
-                            xytext=(0, offset), textcoords="offset points", ha="center", va=va, fontsize=7)
-
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
 
     plt.tight_layout()
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
