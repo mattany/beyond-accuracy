@@ -11,20 +11,28 @@ import pandas as pd
 from deepeval.test_case import LLMTestCase
 from custom_metrics.metrics import (
     # baram tsabari metrics
-    explanation_type_metric_explicit,
-    connection_to_everyday_life_metric_explicit,
-    metaphor_metric_explicit,
-    content_units_metric_explicit,
-    humor_metric_explicit,
-    analogy_metric_explicit,
-    correctness_metric_explicit,
+    # explanation_type_metric_explicit,
+    explanation_type_metric_explicit_v2,
+    # connection_to_everyday_life_metric_explicit,
+    connection_to_everyday_life_metric_explicit_v2,
+    # metaphor_metric_explicit,
+    metaphor_metric_explicit_v2,
+    # content_units_metric_explicit,
+    # content_units_metric_explicit_v2,
+    # humor_metric_explicit,
+    humor_metric_explicit_v2,
+    # analogy_metric_explicit,
+    analogy_metric_explicit_v2,
+    # correctness_metric_explicit,
     jargon_metric,
+    # NEW baram tsabari metrics (2012 paper)
+    scaffolding_metric,
     # zemla metrics
-    internal_coherence_metric_explicit,
-    completeness_metric_explicit,
-    alternatives_metric_explicit,
-    articulation_metric_explicit,
-    perceived_truth_metric_explicit,
+    # internal_coherence_metric_explicit,
+    # completeness_metric_explicit,
+    # alternatives_metric_explicit,
+    # articulation_metric_explicit,
+    # perceived_truth_metric_explicit,
     # readability metrics
     flesch_kincaid,
     flesch_reading_ease,
@@ -236,35 +244,38 @@ if __name__ == "__main__":
         # "SciComma-3.1-8B",
         # "o1",
         # "claude-3-7-sonnet-20250219",
-        # "Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        # "Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt",
-        # "SciComma-3.1-8B_y",
-        # "SciComma-3.1-8B_prompt",
+        "Meta-Llama-3.1-8B-Instruct-bnb-4bit",
+        "Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt",
+        "SciComma-3.1-8B_y",
+        "SciComma-3.1-8B_prompt",
         # "scicomma-3.1-dpo",
         # "scicomma-3.1-dpo_prompt"
         # "scicomma-3.1-dpo_real_256",
         # "scicomma-3.1-dpo_real_512",
         # "scicomma-3.1-dpo_real_512_short",
-        "scicomma-3.1-dpo_full"
+        # "scicomma-3.1-dpo_full"
     ]
     asyncio.run(
         generate_metric_report(
             metrics={
                 ## BARAM TSABARI METRICS
                 "jargon": jargon_metric,
-                "explanation_type": explanation_type_metric_explicit,
-                "metaphor_explicit": metaphor_metric_explicit,
-                "content_units_explicit": content_units_metric_explicit,
-                "humor_explicit": humor_metric_explicit,
-                "analogy_explicit": analogy_metric_explicit,
-                "connection_to_everyday_life": connection_to_everyday_life_metric_explicit,
+                # "explanation_type": explanation_type_metric_explicit,
+                "metaphor_v2": metaphor_metric_explicit_v2,
+                # "content_units_explicit_v2": content_units_metric_explicit_v2,
+                # "humor_explicit": humor_metric_explicit,
+                "humor_v2": humor_metric_explicit_v2,
+                "analogy_v2": analogy_metric_explicit_v2,
+                "explanation_type_v2": explanation_type_metric_explicit_v2,
+                "connection_to_everyday_life_v2": connection_to_everyday_life_metric_explicit_v2,
                 # ## ZEMLA METRICS
-                "internal_coherence_explicit": internal_coherence_metric_explicit,
-                "completeness_explicit": completeness_metric_explicit,
-                "alternatives_explicit": alternatives_metric_explicit,
-                "articulation_explicit": articulation_metric_explicit,
-                "perceived_truth_explicit": perceived_truth_metric_explicit,
+                # "internal_coherence_v2": internal_coherence_metric_explicit_v2,
+                # "completeness_v2": completeness_metric_explicit_v2,
+                # "alternatives_explicit": alternatives_metric_explicit,  # unreliable for LLM measurement
+                # "articulation_v2": articulation_metric_explicit_v2,
+                # "perceived_truth_explicit": perceived_truth_metric_explicit,  # unreliable for LLM measurement
                 # ## READING EASE
+                "scaffolding": scaffolding_metric,
                 "flesch_kincaid": flesch_kincaid,
                 "flesch_reading_ease": flesch_reading_ease,
                 "dale_chall": dale_chall,
@@ -274,7 +285,7 @@ if __name__ == "__main__":
             },
             evaluation_dataset=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv",
             models_to_evaluate=models,
-            run_number=8,
+            run_number=9,
         )
     )
 

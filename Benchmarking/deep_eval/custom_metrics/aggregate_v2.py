@@ -27,7 +27,7 @@ import seaborn as sns
 from config import PROJECT_DIR
 
 # Default run number
-RUN_NUMBER = 8
+RUN_NUMBER = 9
 
 # Level definitions with cluster groupings
 LEVELS = {
@@ -55,39 +55,39 @@ CLUSTERS = {
             "jargon": {"weight": 0.10},
             "explanation_type_v2": {"weight": 0.15},
             # Readability metrics (equal weight each)
-            "flesch_reading_ease": {"weight": 0.05},
-            "flesch_kincaid": {"weight": 0.05},
-            "dale_chall": {"weight": 0.05},
-            "ari": {"weight": 0.05},
+            "flesch_reading_ease": {"weight": 0.025},
+            "flesch_kincaid": {"weight": 0.025},
+            "dale_chall": {"weight": 0.025},
+            "ari": {"weight": 0.025},
         },
         "description": "Clear, understandable explanations",
         "level": "basic",
     },
     "content": {
         "metrics": {
-            "connection_to_everyday_life_v2": {"weight": 0.15},
+            "connection_to_everyday_life_v2": {"weight": 0.10},
         },
         "description": "Connection to real-world context",
         "level": "basic",
     },
     "knowledge_organization": {
         "metrics": {
-            "scaffolding_v2": {"weight": 0.10},
+            "scaffolding": {"weight": 0.15},
         },
         "description": "Knowledge organization and structure",
         "level": "basic",
     },
     "rhetorical_devices": {
         "metrics": {
-            "analogy_v2": {"weight": 0.10},
-            "metaphor_v2": {"weight": 0.10},
+            "analogy_v2": {"weight": 0.15},
+            "metaphor_v2": {"weight": 0.15},
         },
         "description": "Use of analogies and metaphors",
         "level": "intermediate",
     },
     "style": {
         "metrics": {
-            "humor_explicit": {"weight": 0.10},
+            "humor_v2": {"weight": 0.10},
         },
         "description": "Engaging style (humor)",
         "level": "intermediate",
@@ -177,7 +177,8 @@ METRIC_FALLBACKS = {
     "connection_to_everyday_life_v2": ["connection_to_everyday_life", "connection_to_everyday_life_explicit"],
     "analogy_v2": ["analogy", "analogy_explicit"],
     "metaphor_v2": ["metaphor", "metaphor_explicit"],
-    "humor_explicit": ["humor"],
+    "humor_v2": ["humor_explicit", "humor"],
+    "scaffolding": [],
     "argumentation": [],  # No v1 fallback (new metric)
     "jargon": [],  # No fallback needed
     "flesch_reading_ease": [],  # No fallback needed
@@ -335,11 +336,11 @@ def compute_total_scores(metric_df: pd.DataFrame) -> pd.DataFrame:
         
         row["total_score"] = total_weighted / total_weight if total_weight > 0 else np.nan
         
-        # Cluster subtotals (normalized to their weight)
+        # Cluster subtotals (normalized to their actual weight from metrics)
         for cluster_name, cluster_data in cluster_scores.items():
             if cluster_data["weight"] > 0:
-                # Score as percentage of cluster's total weight achieved
-                row[f"{cluster_name}_score"] = cluster_data["weighted"] / LEVELS[cluster_name]["weight"]
+                # Score as weighted average within the cluster
+                row[f"{cluster_name}_score"] = cluster_data["weighted"] / cluster_data["weight"]
             else:
                 row[f"{cluster_name}_score"] = np.nan
         
@@ -373,6 +374,31 @@ def plot_stacked_bar_chart(total_df: pd.DataFrame, metric_df: pd.DataFrame, outp
     models = df_sorted["model"].tolist()
     y_pos = np.arange(len(models))
     
+    # First pass: compute raw bar heights and scale factors for each model
+    # This ensures the stacked bar height matches total_score
+    raw_bar_heights = {model: 0.0 for model in models}
+    total_scores = {model: df_sorted[df_sorted["model"] == model]["total_score"].values[0] for model in models}
+    
+    for cluster_name in ["basic", "intermediate", "advanced"]:
+        for cat_name in LEVELS[cluster_name]["categories"]:
+            for metric_name in CLUSTERS[cat_name]["metrics"].keys():
+                if metric_name not in METRIC_WEIGHTS:
+                    continue
+                weight = METRIC_WEIGHTS[metric_name]["weight"]
+                for model in models:
+                    if metric_name in df_sorted.columns:
+                        score = df_sorted[df_sorted["model"] == model][metric_name].values
+                        if len(score) > 0 and pd.notna(score[0]):
+                            raw_bar_heights[model] += score[0] * weight
+    
+    # Compute scale factors so bar heights match total_score
+    scale_factors = {}
+    for model in models:
+        if raw_bar_heights[model] > 0:
+            scale_factors[model] = total_scores[model] / raw_bar_heights[model]
+        else:
+            scale_factors[model] = 1.0
+    
     # Stack bars from left to right, grouped by cluster
     left = np.zeros(len(models))
     legend_handles = []
@@ -392,17 +418,21 @@ def plot_stacked_bar_chart(total_df: pd.DataFrame, metric_df: pd.DataFrame, outp
                 metric_info = METRIC_WEIGHTS[metric_name]
                 color = METRIC_COLORS[metric_name]
                 
-                # Get scores for each model
+                # Get scores for each model (scaled to match total_score)
                 scores = []
+                weighted_scores_list = []
                 for model in models:
                     if metric_name in df_sorted.columns:
                         score = df_sorted[df_sorted["model"] == model][metric_name].values
-                        scores.append(score[0] if len(score) > 0 and pd.notna(score[0]) else 0)
+                        raw_score = score[0] if len(score) > 0 and pd.notna(score[0]) else 0
                     else:
-                        scores.append(0)
+                        raw_score = 0
+                    scores.append(raw_score)
+                    # Scale weighted contribution so total bar height = total_score
+                    weighted_scores_list.append(raw_score * metric_info["weight"] * scale_factors[model])
                 
                 scores = np.array(scores)
-                weighted_scores = scores * metric_info["weight"]
+                weighted_scores = np.array(weighted_scores_list)
                 
                 # Shorten metric name for display
                 short_name = metric_name.replace("_v2", "").replace("_explicit", "").replace("_", " ").title()
@@ -432,26 +462,40 @@ def plot_stacked_bar_chart(total_df: pd.DataFrame, metric_df: pd.DataFrame, outp
     # Add error bars from v2 bootstrap confidence intervals if available
     error_bar_ends = {}  # Track CI upper bounds for label positioning
     if bootstrap_df is not None:
+        bootstrap_mismatch_warned = False
         for i, model in enumerate(models):
             # Match model name (handle potential __score suffix)
             model_clean = model.replace('__score', '')
             match = bootstrap_df[bootstrap_df['Model'] == model_clean]
             if not match.empty:
-                total = df_sorted[df_sorted["model"] == model]["total_score"].values[0]
+                total = total_scores[model]  # Use the actual bar end position
+                bootstrap_total = match.iloc[0]['Total_Score']
                 bootstrap_se = match.iloc[0]['Bootstrap_SE']
                 
-                # Use SE-based symmetric error bars (more robust than raw CI)
-                # This works even if aggregate and bootstrap have slight score differences
-                ci_half_width = 1.96 * bootstrap_se  # 95% CI
+                # Check if bootstrap data is stale (scores differ significantly)
+                score_diff = abs(total - bootstrap_total)
+                if score_diff > 0.05 and not bootstrap_mismatch_warned:
+                    print(f"  Warning: Bootstrap data may be stale - score differences detected")
+                    print(f"    (e.g., {model_clean}: current={total:.3f}, bootstrap={bootstrap_total:.3f})")
+                    print(f"    Re-run bootstrap.py to update confidence intervals")
+                    bootstrap_mismatch_warned = True
                 
-                # Draw error bar
+                # Scale SE proportionally if scores differ (rough approximation)
+                if bootstrap_total > 0:
+                    scaled_se = bootstrap_se * (total / bootstrap_total)
+                else:
+                    scaled_se = bootstrap_se
+                
+                ci_half_width = 1.96 * scaled_se  # 95% CI
+                
+                # Draw error bar at the actual bar end (total_score)
                 ax.errorbar(total, i, xerr=ci_half_width, 
                            fmt='none', color='black', capsize=4, capthick=1.5, elinewidth=1.5)
                 error_bar_ends[model] = total + ci_half_width
     
     # Add total score labels at the end of each bar
     for i, model in enumerate(models):
-        total = df_sorted[df_sorted["model"] == model]["total_score"].values[0]
+        total = total_scores[model]
         # Adjust label position if error bar is present
         if model in error_bar_ends:
             label_x = error_bar_ends[model] + 0.01
