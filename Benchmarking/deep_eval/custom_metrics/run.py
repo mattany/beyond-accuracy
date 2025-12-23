@@ -244,10 +244,11 @@ if __name__ == "__main__":
         # "SciComma-3.1-8B",
         # "o1",
         # "claude-3-7-sonnet-20250219",
-        "Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        "Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt",
-        "SciComma-3.1-8B_y",
-        "SciComma-3.1-8B_prompt",
+        # "Meta-Llama-3.1-8B-Instruct-bnb-4bit",
+        # "Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt",
+        # "SciComma-3.1-8B_y",
+        # "SciComma-3.1-8B_prompt",
+        "human"
         # "scicomma-3.1-dpo",
         # "scicomma-3.1-dpo_prompt"
         # "scicomma-3.1-dpo_real_256",

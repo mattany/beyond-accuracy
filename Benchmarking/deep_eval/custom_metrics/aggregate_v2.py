@@ -169,6 +169,14 @@ NORMALIZATION_RANGES = {
     "dale_chall": (7, 12),  # 7th grade → 1, college level → 0
     # Flesch Reading Ease: already 0-1 scaled, clip to reasonable range
     "flesch_reading_ease": (0.3, 0.7),  # 0.3 (difficult) → 0, 0.7+ (easy) → 1
+    # Binary metrics already on 0-1 scale - use fixed range to avoid
+    # min==max returning 0.5 when all values are 0 (or all 1)
+    "humor_v2": (0, 1),  # 0 → 0, 1 → 1
+    "analogy_v2": (0, 1),  # 0 → 0, 1 → 1
+    "metaphor_v2": (0, 1),  # 0 → 0, 1 → 1
+    "connection_to_everyday_life_v2": (0, 1),  # 0 → 0, 1 → 1
+    "scaffolding": (0, 1),  # 0 → 0, 1 → 1
+    "explanation_type_v2": (0, 1),  # 0 → 0, 1 → 1
 }
 
 # Backwards compatibility: map v2 metric names to v1 fallbacks for old runs
