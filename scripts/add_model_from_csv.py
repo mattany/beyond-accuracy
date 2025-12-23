@@ -1,12 +1,12 @@
 import pandas as pd
-input_path = "/Users/mattan.yeroushalmi/studies/thesis/scripts/generations_2/"
-df = pd.read_csv(f"{input_path}/output_dpo_full_student_results.csv")
+# input_path = "/Users/mattan.yeroushalmi/studies/thesis/scripts/generations_2/"
+df = pd.read_csv(f"/Users/mattan.yeroushalmi/studies/thesis/SFT/data/ask_science_human_test.csv")
 main_df = pd.read_csv("/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv")
 
 
 df = df.rename(columns={
     "Question": "question",
-    "Answer": "scicomma-3.1-dpo_full",
+    "Human Answer": "human",
 })
 
 # Ensure both question columns have the same data type (string)
