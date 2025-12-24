@@ -29,6 +29,7 @@ from custom_metrics.metrics import (
     metaphor_metric_explicit_v2,
     analogy_metric_explicit_v2,
     connection_to_everyday_life_metric_explicit_v2,
+    scaffolding_metric,
 )
 
 GEVAL_RETRIES = 3
@@ -39,6 +40,7 @@ V2_METRICS = {
     "metaphor_v2": metaphor_metric_explicit_v2,
     "analogy_v2": analogy_metric_explicit_v2,
     "connection_to_everyday_life_v2": connection_to_everyday_life_metric_explicit_v2,
+    "scaffolding": scaffolding_metric,
 }
 
 
