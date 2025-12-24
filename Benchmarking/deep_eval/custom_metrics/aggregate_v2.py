@@ -158,6 +158,10 @@ METRIC_COLORS = assign_metric_colors()
 # Metrics where lower values are better (will be inverted during normalization)
 LOWER_IS_BETTER = ["ari", "dale_chall", "flesch_kincaid"]
 
+# Readability metrics to group into a single block in visualizations
+READABILITY_METRICS = ["flesch_reading_ease", "flesch_kincaid", "dale_chall", "ari"]
+READABILITY_COMBINED_WEIGHT = sum(CLUSTERS["clarity"]["metrics"][m]["weight"] for m in READABILITY_METRICS)
+
 # Custom normalization ranges: {metric_name: (min_val, max_val)}
 # Values outside this range are clipped to 0 or 1
 NORMALIZATION_RANGES = {
@@ -393,6 +397,8 @@ def plot_stacked_bar_chart(total_df: pd.DataFrame, metric_df: pd.DataFrame, outp
                 if metric_name not in METRIC_WEIGHTS:
                     continue
                 weight = METRIC_WEIGHTS[metric_name]["weight"]
+                if weight == 0:  # Skip metrics with zero weight (e.g., argumentation)
+                    continue
                 for model in models:
                     if metric_name in df_sorted.columns:
                         score = df_sorted[df_sorted["model"] == model][metric_name].values
@@ -414,6 +420,8 @@ def plot_stacked_bar_chart(total_df: pd.DataFrame, metric_df: pd.DataFrame, outp
     
     # Plot clusters in order: Basic, Intermediate, Advanced
     cluster_boundaries = []
+    readability_plotted = False  # Track if we've plotted the combined readability block
+    
     for cluster_name in ["basic", "intermediate", "advanced"]:
         cluster_info = LEVELS[cluster_name]
         cluster_start = left.copy()
@@ -424,27 +432,54 @@ def plot_stacked_bar_chart(total_df: pd.DataFrame, metric_df: pd.DataFrame, outp
                     continue
                 
                 metric_info = METRIC_WEIGHTS[metric_name]
-                color = METRIC_COLORS[metric_name]
+                if metric_info["weight"] == 0:  # Skip metrics with zero weight
+                    continue
                 
-                # Get scores for each model (scaled to match total_score)
-                scores = []
-                weighted_scores_list = []
-                for model in models:
-                    if metric_name in df_sorted.columns:
-                        score = df_sorted[df_sorted["model"] == model][metric_name].values
-                        raw_score = score[0] if len(score) > 0 and pd.notna(score[0]) else 0
-                    else:
-                        raw_score = 0
-                    scores.append(raw_score)
-                    # Scale weighted contribution so total bar height = total_score
-                    weighted_scores_list.append(raw_score * metric_info["weight"] * scale_factors[model])
-                
-                scores = np.array(scores)
-                weighted_scores = np.array(weighted_scores_list)
-                
-                # Shorten metric name for display
-                short_name = metric_name.replace("_v2", "").replace("_explicit", "").replace("_", " ").title()
-                weight_pct = metric_info["weight"] * 100
+                # Handle readability metrics as a combined block
+                if metric_name in READABILITY_METRICS:
+                    if readability_plotted:
+                        continue  # Skip - already plotted as combined block
+                    readability_plotted = True
+                    
+                    # Compute combined readability scores
+                    combined_scores = []
+                    combined_weighted_scores = []
+                    for model in models:
+                        model_avg = 0
+                        count = 0
+                        for rm in READABILITY_METRICS:
+                            if rm in df_sorted.columns:
+                                score = df_sorted[df_sorted["model"] == model][rm].values
+                                if len(score) > 0 and pd.notna(score[0]):
+                                    model_avg += score[0]
+                                    count += 1
+                        avg_score = model_avg / count if count > 0 else 0
+                        combined_scores.append(avg_score)
+                        combined_weighted_scores.append(avg_score * READABILITY_COMBINED_WEIGHT * scale_factors[model])
+                    
+                    scores = np.array(combined_scores)
+                    weighted_scores = np.array(combined_weighted_scores)
+                    short_name = "Readability"
+                    weight_pct = READABILITY_COMBINED_WEIGHT * 100
+                    color = METRIC_COLORS[READABILITY_METRICS[0]]  # Use first readability metric's color
+                else:
+                    # Regular metric handling
+                    color = METRIC_COLORS[metric_name]
+                    scores = []
+                    weighted_scores_list = []
+                    for model in models:
+                        if metric_name in df_sorted.columns:
+                            score = df_sorted[df_sorted["model"] == model][metric_name].values
+                            raw_score = score[0] if len(score) > 0 and pd.notna(score[0]) else 0
+                        else:
+                            raw_score = 0
+                        scores.append(raw_score)
+                        weighted_scores_list.append(raw_score * metric_info["weight"] * scale_factors[model])
+                    
+                    scores = np.array(scores)
+                    weighted_scores = np.array(weighted_scores_list)
+                    short_name = metric_name.replace("_v2", "").replace("_explicit", "").replace("_", " ").title()
+                    weight_pct = metric_info["weight"] * 100
                 
                 bars = ax.barh(y_pos, weighted_scores, left=left, 
                                color=color, alpha=0.85, edgecolor="white", linewidth=0.5)
@@ -514,7 +549,7 @@ def plot_stacked_bar_chart(total_df: pd.DataFrame, metric_df: pd.DataFrame, outp
     ax.set_yticks(y_pos)
     ax.set_yticklabels(models, fontsize=10)
     ax.set_xlabel("Weighted Score", fontsize=11)
-    ax.set_title("Science Communication Quality Score\nBasic (50%)  |  Intermediate (30%)  |  Advanced (20%)", 
+    ax.set_title("Science Communication Quality Score\nBasic (60%)  |  Intermediate (40%)", 
                 fontsize=13, fontweight="bold")
     ax.set_xlim(0, 1.15)
     
@@ -541,11 +576,27 @@ def plot_metric_heatmap(df: pd.DataFrame, output_dir: str):
     # Pivot to get metrics as rows, models as columns
     pivot_df = df.pivot(index="metric", columns="model", values="score")
     
-    # Sort metrics by cluster then category
+    # Combine readability metrics into a single row
+    if all(m in pivot_df.index for m in READABILITY_METRICS):
+        readability_row = pivot_df.loc[READABILITY_METRICS].mean()
+        pivot_df = pivot_df.drop(READABILITY_METRICS)
+        pivot_df.loc["readability"] = readability_row
+    
+    # Sort metrics by cluster then category, excluding zero-weight and individual readability metrics
     metric_order = []
+    readability_added = False
     for cluster_name in ["basic", "intermediate", "advanced"]:
         for cat_name in LEVELS[cluster_name]["categories"]:
             for m in CLUSTERS[cat_name]["metrics"].keys():
+                # Skip metrics with zero weight (e.g., argumentation)
+                if m in METRIC_WEIGHTS and METRIC_WEIGHTS[m]["weight"] == 0:
+                    continue
+                # Replace individual readability metrics with combined "readability"
+                if m in READABILITY_METRICS:
+                    if not readability_added and "readability" in pivot_df.index:
+                        metric_order.append("readability")
+                        readability_added = True
+                    continue
                 if m in pivot_df.index:
                     metric_order.append(m)
     pivot_df = pivot_df.reindex(metric_order)
@@ -559,7 +610,7 @@ def plot_metric_heatmap(df: pd.DataFrame, output_dir: str):
     sns.heatmap(pivot_df, annot=True, fmt=".2f", cmap="RdYlGn", 
                 vmin=0, vmax=1, ax=ax, cbar_kws={"label": "Normalized Score"})
     
-    ax.set_title("Model Performance Across All Metrics\n(Basic → Intermediate → Advanced)", 
+    ax.set_title("Model Performance Across All Metrics\n(Basic → Intermediate)", 
                 fontsize=13, fontweight="bold")
     ax.set_xlabel("Model", fontsize=12)
     ax.set_ylabel("Metric", fontsize=12)
@@ -615,7 +666,7 @@ def main(run_number: int = RUN_NUMBER):
     print("\n" + "="*60)
     print("TOTAL SCORES (sorted)")
     print("="*60)
-    display_cols = ["model", "basic_score", "intermediate_score", "advanced_score", "total_score"]
+    display_cols = ["model", "basic_score", "intermediate_score", "total_score"]
     display_cols = [c for c in display_cols if c in total_df.columns]
     print(total_df[display_cols].sort_values("total_score", ascending=False).to_string(index=False, float_format="%.3f"))
     

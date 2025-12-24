@@ -161,30 +161,32 @@ humor_metric_explicit = GEval(
     **g_eval_default_params
 )
 
+# v2: Strictly aligned with Baram-Tsabari (2012) definition
+# "Humor included both explicit jokes and ironic language"
 humor_metric_explicit_v2 = GEval(
     name="Humor Explicit (v2)",
     evaluation_steps=[
-        """1. HUMOR includes explicit jokes and obvious ironic language. Look for:
-   - Explicit jokes with a clear setup and punchline
-   - Puns or wordplay that are obviously meant to be funny
-   - OBVIOUS irony or sarcasm - dry understatement or saying something clearly tongue-in-cheek
+        """1. HUMOR includes explicit jokes AND ironic language.
    
-   Examples of humor:
-   - "...killing our own cells, which wouldn't be very wise" (obvious ironic understatement)
+   Look for ANY of the following:
+   - Explicit jokes (with or without a formal punchline)
+   - Puns or wordplay meant to amuse
+   - Ironic language: understatement, tongue-in-cheek remarks, or wry observations
+   
+   Examples of humor PRESENT:
+   - "...killing our own cells, which wouldn't be very wise" (ironic understatement)
    - "Atoms are like tiny LEGO blocks, except you can't step on them at 3 AM" (joke with punchline)
    - "Why did the electron leave the atom? Because it had no potential" (pun)
    - "Evolution doesn't plan ahead – if it did, it would have given us better knees" (ironic observation)""",
-        """2. The following are NOT humor (be strict!):
-   - Subtle or ambiguous irony that could be read literally
-   - Playful or casual tone without actual jokes or irony
-   - Exaggeration used for emphasis (not comedy)
-   - Creative or vivid analogies without comedic intent
-   - Witty writing style without explicit jokes
-   - Being engaging, enthusiastic, or conversational
-   - Interesting examples or observations
-   - Light-hearted comments without jokes or clear irony""",
-        """3. Be STRICT. Only return 10 if there is an EXPLICIT JOKE or OBVIOUS IRONIC LANGUAGE that is clearly meant to amuse.
-   The humor must be unmistakable – if you're unsure, return 0.
+        """2. The following are NOT humor:
+   - Creative or vivid analogies/metaphors without irony (e.g., "DNA is like a blueprint", "bacteria are like ninjas")
+   - Engaging or enthusiastic tone without jokes or irony
+   - Personification without irony (e.g., "the virus wants to replicate", "chemicals are villains")
+   - Vivid or dramatic descriptions
+   - Playful language that lacks actual jokes or ironic statements""",
+        """3. The key question: Is there an explicit JOKE or IRONIC statement?
+   If yes → return 10.
+   If no (even if creative, vivid, or playful) → return 0.
    Do not use intermediate scores."""
     ],
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],

@@ -50,7 +50,7 @@ SciComma-3.1-8B_y,metaphor_v2,metaphor_v2,0.05495928142119543,0.15,intermediate,
 SciComma-3.1-8B_prompt,metaphor_v2,metaphor_v2,0.17825726388569846,0.15,intermediate,rhetorical_devices
 human,metaphor_v2,metaphor_v2,0.05113284630021905,0.15,intermediate,rhetorical_devices
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,humor_v2,humor_v2,0.0,0.1,intermediate,style
-Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,humor_v2,humor_v2,0.0,0.1,intermediate,style
+Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,humor_v2,humor_v2,0.00028524568814995276,0.1,intermediate,style
 SciComma-3.1-8B_y,humor_v2,humor_v2,0.0,0.1,intermediate,style
 SciComma-3.1-8B_prompt,humor_v2,humor_v2,0.0,0.1,intermediate,style
-human,humor_v2,humor_v2,0.0065128197797150525,0.1,intermediate,style
+human,humor_v2,humor_v2,0.024988385972289393,0.1,intermediate,style

@@ -244,10 +244,10 @@ if __name__ == "__main__":
         # "SciComma-3.1-8B",
         # "o1",
         # "claude-3-7-sonnet-20250219",
-        # "Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        # "Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt",
-        # "SciComma-3.1-8B_y",
-        # "SciComma-3.1-8B_prompt",
+        "Meta-Llama-3.1-8B-Instruct-bnb-4bit",
+        "Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt",
+        "SciComma-3.1-8B_y",
+        "SciComma-3.1-8B_prompt",
         "human"
         # "scicomma-3.1-dpo",
         # "scicomma-3.1-dpo_prompt"
@@ -259,30 +259,30 @@ if __name__ == "__main__":
     asyncio.run(
         generate_metric_report(
             metrics={
-                ## BARAM TSABARI METRICS
-                "jargon": jargon_metric,
-                # "explanation_type": explanation_type_metric_explicit,
-                "metaphor_v2": metaphor_metric_explicit_v2,
-                # "content_units_explicit_v2": content_units_metric_explicit_v2,
-                # "humor_explicit": humor_metric_explicit,
+                # ## BARAM TSABARI METRICS
+                # "jargon": jargon_metric,
+                # "metaphor_v2": metaphor_metric_explicit_v2,
                 "humor_v2": humor_metric_explicit_v2,
-                "analogy_v2": analogy_metric_explicit_v2,
-                "explanation_type_v2": explanation_type_metric_explicit_v2,
-                "connection_to_everyday_life_v2": connection_to_everyday_life_metric_explicit_v2,
+                # "analogy_v2": analogy_metric_explicit_v2,
+                # "explanation_type_v2": explanation_type_metric_explicit_v2,
+                # "connection_to_everyday_life_v2": connection_to_everyday_life_metric_explicit_v2,
+                #
+                # # ## READING EASE
+                # "scaffolding": scaffolding_metric,
+                # "flesch_kincaid": flesch_kincaid,
+                # "flesch_reading_ease": flesch_reading_ease,
+                # "dale_chall": dale_chall,
+                # "ari": ari,
+
+                ### DEPRECATED
+                ## CORRECTNESS METRICS
+                # "correctness_explicit": correctness_metric_explicit,
                 # ## ZEMLA METRICS
                 # "internal_coherence_v2": internal_coherence_metric_explicit_v2,
                 # "completeness_v2": completeness_metric_explicit_v2,
                 # "alternatives_explicit": alternatives_metric_explicit,  # unreliable for LLM measurement
                 # "articulation_v2": articulation_metric_explicit_v2,
                 # "perceived_truth_explicit": perceived_truth_metric_explicit,  # unreliable for LLM measurement
-                # ## READING EASE
-                "scaffolding": scaffolding_metric,
-                "flesch_kincaid": flesch_kincaid,
-                "flesch_reading_ease": flesch_reading_ease,
-                "dale_chall": dale_chall,
-                "ari": ari,
-                ## CORRECTNESS METRICS
-                # "correctness_explicit": correctness_metric_explicit,
             },
             evaluation_dataset=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv",
             models_to_evaluate=models,
