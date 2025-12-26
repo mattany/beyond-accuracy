@@ -27,6 +27,7 @@ from deepeval.test_case import LLMTestCase
 from custom_metrics.metrics import (
     humor_metric_explicit_v2,
     metaphor_metric_explicit_v2,
+    metaphor_metric_explicit_v6,
     analogy_metric_explicit_v2,
     connection_to_everyday_life_metric_explicit_v2,
     scaffolding_metric,
@@ -34,10 +35,11 @@ from custom_metrics.metrics import (
 
 GEVAL_RETRIES = 3
 
-# Map metric names to v2 metric objects
+# Map metric names to metric objects
 V2_METRICS = {
     "humor_v2": humor_metric_explicit_v2,
     "metaphor_v2": metaphor_metric_explicit_v2,
+    "metaphor_v6": metaphor_metric_explicit_v6,
     "analogy_v2": analogy_metric_explicit_v2,
     "connection_to_everyday_life_v2": connection_to_everyday_life_metric_explicit_v2,
     "scaffolding": scaffolding_metric,

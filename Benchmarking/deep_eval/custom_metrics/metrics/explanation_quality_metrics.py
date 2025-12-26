@@ -387,6 +387,99 @@ metaphor_metric_explicit_v5 = GEval(
     **g_eval_default_params
 )
 
+
+metaphor_metric_explicit_v6 = GEval(
+    name="Metaphor Explicit (v6)",
+    evaluation_steps=[
+        """1. DEFINITION
+        
+        A METAPHOR is ACTIVE / LIVE figurative language in which a concept
+        is framed, evaluated, or described using another domain
+        in a NON-LITERAL way.
+        
+        Metaphors must be NOVEL (fresh, invented, not conventional).
+        Metaphors may appear WITH or WITHOUT explicit comparison words
+        such as "like" or "similar to".
+        
+        Score 10 if a novel metaphor is present.
+        Score 0 otherwise.
+        Do not use intermediate scores.
+        """,
+
+        """2. CORE METAPHOR TEST
+        
+        Ask:
+        Does the passage introduce novel, expressive,
+        or unexpected conceptual framing
+        beyond literal or textbook description?
+        
+        If YES → metaphor present (Score 10).
+        If NO → Score 0.
+        """,
+
+        """3. PERSONIFICATION TEST (KEY RULE)
+        
+        For personification, ask:
+        Is the attributed action, intention, or behavior
+        vivid, surprising, playful, or clearly invented?
+        
+        - YES → metaphor (Score 10)
+        - NO, sounds normal in news, textbooks, or everyday speech → NOT metaphor
+        """,
+
+        """4. METAPHORICAL ANALOGIES (IMPORTANT)
+        
+        The presence of explicit comparison language
+        ("like", "similar to", "think of X as Y", etc.)
+        does NOT exclude a metaphor.
+        
+        An analogy IS ALSO a metaphor if it introduces
+        novel, expressive, or imaginative figurative framing
+        beyond neutral explanation.
+        
+        Example (Score 10):
+        - "Debugging this system is like performing surgery with oven mitts."
+        """,
+
+        """5. CLEAR METAPHORS (Score 10) — EXAMPLES
+        
+        - "rogue proteins throwing a tantrum inside your cells"
+        - "Your DNA is a recipe book written in a 4-letter alphabet"
+        - "electrons waltzing around the nucleus"
+        - "molecules whispering secrets"
+        - "antibodies going to war"
+        - "a tsunami of medication swept through"
+        - "The star is a cosmic pressure cooker slowly boiling itself"
+        """,
+
+        """6. NOT METAPHORS (Score 0)
+        
+        Exclude all of the following:
+        
+        - DEAD or CONVENTIONAL METAPHORS / TECHNICAL TERMS:
+          "the cell is a factory", "DNA is a blueprint", "genetic code"
+        
+        - STANDARD PERSONIFICATION:
+          "the market fears", "the algorithm decides", "evolution favors"
+        
+        - IDIOMS:
+          "tip of the iceberg", "here be dragons", "play mind tricks"
+        
+        - METONYMY:
+          "Science says", "The USA wants"
+        
+        - SHAPE OR LITERAL RESEMBLANCE:
+          "mushroom cloud", "potato-shaped asteroid"
+        
+        - PURELY LITERAL STATEMENTS:
+          "The heart pumps blood"
+        """
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
+)
+
+
 correctness_metric_explicit = GEval(
     name="Correctness",
     evaluation_steps=[

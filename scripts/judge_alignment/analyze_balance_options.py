@@ -45,6 +45,7 @@ MAX_ANSWER_LENGTH = 2560  # Exclude answers longer than this for labeling tasks
 # Mapping from metric name to previous versions (for smart sampling)
 # List is ordered by preference: try first, then fallback to next
 METRIC_PREVIOUS_VERSIONS = {
+    'metaphor_v6': ['metaphor_v5', 'metaphor_v4', 'metaphor_v3', 'metaphor_v2'],
     'metaphor_v5': ['metaphor_v4', 'metaphor_v3', 'metaphor_v2'],
     'metaphor_v4': ['metaphor_v3', 'metaphor_v2'],
     'metaphor_v3': ['metaphor_v2'],
@@ -58,7 +59,7 @@ METRIC_PREVIOUS_VERSIONS = {
 
 ALL_METRICS = [
     'humor_v2_score',
-    'metaphor_v5_score',
+    'metaphor_v6_score',
     'analogy_v2_score', 
     'connection_to_everyday_life_v2_score', 
     'scaffolding_score'
@@ -67,7 +68,7 @@ ALL_METRICS = [
 # Reason columns corresponding to each metric
 ALL_REASON_COLUMNS = [
     'humor_v2_reason',
-    'metaphor_v5_reason',
+    'metaphor_v6_reason',
     'analogy_v2_reason',
     'connection_to_everyday_life_v2_reason',
     'scaffolding_reason'
@@ -536,6 +537,7 @@ def setup_deepeval(metrics_to_run=None):
         metaphor_metric_explicit_v3,
         metaphor_metric_explicit_v4,
         metaphor_metric_explicit_v5,
+        metaphor_metric_explicit_v6,
         analogy_metric_explicit_v2,
         connection_to_everyday_life_metric_explicit_v2,
         scaffolding_metric,
@@ -548,6 +550,7 @@ def setup_deepeval(metrics_to_run=None):
         "metaphor_v3": metaphor_metric_explicit_v3,
         "metaphor_v4": metaphor_metric_explicit_v4,
         "metaphor_v5": metaphor_metric_explicit_v5,
+        "metaphor_v6": metaphor_metric_explicit_v6,
         "analogy_v2": analogy_metric_explicit_v2,
         "connection_to_everyday_life_v2": connection_to_everyday_life_metric_explicit_v2,
         "scaffolding": scaffolding_metric,
