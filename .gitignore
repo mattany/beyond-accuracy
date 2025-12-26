@@ -1158,3 +1158,14 @@
 *.pyc
 *.DS_Store
 
+/colab/ask_science_evaluation.ipynb
+/colab/benchmark.ipynb
+/colab/Finetune LLaMa 2 7B.ipynb
+/colab/Finetune LLaMa 3.1 8B.ipynb
+/colab/Finetune LLaMa 3.3.ipynb
+/colab/GPT_SFT_only.ipynb
+/colab/llama3 evaluation.ipynb
+/colab/RAG haystack answer generation - gpt-4o.ipynb
+/colab/RAG haystack answer generation - llama2_basemodel.ipynb
+/colab/RAG haystack answer generation - llama2_sft_model.ipynb
+/colab/RAG_haystack_answer_generation.ipynb
