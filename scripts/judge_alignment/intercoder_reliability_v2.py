@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from scipy import stats
 
 
-METRIC_NAMES = ["Analogy", "Metaphor", "Humor", "Connection"]
+METRIC_NAMES = ["Analogy", "Metaphor", "Humor", "Connection", "Scaffolding"]
 
 # Mapping from METRIC_NAMES to CSV column names for v2 scores
 V2_SCORE_COLUMNS = {
@@ -23,6 +23,7 @@ V2_SCORE_COLUMNS = {
     "Metaphor": "metaphor_v2_score",
     "Humor": "humor_v2_score",
     "Connection": "connection_to_everyday_life_v2_score",
+    "Scaffolding": "scaffolding_score",
 }
 
 
@@ -62,6 +63,8 @@ def extract_metrics_from_result(result: List[Dict[str, Any]]) -> Dict[str, int]:
                     metrics["Humor"] = 1
                 elif c == "Connection to everyday life":
                     metrics["Connection"] = 1
+                elif c == "Scaffolding":
+                    metrics["Scaffolding"] = 1
     return metrics
 
 
@@ -70,15 +73,15 @@ def build_item_table(
     v2_scores_df: pd.DataFrame
 ) -> Tuple[pd.DataFrame, List[str]]:
     """
-    Build a DataFrame with one row per (question_id, model) where all annotators are present.
+    Build a DataFrame with one row per (Index, model) where all annotators are present.
     Uses v2 scores from the provided DataFrame instead of from JSON.
     """
     annotators = extract_annotators(tasks)
     rows = []
 
     for t in tasks:
-        qid = t["data"]["question_id"]
-        model = t["data"]["model"]
+        qid = t["data"]["Index"]
+        model = "human"
 
         # Latest annotation per annotator
         latest: Dict[str, Dict[str, Any]] = {}
@@ -110,8 +113,7 @@ def build_item_table(
 
         # Get v2 LLM scores from the CSV DataFrame
         v2_row = v2_scores_df[
-            (v2_scores_df["question_id"] == qid) & 
-            (v2_scores_df["model"] == model)
+            (v2_scores_df["Index"] == qid)
         ]
         
         if len(v2_row) == 0:
@@ -247,53 +249,319 @@ def compute_majority_vote_labels(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def plot_intercoder_reliability(icr_df: pd.DataFrame, output_path: Path) -> None:
-    """Create a grouped bar chart showing percent agreement and Gwet's AC1."""
-    fig, ax = plt.subplots(figsize=(10, 6))
-
+def _plot_intercoder_reliability_on_ax(
+    ax: plt.Axes, 
+    icr_df: pd.DataFrame,
+    title: str = "Inter-coder Reliability: Human Annotator Agreement (v2)",
+    fontsize: int = 12,
+    rotation: int = 0
+) -> None:
+    """Plot intercoder reliability bar chart on given axes."""
     metrics = icr_df["metric"].tolist()
     x = np.arange(len(metrics))
     width = 0.35
 
-    percent_agreement = icr_df["percent_agreement"].values
-    ac1 = icr_df["ac1"].values
+    pa_vals = icr_df["percent_agreement"].values
+    ac1_vals = icr_df["ac1"].values
 
-    bars1 = ax.bar(x - width / 2, percent_agreement, width, label="Percent Agreement", color="#4C72B0")
-    bars2 = ax.bar(x + width / 2, ac1, width, label="Gwet's AC1", color="#55A868")
+    bars1 = ax.bar(x - width / 2, pa_vals, width, label="Percent Agreement", color="#4C72B0")
+    bars2 = ax.bar(x + width / 2, ac1_vals, width, label="Gwet's AC1", color="#55A868")
 
-    ax.set_xlabel("Metric", fontsize=12)
-    ax.set_ylabel("Score", fontsize=12)
-    ax.set_title("Inter-coder Reliability: Human Annotator Agreement (v2)", fontsize=14, fontweight="bold")
+    ax.set_xlabel("Metric", fontsize=fontsize)
+    ax.set_ylabel("Score", fontsize=fontsize)
+    ax.set_title(title, fontsize=fontsize + 2, fontweight="bold")
     ax.set_xticks(x)
-    ax.set_xticklabels(metrics, fontsize=11)
-    ax.set_ylim(0, 1.1)
-    ax.axhline(y=0, color="gray", linestyle="-", linewidth=0.5)
-    ax.legend(loc="upper right", fontsize=10)
+    ax.set_xticklabels(metrics, fontsize=fontsize - 1, rotation=rotation, ha="right" if rotation else "center")
+    ax.set_ylim(0, 1.15)
+    ax.legend(loc="upper right", fontsize=fontsize - 2)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
 
     for bar in bars1:
         height = bar.get_height()
         ax.annotate(f"{height:.2f}", xy=(bar.get_x() + bar.get_width() / 2, height),
-                    xytext=(0, 3), textcoords="offset points", ha="center", va="bottom", fontsize=9)
+                    xytext=(0, 2), textcoords="offset points", ha="center", va="bottom", fontsize=fontsize - 3)
     for bar in bars2:
         height = bar.get_height()
         ax.annotate(f"{height:.2f}", xy=(bar.get_x() + bar.get_width() / 2, height),
-                    xytext=(0, 3), textcoords="offset points", ha="center", va="bottom", fontsize=9)
+                    xytext=(0, 2), textcoords="offset points", ha="center", va="bottom", fontsize=fontsize - 3)
 
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
 
+def plot_intercoder_reliability(icr_df: pd.DataFrame, output_path: Path) -> None:
+    """Create a grouped bar chart showing percent agreement and Gwet's AC1."""
+    fig, ax = plt.subplots(figsize=(10, 6))
+    _plot_intercoder_reliability_on_ax(ax, icr_df)
     plt.tight_layout()
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close()
     print(f"  Saved: {output_path.name}")
 
 
-def plot_human_llm_correlations(
-    corr_mean_df: pd.DataFrame, corr_maj_df: pd.DataFrame, output_path: Path
-) -> None:
-    """Create a grouped bar chart showing Spearman correlations."""
-    fig, ax = plt.subplots(figsize=(10, 6))
+def _plot_confusion_matrix_on_ax(
+    ax: plt.Axes,
+    row_labels: np.ndarray,
+    col_labels: np.ndarray,
+    metric_name: str,
+    row_axis_label: str,
+    col_axis_label: str,
+    cmap: str = "Blues",
+    fontsize: int = 11,
+    tick_labels: Tuple[str, str] = ("Absent", "Present"),
+    pct_decimals: int = 1
+) -> float:
+    """
+    Plot a single confusion matrix on the given axes.
+    
+    Args:
+        ax: Matplotlib axes to plot on
+        row_labels: Binary labels for rows (0/1)
+        col_labels: Binary labels for columns (0/1)
+        metric_name: Name of the metric for title
+        row_axis_label: Label for y-axis
+        col_axis_label: Label for x-axis
+        cmap: Colormap name
+        fontsize: Font size for cell annotations
+        tick_labels: Labels for tick marks (default: "Absent", "Present")
+        pct_decimals: Decimal places for percentage display
+        
+    Returns:
+        Agreement rate (accuracy)
+    """
+    # Compute confusion matrix
+    cm = np.zeros((2, 2), dtype=int)
+    for r, c in zip(row_labels, col_labels):
+        cm[r, c] += 1
+    
+    total = cm.sum()
+    agreement = (cm[0, 0] + cm[1, 1]) / total if total > 0 else 0
+    
+    # Plot
+    ax.imshow(cm, cmap=cmap, aspect="auto")
+    
+    # Add text annotations
+    for i in range(2):
+        for j in range(2):
+            count = cm[i, j]
+            pct = count / total * 100 if total > 0 else 0
+            text_color = "white" if cm[i, j] > cm.max() / 2 else "black"
+            ax.text(j, i, f"{count}\n({pct:.{pct_decimals}f}%)", 
+                   ha="center", va="center", color=text_color, fontsize=fontsize)
+    
+    ax.set_xticks([0, 1])
+    ax.set_yticks([0, 1])
+    ax.set_xticklabels(list(tick_labels), fontsize=fontsize - 1)
+    ax.set_yticklabels(list(tick_labels), fontsize=fontsize - 1)
+    ax.set_xlabel(col_axis_label, fontsize=fontsize)
+    ax.set_ylabel(row_axis_label, fontsize=fontsize)
+    ax.set_title(f"{metric_name}\n({agreement:.{pct_decimals}%})", fontsize=fontsize + 1, fontweight="bold")
+    
+    return agreement
 
+
+def _plot_confusion_matrices_on_axes(
+    axes: List[plt.Axes],
+    df: pd.DataFrame,
+    mode: str = "llm_vs_human",
+    annotators: List[str] = None,
+    threshold: float = 0.5,
+    fontsize: int = 11,
+    tick_labels: Tuple[str, str] = ("Absent", "Present"),
+    pct_decimals: int = 1,
+    show_first_ylabel_only: bool = False
+) -> None:
+    """
+    Plot confusion matrices on provided axes.
+    
+    Args:
+        axes: List of matplotlib axes (one per metric)
+        df: DataFrame with metric data
+        mode: "llm_vs_human" or "intercoder"
+        annotators: List of annotator names (required for intercoder mode)
+        threshold: Threshold for binarizing LLM scores (llm_vs_human mode only)
+        fontsize: Base font size
+        tick_labels: Labels for tick marks
+        pct_decimals: Decimal places for percentage display
+        show_first_ylabel_only: If True, only show ylabel on first subplot
+    """
+    # Configure based on mode
+    if mode == "intercoder":
+        cmap = "Greens"
+        short_names = []
+        for a in (annotators or []):
+            if "@" in a:
+                short_names.append(a.split("@")[0][:10])
+            else:
+                short_names.append(a[:10])
+        row_label = f"Coder 1 ({short_names[0]})" if short_names else "Coder 1"
+        col_label = f"Coder 2 ({short_names[1]})" if len(short_names) > 1 else "Coder 2"
+    else:  # llm_vs_human
+        cmap = "Blues"
+        row_label = "Human Label"
+        col_label = "LLM Prediction"
+    
+    for idx, metric in enumerate(METRIC_NAMES):
+        ax = axes[idx]
+        
+        if mode == "intercoder":
+            per_annotator = df[f"{metric}_per_annotator"].tolist()
+            row_labels = np.array([row[0] for row in per_annotator], dtype=int)
+            col_labels = np.array([row[1] for row in per_annotator], dtype=int)
+        else:  # llm_vs_human
+            human_col = f"human_mean_{metric}"
+            llm_col = f"LLM_{metric}"
+            mask = ~(df[human_col].isna() | df[llm_col].isna())
+            human_vals = df.loc[mask, human_col].values
+            llm_vals = df.loc[mask, llm_col].values
+            row_labels = (human_vals >= 0.5).astype(int)
+            col_labels = (llm_vals >= threshold).astype(int)
+        
+        ylabel = row_label if (not show_first_ylabel_only or idx == 0) else ""
+        _plot_confusion_matrix_on_ax(
+            ax, row_labels, col_labels, metric,
+            ylabel, col_label, cmap=cmap, fontsize=fontsize,
+            tick_labels=tick_labels, pct_decimals=pct_decimals
+        )
+
+
+def plot_confusion_matrices_grid(
+    df: pd.DataFrame,
+    output_path: Path,
+    mode: str = "llm_vs_human",
+    annotators: List[str] = None,
+    threshold: float = 0.5
+) -> None:
+    """
+    Create confusion matrices for all metrics.
+    
+    Args:
+        df: DataFrame with metric data
+        output_path: Path to save the plot
+        mode: "llm_vs_human" or "intercoder"
+        annotators: List of annotator names (required for intercoder mode)
+        threshold: Threshold for binarizing LLM scores (llm_vs_human mode only)
+    """
+    n_metrics = len(METRIC_NAMES)
+    fig, axes = plt.subplots(2, 3, figsize=(14, 9))
+    axes_flat = axes.flatten()
+    
+    # Configure title based on mode
+    if mode == "intercoder":
+        title = "Inter-coder Agreement - Confusion Matrices"
+    else:
+        title = f"LLM vs Human Agreement - Confusion Matrices\n(LLM threshold={threshold})"
+    
+    _plot_confusion_matrices_on_axes(
+        axes_flat, df, mode=mode, annotators=annotators, threshold=threshold
+    )
+    
+    # Hide extra subplots
+    for idx in range(n_metrics, len(axes_flat)):
+        axes_flat[idx].axis("off")
+    
+    fig.suptitle(title, fontsize=14, fontweight="bold", y=1.02)
+    
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close()
+    print(f"  Saved: {output_path.name}")
+
+
+def plot_intercoder_confusion_matrices(
+    df: pd.DataFrame, annotators: List[str], output_path: Path
+) -> None:
+    """Create confusion matrices comparing agreement between two human coders."""
+    plot_confusion_matrices_grid(df, output_path, mode="intercoder", annotators=annotators)
+
+
+def plot_confusion_matrices(
+    df: pd.DataFrame, output_path: Path, threshold: float = 0.5
+) -> None:
+    """Create confusion matrices comparing LLM predictions vs human labels."""
+    plot_confusion_matrices_grid(df, output_path, mode="llm_vs_human", threshold=threshold)
+
+
+def plot_per_annotator_llm_confusion_matrices(
+    df: pd.DataFrame,
+    annotators: List[str],
+    output_path: Path,
+    threshold: float = 0.5
+) -> None:
+    """
+    Create confusion matrices comparing each individual annotator vs LLM predictions.
+    
+    Args:
+        df: DataFrame with {metric}_per_annotator and LLM_{metric} columns
+        annotators: List of annotator names/emails
+        output_path: Path to save the plot
+        threshold: Threshold for binarizing LLM scores
+    """
+    n_annotators = len(annotators)
+    n_metrics = len(METRIC_NAMES)
+    
+    # Get short names for annotators
+    short_names = []
+    for a in annotators:
+        if "@" in a:
+            short_names.append(a.split("@")[0])
+        else:
+            short_names.append(a[:15])
+    
+    fig, axes = plt.subplots(n_annotators, n_metrics, figsize=(3 * n_metrics, 3.5 * n_annotators))
+    
+    # Handle single annotator case
+    if n_annotators == 1:
+        axes = axes.reshape(1, -1)
+    
+    for ann_idx, (annotator, short_name) in enumerate(zip(annotators, short_names)):
+        for metric_idx, metric in enumerate(METRIC_NAMES):
+            ax = axes[ann_idx, metric_idx]
+            
+            # Get annotator's labels
+            per_annotator = df[f"{metric}_per_annotator"].tolist()
+            annotator_labels = np.array([row[ann_idx] for row in per_annotator], dtype=int)
+            
+            # Get LLM predictions
+            llm_col = f"LLM_{metric}"
+            mask = ~df[llm_col].isna()
+            llm_vals = df.loc[mask, llm_col].values
+            llm_binary = (llm_vals >= threshold).astype(int)
+            annotator_labels_valid = annotator_labels[mask]
+            
+            # Plot confusion matrix
+            _plot_confusion_matrix_on_ax(
+                ax, annotator_labels_valid, llm_binary, metric,
+                row_axis_label=short_name if metric_idx == 0 else "",
+                col_axis_label="LLM" if ann_idx == n_annotators - 1 else "",
+                cmap="Purples", fontsize=9,
+                tick_labels=("0", "1"), pct_decimals=0
+            )
+            
+            # Only show metric name in title for first row
+            if ann_idx > 0:
+                # Get agreement from title and update
+                title_text = ax.get_title()
+                # Extract just the percentage part
+                pct_part = title_text.split('\n')[-1] if '\n' in title_text else title_text
+                ax.set_title(pct_part, fontsize=10, fontweight="bold")
+    
+    fig.suptitle(f"Per-Annotator LLM Agreement (threshold={threshold})", 
+                 fontsize=14, fontweight="bold", y=1.02)
+    
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close()
+    print(f"  Saved: {output_path.name}")
+
+
+def _plot_human_llm_correlations_on_ax(
+    ax: plt.Axes,
+    corr_mean_df: pd.DataFrame,
+    corr_maj_df: pd.DataFrame,
+    title: str = "Human–LLM Agreement (Spearman ρ) - v2 Metrics",
+    fontsize: int = 12,
+    rotation: int = 0
+) -> None:
+    """Plot human-LLM correlations bar chart on given axes."""
     metrics = corr_mean_df["metric"].tolist()
     x = np.arange(len(metrics))
     width = 0.35
@@ -302,16 +570,18 @@ def plot_human_llm_correlations(
     spearman_majority = corr_maj_df["spearman_majority"].values
 
     bars1 = ax.bar(x - width / 2, spearman_mean, width, label="Mean Human Label", color="#4C72B0")
-    bars2 = ax.bar(x + width / 2, spearman_majority, width, label="Majority-vote Label", color="#55A868")
+    bars2 = ax.bar(x + width / 2, spearman_majority, width, label="Unanimous Label", color="#55A868")
 
-    ax.set_xlabel("Metric", fontsize=12)
-    ax.set_ylabel("Spearman Correlation", fontsize=12)
-    ax.set_title("Human–LLM Agreement (Spearman ρ) - v2 Metrics", fontsize=14, fontweight="bold")
+    ax.set_xlabel("Metric", fontsize=fontsize)
+    ax.set_ylabel("Spearman ρ", fontsize=fontsize)
+    ax.set_title(title, fontsize=fontsize + 2, fontweight="bold")
     ax.set_xticks(x)
-    ax.set_xticklabels(metrics, fontsize=11)
+    ax.set_xticklabels(metrics, fontsize=fontsize - 1, rotation=rotation, ha="right" if rotation else "center")
     ax.set_ylim(-0.3, 1.15)
     ax.axhline(y=0, color="gray", linestyle="-", linewidth=0.5)
-    ax.legend(loc="upper right", fontsize=10)
+    ax.legend(loc="upper right", fontsize=fontsize - 2)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
 
     for bars in [bars1, bars2]:
         for bar in bars:
@@ -319,14 +589,74 @@ def plot_human_llm_correlations(
             if np.isnan(height):
                 continue
             va = "bottom" if height >= 0 else "top"
-            offset = 3 if height >= 0 else -3
+            offset = 2 if height >= 0 else -2
             ax.annotate(f"{height:.2f}", xy=(bar.get_x() + bar.get_width() / 2, height),
-                        xytext=(0, offset), textcoords="offset points", ha="center", va=va, fontsize=9)
+                        xytext=(0, offset), textcoords="offset points", ha="center", va=va, fontsize=fontsize - 3)
 
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
 
+def plot_human_llm_correlations(
+    corr_mean_df: pd.DataFrame, corr_maj_df: pd.DataFrame, output_path: Path
+) -> None:
+    """Create a grouped bar chart showing Spearman correlations."""
+    fig, ax = plt.subplots(figsize=(10, 6))
+    _plot_human_llm_correlations_on_ax(ax, corr_mean_df, corr_maj_df)
     plt.tight_layout()
+    plt.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close()
+    print(f"  Saved: {output_path.name}")
+
+
+def plot_combined_analysis(
+    df: pd.DataFrame,
+    annotators: List[str],
+    icr_df: pd.DataFrame,
+    corr_mean_df: pd.DataFrame,
+    corr_maj_df: pd.DataFrame,
+    output_path: Path,
+    threshold: float = 0.5
+) -> None:
+    """
+    Create a combined figure with all four analysis plots.
+    
+    Layout:
+    - Row 0: Intercoder reliability bar chart | Human-LLM correlations bar chart
+    - Row 1: Inter-coder confusion matrices (5 metrics)
+    - Row 2: LLM vs Human confusion matrices (5 metrics)
+    """
+    fig = plt.figure(figsize=(18, 16))
+    
+    # Use GridSpec for flexible layout
+    gs = fig.add_gridspec(3, 5, height_ratios=[1.2, 1, 1], hspace=0.4, wspace=0.3)
+    
+    # === Row 0: Bar charts (spanning columns) ===
+    ax_icr = fig.add_subplot(gs[0, :2])
+    ax_corr = fig.add_subplot(gs[0, 3:])
+    
+    _plot_intercoder_reliability_on_ax(
+        ax_icr, icr_df, title="A) Inter-coder Reliability", fontsize=10, rotation=15
+    )
+    _plot_human_llm_correlations_on_ax(
+        ax_corr, corr_mean_df, corr_maj_df, title="B) Human–LLM Correlation", fontsize=10, rotation=15
+    )
+    
+    # === Row 1: Inter-coder confusion matrices ===
+    intercoder_axes = [fig.add_subplot(gs[1, idx]) for idx in range(len(METRIC_NAMES))]
+    _plot_confusion_matrices_on_axes(
+        intercoder_axes, df, mode="intercoder", annotators=annotators,
+        fontsize=9, tick_labels=("0", "1"), pct_decimals=0, show_first_ylabel_only=True
+    )
+    fig.text(0.5, 0.64, "C) Inter-coder Agreement Matrices", ha="center", fontsize=12, fontweight="bold")
+    
+    # === Row 2: LLM vs Human confusion matrices ===
+    llm_axes = [fig.add_subplot(gs[2, idx]) for idx in range(len(METRIC_NAMES))]
+    _plot_confusion_matrices_on_axes(
+        llm_axes, df, mode="llm_vs_human", threshold=threshold,
+        fontsize=9, tick_labels=("0", "1"), pct_decimals=0, show_first_ylabel_only=True
+    )
+    fig.text(0.5, 0.32, f"D) LLM vs Human Agreement Matrices (threshold={threshold})", 
+             ha="center", fontsize=12, fontweight="bold")
+    
+    # Adjust layout and save
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close()
     print(f"  Saved: {output_path.name}")
@@ -388,11 +718,26 @@ def main(v2_csv_path: str, json_path: str) -> None:
 
     # Generate plots
     print("\nGenerating plots...")
+    
+    # Combined plot with all four analyses
+    combined_plot_path = output_dir / "combined_analysis.png"
+    plot_combined_analysis(df, annotators, icr_df, corr_mean_df, corr_maj_df, combined_plot_path)
+    
+    # Also save individual plots
     icr_plot_path = output_dir / "intercoder_reliability.png"
     human_llm_plot_path = output_dir / "human_llm_correlations.png"
+    confusion_plot_path = output_dir / "confusion_matrices.png"
+    intercoder_confusion_plot_path = output_dir / "intercoder_confusion_matrices.png"
 
     plot_intercoder_reliability(icr_df, icr_plot_path)
     plot_human_llm_correlations(corr_mean_df, corr_maj_df, human_llm_plot_path)
+    plot_confusion_matrices(df, confusion_plot_path)
+    if len(annotators) == 2:
+        plot_intercoder_confusion_matrices(df, annotators, intercoder_confusion_plot_path)
+    
+    # Per-annotator LLM agreement
+    per_annotator_plot_path = output_dir / "per_annotator_llm_confusion.png"
+    plot_per_annotator_llm_confusion_matrices(df, annotators, per_annotator_plot_path)
 
 
 if __name__ == "__main__":
