@@ -17,14 +17,23 @@ from scipy import stats
 
 METRIC_NAMES = ["Analogy", "Metaphor", "Humor", "Connection", "Scaffolding"]
 
-# Mapping from METRIC_NAMES to CSV column names for v2 scores
+# Mapping from METRIC_NAMES to CSV column names for v2 scores (with fallbacks)
 V2_SCORE_COLUMNS = {
-    "Analogy": "analogy_v2_score",
-    "Metaphor": "metaphor_v2_score",
-    "Humor": "humor_v2_score",
-    "Connection": "connection_to_everyday_life_v2_score",
-    "Scaffolding": "scaffolding_score",
+    "Analogy": ["analogy_v2_score", "analogy_v6_score", "analogy_score"],
+    "Metaphor": ["metaphor_v2_score", "metaphor_v6_score", "metaphor_score"],
+    "Humor": ["humor_v2_score", "humor_v6_score", "humor_score"],
+    "Connection": ["connection_to_everyday_life_v2_score", "connection_v6_score", "connection_score"],
+    "Scaffolding": ["scaffolding_score", "scaffolding_v2_score", "scaffolding_v6_score"],
 }
+
+
+def find_score_column(df: pd.DataFrame, metric: str) -> str:
+    """Find the first matching score column for a metric."""
+    candidates = V2_SCORE_COLUMNS.get(metric, [])
+    for col in candidates:
+        if col in df.columns:
+            return col
+    return None
 
 
 def load_tasks(json_path: str) -> List[Dict[str, Any]]:
@@ -46,16 +55,37 @@ def extract_annotators(tasks: List[Dict[str, Any]]) -> List[str]:
     return annotators
 
 
-def extract_metrics_from_result(result: List[Dict[str, Any]]) -> Dict[str, int]:
+def extract_metrics_from_result(result: List[Dict[str, Any]], active_metrics: List[str] = None) -> Dict[str, int]:
     """
     Extract binary metrics from a single annotation's `result` field.
     Returns a dict with keys in METRIC_NAMES and values in {0,1}.
+    
+    Handles two formats:
+    1. Multi-choice: choices like ["Metaphor", "Analogy", ...]
+    2. Yes/No: choices like ["Yes"] or ["No"] for single-metric labeling
+    
+    Args:
+        result: The annotation result field
+        active_metrics: For Yes/No format, which metrics to set. Defaults to all METRIC_NAMES.
     """
+    if active_metrics is None:
+        active_metrics = METRIC_NAMES
+    
     metrics = {m: 0 for m in METRIC_NAMES}
     for r in result:
         if r.get("type") == "choices":
-            for c in r.get("value", {}).get("choices", []):
-                if c == "Analogy":
+            choices = r.get("value", {}).get("choices", [])
+            for c in choices:
+                # Handle Yes/No format (single-metric labeling)
+                if c == "Yes":
+                    for m in active_metrics:
+                        metrics[m] = 1
+                elif c == "No":
+                    # Explicitly set to 0 (already default, but clear intent)
+                    for m in active_metrics:
+                        metrics[m] = 0
+                # Handle multi-choice format (original)
+                elif c == "Analogy":
                     metrics["Analogy"] = 1
                 elif c == "Metaphor":
                     metrics["Metaphor"] = 1
@@ -70,17 +100,38 @@ def extract_metrics_from_result(result: List[Dict[str, Any]]) -> Dict[str, int]:
 
 def build_item_table(
     tasks: List[Dict[str, Any]], 
-    v2_scores_df: pd.DataFrame
+    v2_scores_df: pd.DataFrame,
+    active_metrics: List[str] = None
 ) -> Tuple[pd.DataFrame, List[str]]:
     """
     Build a DataFrame with one row per (Index, model) where all annotators are present.
     Uses v2 scores from the provided DataFrame instead of from JSON.
+    
+    Args:
+        tasks: Label Studio tasks with annotations
+        v2_scores_df: DataFrame with v2 metric scores
+        active_metrics: For Yes/No format labeling, which metrics to set. 
+                       Defaults to all METRIC_NAMES.
     """
+    if active_metrics is None:
+        active_metrics = METRIC_NAMES
+        
     annotators = extract_annotators(tasks)
     rows = []
+    
+    # Determine if we're using Index or question-based matching
+    use_index = "Index" in v2_scores_df.columns
+    if not use_index:
+        print("  Note: No 'Index' column found, using 'question' for matching")
 
     for t in tasks:
-        qid = t["data"]["Index"]
+        data = t["data"]
+        # Try Index first, fall back to question
+        if "Index" in data:
+            qid = data["Index"]
+        else:
+            qid = data.get("question", "")
+        
         model = "human"
 
         # Latest annotation per annotator
@@ -91,7 +142,7 @@ def build_item_table(
             if email not in latest or ts > latest[email]["ts"]:
                 latest[email] = {
                     "ts": ts,
-                    "metrics": extract_metrics_from_result(ann.get("result", [])),
+                    "metrics": extract_metrics_from_result(ann.get("result", []), active_metrics),
                 }
 
         # Only keep items where all annotators are present
@@ -112,19 +163,23 @@ def build_item_table(
             row[f"human_mean_{metric}"] = float(arr.mean())
 
         # Get v2 LLM scores from the CSV DataFrame
-        v2_row = v2_scores_df[
-            (v2_scores_df["Index"] == qid)
-        ]
+        if use_index:
+            v2_row = v2_scores_df[v2_scores_df["Index"] == qid]
+        else:
+            v2_row = v2_scores_df[v2_scores_df["question"] == qid]
         
         if len(v2_row) == 0:
-            print(f"  Warning: No v2 scores found for qid={qid}, model={model}")
+            print(f"  Warning: No v2 scores found for qid={str(qid)[:50]}...")
             continue
             
         v2_row = v2_row.iloc[0]
         
         for metric in METRIC_NAMES:
-            score_col = V2_SCORE_COLUMNS[metric]
-            row[f"LLM_{metric}"] = v2_row.get(score_col, np.nan)
+            score_col = find_score_column(v2_scores_df, metric)
+            if score_col:
+                row[f"LLM_{metric}"] = v2_row.get(score_col, np.nan)
+            else:
+                row[f"LLM_{metric}"] = np.nan
 
         rows.append(row)
 
@@ -726,21 +781,26 @@ def plot_combined_analysis(
     print(f"  Saved: {output_path.name}")
 
 
-def main(v2_csv_path: str, json_path: str) -> None:
+def main(v2_csv_path: str, json_path: str, active_metrics: List[str] = None) -> None:
     """
     Main analysis function.
     
     Args:
         v2_csv_path: Path to balanced_dataset_v2.csv with v2 metric scores
         json_path: Path to labelstudio_output.json with human annotations
+        active_metrics: For Yes/No format labeling, which metrics to analyze.
+                       Defaults to all METRIC_NAMES.
     """
+    if active_metrics is None:
+        active_metrics = METRIC_NAMES
+        
     print(f"Loading v2 scores from: {v2_csv_path}")
     v2_df = pd.read_csv(v2_csv_path)
     
     print(f"Loading human annotations from: {json_path}")
     tasks = load_tasks(json_path)
     
-    df, annotators = build_item_table(tasks, v2_df)
+    df, annotators = build_item_table(tasks, v2_df, active_metrics)
 
     output_dir = Path(v2_csv_path).parent
 
@@ -781,21 +841,47 @@ def main(v2_csv_path: str, json_path: str) -> None:
     print(f"  {corr_maj_path.name}")
 
     # Generate combined plot with all analyses
-    print("\nGenerating plot...")
-    combined_plot_path = output_dir / "combined_analysis.png"
-    plot_combined_analysis(df, annotators, icr_df, corr_mean_df, corr_maj_df, combined_plot_path)
+    if len(annotators) >= 2:
+        print("\nGenerating plot...")
+        combined_plot_path = output_dir / "combined_analysis.png"
+        plot_combined_analysis(df, annotators, icr_df, corr_mean_df, corr_maj_df, combined_plot_path)
+    else:
+        print(f"\nSkipping combined plot (requires at least 2 annotators, found {len(annotators)})")
+        # Generate simpler LLM correlation plot only
+        print("Generating LLM correlation plot...")
+        corr_plot_path = output_dir / "human_llm_correlations.png"
+        plot_human_llm_correlations(corr_mean_df, corr_maj_df, corr_plot_path)
 
 
 if __name__ == "__main__":
+    import argparse
+    
     script_dir = Path(__file__).parent
     
-    # Default paths
-    v2_csv = script_dir / "balanced_dataset_v2" / "balanced_dataset_v2.csv"
-    json_file = script_dir / "balanced_dataset" / "labelstudio_output.json"
+    parser = argparse.ArgumentParser(
+        description="Inter-coder reliability analysis for v2 metrics."
+    )
+    parser.add_argument(
+        "v2_csv", 
+        nargs="?",
+        default=str(script_dir / "balanced_dataset_v2" / "balanced_dataset_v2.csv"),
+        help="Path to CSV with v2 metric scores"
+    )
+    parser.add_argument(
+        "json_file",
+        nargs="?", 
+        default=str(script_dir / "balanced_dataset" / "labelstudio_output.json"),
+        help="Path to Label Studio JSON export"
+    )
+    parser.add_argument(
+        "--metrics",
+        nargs="+",
+        choices=METRIC_NAMES,
+        default=None,
+        help="Active metrics for Yes/No format labeling (default: all)"
+    )
     
-    if len(sys.argv) == 3:
-        v2_csv = Path(sys.argv[1])
-        json_file = Path(sys.argv[2])
+    args = parser.parse_args()
     
-    main(str(v2_csv), str(json_file))
+    main(args.v2_csv, args.json_file, args.metrics)
 
