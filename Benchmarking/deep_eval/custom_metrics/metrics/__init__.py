@@ -6,6 +6,7 @@ from custom_metrics.metrics.explanation_quality_metrics import (
     metaphor_metric_explicit,
     metaphor_metric_explicit_v2,
     metaphor_metric_explicit_v3,
+    metaphor_metric_explicit_v4,
     content_units_metric_explicit,
     content_units_metric_explicit_v2,
     humor_metric_explicit,

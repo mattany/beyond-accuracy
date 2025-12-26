@@ -42,12 +42,17 @@ DEFAULT_BATCH_SIZE = 100
 GEVAL_RETRIES = 3
 MAX_ANSWER_LENGTH = 2560  # Exclude answers longer than this for labeling tasks
 
-# Mapping from metric name to previous version (for smart sampling)
-METRIC_PREVIOUS_VERSION = {
-    'metaphor_v3': 'metaphor_v2',
-    'humor_v3': 'humor_v2',
-    'analogy_v3': 'analogy_v2',
-    'connection_to_everyday_life_v3': 'connection_to_everyday_life_v2',
+# Mapping from metric name to previous versions (for smart sampling)
+# List is ordered by preference: try first, then fallback to next
+METRIC_PREVIOUS_VERSIONS = {
+    'metaphor_v4': ['metaphor_v3', 'metaphor_v2'],
+    'metaphor_v3': ['metaphor_v2'],
+    'humor_v4': ['humor_v3', 'humor_v2'],
+    'humor_v3': ['humor_v2'],
+    'analogy_v4': ['analogy_v3', 'analogy_v2'],
+    'analogy_v3': ['analogy_v2'],
+    'connection_to_everyday_life_v4': ['connection_to_everyday_life_v3', 'connection_to_everyday_life_v2'],
+    'connection_to_everyday_life_v3': ['connection_to_everyday_life_v2'],
 }
 
 ALL_METRICS = [
@@ -623,10 +628,10 @@ async def process_batch(batch_df, semaphore, LLMTestCase, V2_METRICS):
 
 def smart_sample(metrics_df, source_df, metric_name, batch_size):
     """
-    Sample a stratified dataset based on the previous version of a metric.
+    Sample a stratified dataset based on a previous version of a metric.
     
-    For example, for metaphor_v3, look at metaphor_v2_score and sample
-    half from positive (>0.5) and half from negative (<=0.5).
+    For example, for metaphor_v4, first try metaphor_v3_score, then fall back to metaphor_v2_score.
+    Samples half from positive (>0.5) and half from negative (<=0.5).
     
     Falls back to source_df if not enough examples in one group.
     Excludes:
@@ -634,17 +639,28 @@ def smart_sample(metrics_df, source_df, metric_name, batch_size):
     - Rows in exclude_indices.csv
     - Rows with answers too long (> MAX_ANSWER_LENGTH)
     """
-    prev_metric = METRIC_PREVIOUS_VERSION.get(metric_name)
-    if not prev_metric:
+    prev_metrics = METRIC_PREVIOUS_VERSIONS.get(metric_name)
+    if not prev_metrics:
         print(f"Warning: No previous version mapping for '{metric_name}'. Using sequential sampling.")
         return None
     
-    prev_score_col = f"{prev_metric}_score"
-    target_score_col = f"{metric_name}_score"
+    # Try each previous version in order until we find one that exists
+    prev_metric = None
+    prev_score_col = None
+    for candidate in prev_metrics:
+        candidate_col = f"{candidate}_score"
+        if candidate_col in metrics_df.columns:
+            prev_metric = candidate
+            prev_score_col = candidate_col
+            break
     
-    if prev_score_col not in metrics_df.columns:
-        print(f"Warning: Previous metric column '{prev_score_col}' not found. Using sequential sampling.")
+    if not prev_score_col:
+        tried = [f"{m}_score" for m in prev_metrics]
+        print(f"Warning: No previous metric columns found (tried: {tried}). Using sequential sampling.")
         return None
+    
+    target_score_col = f"{metric_name}_score"
+    print(f"Using '{prev_score_col}' for stratified sampling")
     
     # Get indices already in metrics_df
     existing_indices = set(metrics_df.index.tolist())

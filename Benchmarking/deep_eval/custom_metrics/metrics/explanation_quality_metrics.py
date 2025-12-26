@@ -316,6 +316,40 @@ metaphor_metric_explicit_v3 = GEval(
     **g_eval_default_params
 )
 
+# v4: Further refined based on edge case analysis - stricter novelty focus
+metaphor_metric_explicit_v4 = GEval(
+    name="Metaphor Explicit (v4)",
+    evaluation_steps=[
+        """1. A METAPHOR is NOVEL figurative language that creates fresh imagery, NOT standard expressions.
+   
+   CLEAR METAPHORS (score 10) - creative/unexpected comparisons:
+   - "Zombie-proteins that reanimate and need a head-shot" (creative extended metaphor)
+   - "Your DNA is a recipe book written in a 4-letter alphabet" (fresh framing, not textbook)
+   - "Neurons gossiping with each other" (unexpected personification)
+   - "The star is a cosmic pressure cooker slowly boiling itself" (vivid novel imagery)""",
+        """2. NOT metaphors (exclude all of these):
+   
+   - SIMILES/ANALOGIES: comparisons with "like", "similar to", "imagine", "think of it as"
+   - IDIOMS: frozen phrases with conventional figurative meanings that native speakers would recognize as common sayings (e.g., "play mind tricks", "tip of the iceberg", "here be dragons")
+   - METONYMY: organizations/institutions standing for their people ("The USA wants", "The company decided", "Science says")
+   - WEAK PERSONIFICATION: everyday humanizing language for animals, systems, or abstractions ("cats figured out", "the algorithm decides", "the market fears")
+   - SHAPE DESCRIPTIONS: literal visual resemblance ("potato-shaped asteroid", "mushroom cloud")
+   - TECHNICAL TERMS & DEAD METAPHORS: standardized vocabulary or textbook analogies ("the cell is a factory", "DNA is a blueprint", "the heart is a pump", "genetic code", "viral marketing")
+   - LITERAL STATEMENTS: "The heart pumps blood", "Fields attract and repel" """,
+        """3. KEY DECISION RULE:
+   Ask: "Is this phrase NOVEL to this context, or would a native speaker recognize it as a common expression?"
+   
+   - If a native speaker would say "oh, that's a common saying" → NOT a metaphor (it's an idiom)
+   - If the figurative language is FRESH and INVENTED for this explanation → METAPHOR
+   
+   Only score 10 for ACTIVE metaphors that create fresh figurative meaning.
+   Return 0 for idioms, explicit analogies, weak personification, or technical terms. 
+   Do not use intermediate scores."""
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
+)
+
 correctness_metric_explicit = GEval(
     name="Correctness",
     evaluation_steps=[
