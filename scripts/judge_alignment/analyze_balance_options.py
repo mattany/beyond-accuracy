@@ -45,6 +45,7 @@ MAX_ANSWER_LENGTH = 2560  # Exclude answers longer than this for labeling tasks
 # Mapping from metric name to previous versions (for smart sampling)
 # List is ordered by preference: try first, then fallback to next
 METRIC_PREVIOUS_VERSIONS = {
+    'metaphor_v5': ['metaphor_v4', 'metaphor_v3', 'metaphor_v2'],
     'metaphor_v4': ['metaphor_v3', 'metaphor_v2'],
     'metaphor_v3': ['metaphor_v2'],
     'humor_v4': ['humor_v3', 'humor_v2'],
@@ -57,7 +58,7 @@ METRIC_PREVIOUS_VERSIONS = {
 
 ALL_METRICS = [
     'humor_v2_score',
-    'metaphor_v4_score',
+    'metaphor_v5_score',
     'analogy_v2_score', 
     'connection_to_everyday_life_v2_score', 
     'scaffolding_score'
@@ -66,7 +67,7 @@ ALL_METRICS = [
 # Reason columns corresponding to each metric
 ALL_REASON_COLUMNS = [
     'humor_v2_reason',
-    'metaphor_v4_reason',
+    'metaphor_v5_reason',
     'analogy_v2_reason',
     'connection_to_everyday_life_v2_reason',
     'scaffolding_reason'
@@ -534,6 +535,7 @@ def setup_deepeval(metrics_to_run=None):
         metaphor_metric_explicit_v2,
         metaphor_metric_explicit_v3,
         metaphor_metric_explicit_v4,
+        metaphor_metric_explicit_v5,
         analogy_metric_explicit_v2,
         connection_to_everyday_life_metric_explicit_v2,
         scaffolding_metric,
@@ -545,6 +547,7 @@ def setup_deepeval(metrics_to_run=None):
         "metaphor_v2": metaphor_metric_explicit_v2,
         "metaphor_v3": metaphor_metric_explicit_v3,
         "metaphor_v4": metaphor_metric_explicit_v4,
+        "metaphor_v5": metaphor_metric_explicit_v5,
         "analogy_v2": analogy_metric_explicit_v2,
         "connection_to_everyday_life_v2": connection_to_everyday_life_metric_explicit_v2,
         "scaffolding": scaffolding_metric,
@@ -637,12 +640,16 @@ async def process_batch(batch_df, semaphore, LLMTestCase, V2_METRICS):
 
 def smart_sample(metrics_df, source_df, metric_name, batch_size):
     """
-    Sample a stratified dataset based on a previous version of a metric.
+    Sample a stratified dataset based on previous versions of a metric.
     
-    For example, for metaphor_v4, first try metaphor_v3_score, then fall back to metaphor_v2_score.
+    For example, for metaphor_v5:
+    1. First try to sample positives/negatives from metaphor_v4_score
+    2. If depleted, fall back to metaphor_v3_score for more examples
+    3. If still depleted, fall back to metaphor_v2_score
+    4. Finally fall back to source_df for completely new samples
+    
     Samples half from positive (>0.5) and half from negative (<=0.5).
     
-    Falls back to source_df if not enough examples in one group.
     Excludes:
     - Rows where the target metric already has a value
     - Rows in exclude_indices.csv
@@ -653,23 +660,20 @@ def smart_sample(metrics_df, source_df, metric_name, batch_size):
         print(f"Warning: No previous version mapping for '{metric_name}'. Using sequential sampling.")
         return None
     
-    # Try each previous version in order until we find one that exists
-    prev_metric = None
-    prev_score_col = None
+    # Find which previous metric columns exist
+    available_prev_cols = []
     for candidate in prev_metrics:
         candidate_col = f"{candidate}_score"
         if candidate_col in metrics_df.columns:
-            prev_metric = candidate
-            prev_score_col = candidate_col
-            break
+            available_prev_cols.append(candidate_col)
     
-    if not prev_score_col:
+    if not available_prev_cols:
         tried = [f"{m}_score" for m in prev_metrics]
         print(f"Warning: No previous metric columns found (tried: {tried}). Using sequential sampling.")
         return None
     
     target_score_col = f"{metric_name}_score"
-    print(f"Using '{prev_score_col}' for stratified sampling")
+    print(f"Smart sampling with fallback chain: {available_prev_cols}")
     
     # Get indices already in metrics_df
     existing_indices = set(metrics_df.index.tolist())
@@ -701,35 +705,71 @@ def smart_sample(metrics_df, source_df, metric_name, batch_size):
         available_df = available_df.drop(index=list(excluded_in_df), errors='ignore')
         print(f"Excluding {len(excluded_in_df)} rows from exclude_indices.csv")
     
-    # Split available data by previous metric score
-    positive_mask = available_df[prev_score_col] > THRESHOLD
-    negative_mask = available_df[prev_score_col] <= THRESHOLD
-    
-    positive_indices = available_df[positive_mask].index.tolist()
-    negative_indices = available_df[negative_mask].index.tolist()
-    
     half_batch = batch_size // 2
+    sampled_positive = []
+    sampled_negative = []
+    used_indices = set()
     
-    print(f"Smart sampling for {metric_name} based on {prev_score_col}:")
-    print(f"  Available positive examples (unevaluated): {len(positive_indices)}")
-    print(f"  Available negative examples (unevaluated): {len(negative_indices)}")
+    print(f"Smart sampling for {metric_name}:")
     print(f"  Target: {half_batch} positive + {half_batch} negative = {batch_size} total")
     
-    # Sample from each group
-    random.shuffle(positive_indices)
-    random.shuffle(negative_indices)
+    # Debug: show what's available for each version
+    print(f"  Available rows per version (before sampling):")
+    for prev_score_col in available_prev_cols:
+        has_metric = available_df[prev_score_col].notna()
+        version_df = available_df[has_metric]
+        pos_count = (version_df[prev_score_col] > THRESHOLD).sum()
+        neg_count = (version_df[prev_score_col] <= THRESHOLD).sum()
+        print(f"    {prev_score_col}: {pos_count} pos, {neg_count} neg (total: {len(version_df)})")
     
-    sampled_positive = positive_indices[:half_batch]
-    sampled_negative = negative_indices[:half_batch]
+    # Prioritize rows evaluated by newer metrics first
+    # For each metric version (newest to oldest), take rows that have THAT version's score
+    # but haven't been sampled yet
+    for prev_score_col in available_prev_cols:
+        if len(sampled_positive) >= half_batch and len(sampled_negative) >= half_batch:
+            break  # Already have enough
+        
+        # Get rows that have this metric evaluated and aren't already sampled
+        has_metric = available_df[prev_score_col].notna()
+        candidates_df = available_df[has_metric & ~available_df.index.isin(used_indices)]
+        
+        if len(candidates_df) == 0:
+            continue
+        
+        # Split by positive/negative using THIS metric's score
+        positive_mask = candidates_df[prev_score_col] > THRESHOLD
+        negative_mask = candidates_df[prev_score_col] <= THRESHOLD
+        
+        positive_indices = candidates_df[positive_mask].index.tolist()
+        negative_indices = candidates_df[negative_mask].index.tolist()
+        
+        random.shuffle(positive_indices)
+        random.shuffle(negative_indices)
+        
+        # Take what we need (up to the remaining quota)
+        pos_needed = half_batch - len(sampled_positive)
+        neg_needed = half_batch - len(sampled_negative)
+        
+        new_positive = positive_indices[:pos_needed]
+        new_negative = negative_indices[:neg_needed]
+        
+        if new_positive or new_negative:
+            print(f"  From {prev_score_col}: +{len(new_positive)} pos, +{len(new_negative)} neg")
+        
+        sampled_positive.extend(new_positive)
+        sampled_negative.extend(new_negative)
+        used_indices.update(new_positive)
+        used_indices.update(new_negative)
     
-    # Check if we need to fallback to source_df
-    shortfall = 0
-    if len(sampled_positive) < half_batch:
-        shortfall += half_batch - len(sampled_positive)
-        print(f"  Shortfall in positive: {half_batch - len(sampled_positive)}")
-    if len(sampled_negative) < half_batch:
-        shortfall += half_batch - len(sampled_negative)
-        print(f"  Shortfall in negative: {half_batch - len(sampled_negative)}")
+    # Check shortfall after trying all previous versions
+    pos_shortfall = half_batch - len(sampled_positive)
+    neg_shortfall = half_batch - len(sampled_negative)
+    shortfall = pos_shortfall + neg_shortfall
+    
+    if pos_shortfall > 0:
+        print(f"  Shortfall in positive after all versions: {pos_shortfall}")
+    if neg_shortfall > 0:
+        print(f"  Shortfall in negative after all versions: {neg_shortfall}")
     
     sampled_indices = sampled_positive + sampled_negative
     

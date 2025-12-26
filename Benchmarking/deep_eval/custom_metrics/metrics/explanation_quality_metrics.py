@@ -350,6 +350,43 @@ metaphor_metric_explicit_v4 = GEval(
     **g_eval_default_params
 )
 
+# v5: Better handling of creative personification
+metaphor_metric_explicit_v5 = GEval(
+    name="Metaphor Explicit (v5)",
+    evaluation_steps=[
+        """1. A METAPHOR is NOVEL figurative language that creates fresh imagery, NOT standard expressions.
+   
+   CLEAR METAPHORS (score 10) - creative/unexpected language:
+   - Extended creative metaphors: "rogue proteins throwing a tantrum inside your cells"
+   - Fresh framing: "Your DNA is a recipe book written in a 4-letter alphabet"
+   - CREATIVE PERSONIFICATION (vivid, unexpected actions): "electrons waltzing around the nucleus", "molecules whispering secrets", "antibodies going to war", "a tsunami of medication swept through"
+   - Novel imagery: "The star is a cosmic pressure cooker slowly boiling itself"
+   
+   Creative personification IS a metaphor when the action/description is vivid, humorous, or unexpected.""",
+        """2. NOT metaphors (exclude all of these):
+   
+   - SIMILES/ANALOGIES: comparisons with "like", "similar to", "imagine", "think of it as"
+   - IDIOMS: frozen phrases recognized as common sayings ("tip of the iceberg", "here be dragons", "play mind tricks")
+   - METONYMY: organizations standing for people ("The USA wants", "Science says")
+   - STANDARD PERSONIFICATION: common/unremarkable humanizing phrases ("cats figured out", "the algorithm decides", "the market fears", "evolution favors")
+   - SHAPE DESCRIPTIONS: literal visual resemblance ("potato-shaped asteroid", "mushroom cloud")
+   - TECHNICAL TERMS & DEAD METAPHORS: textbook analogies or standardized vocabulary ("the cell is a factory", "DNA is a blueprint", "genetic code")
+   - LITERAL STATEMENTS: "The heart pumps blood" """,
+        """3. KEY DECISION RULE - PERSONIFICATION TEST:
+   
+   For personification specifically, ask: "Is this VIVID/CREATIVE or STANDARD/UNREMARKABLE?"
+   - "The market fears recession" → STANDARD (everyone says this) → NOT metaphor
+   - "White blood cells throwing punches at invaders" → CREATIVE/VIVID → METAPHOR
+   
+   General rule: Is the figurative language FRESH and INVENTED, or would a native speaker recognize it as everyday language?
+   
+   Score 10 for active metaphors with fresh figurative meaning. Return 0 otherwise.
+   Do not use intermediate scores."""
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
+)
+
 correctness_metric_explicit = GEval(
     name="Correctness",
     evaluation_steps=[
