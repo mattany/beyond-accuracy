@@ -29,6 +29,10 @@ LARGE_SURVEY_SIZE = 30
 SMALL_SURVEY_SIZE = 10
 BATCH_SIZE = 100
 GEVAL_RETRIES = 3
+MAX_ANSWER_LENGTH = 2560  # Exclude answers longer than this for labeling tasks
+
+# Indexes to exclude (already used in balanced_10.csv test tagging)
+EXCLUDE_INDICES = [1217, 549, 1188, 1575, 128]
 
 ALL_METRICS = [
     'humor_v2_score', 
@@ -37,6 +41,12 @@ ALL_METRICS = [
     'connection_to_everyday_life_v2_score', 
     'scaffolding_score'
 ]
+
+# Column rename mapping for output (to match balanced_dataset.csv format)
+OUTPUT_COLUMN_RENAME = {
+    'Question': 'question',
+    'Human Answer': 'answer'
+}
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent
@@ -285,6 +295,30 @@ def analyze_best_achievable(df):
     return None
 
 
+def analyze_large_only(df):
+    """Find the best achievable balance for a single large survey only."""
+    print("\n=== Finding BEST achievable balance for LARGE SURVEY ONLY ===\n")
+    
+    valid_df = df.dropna()
+    all_indices = set(valid_df.index.tolist())
+    
+    # Exclude indices already used in balanced_10.csv
+    if EXCLUDE_INDICES:
+        excluded = set(EXCLUDE_INDICES) & all_indices
+        all_indices = all_indices - excluded
+        print(f"Excluding {len(excluded)} indices from previous survey: {sorted(excluded)}")
+    
+    df_values = {idx: {m: valid_df.at[idx, m] for m in ALL_METRICS} for idx in all_indices}
+    
+    print(f"Finding best balance for {LARGE_SURVEY_SIZE}-question survey...")
+    result, counts, tol = find_best_balance(df_values, list(all_indices), LARGE_SURVEY_SIZE, ALL_METRICS)
+    if result:
+        print(f"  ✓ Found! Worst metric deviation: {tol*100:.1f}% from 50%")
+        return [(f"Large Survey ({LARGE_SURVEY_SIZE} questions)", LARGE_SURVEY_SIZE, result, counts)]
+    
+    return None
+
+
 def print_survey_stats(surveys, label="surveys"):
     """Print detailed stats for each survey."""
     print("\n" + "="*60)
@@ -343,6 +377,10 @@ def save_balanced_datasets(df, surveys, output_dir):
         
         output_path = output_dir / filename
         survey_df = df.loc[indices].copy()
+        
+        # Rename columns to match balanced_dataset.csv format
+        survey_df = survey_df.rename(columns=OUTPUT_COLUMN_RENAME)
+        
         survey_df.to_csv(output_path, index=False)
         print(f"Saved {output_path.name} with {len(survey_df)} rows")
     
@@ -503,6 +541,7 @@ async def generate_more_data(num_batches=1):
 def main():
     parser = argparse.ArgumentParser(description="Analyze and generate balanced survey datasets")
     parser.add_argument("--save", action="store_true", help="Save the best achievable datasets to CSV")
+    parser.add_argument("--large", action="store_true", help="Generate only the large survey (no small survey)")
     parser.add_argument("--generate", type=int, nargs="?", const=1, metavar="N",
                         help="Generate N more batches of data (default: 1)")
     args = parser.parse_args()
@@ -520,10 +559,18 @@ def main():
     df = pd.read_csv(METRICS_PATH)
     print(f"Total rows: {len(df)}")
     
-    total_4 = 2 * LARGE_SURVEY_SIZE + 2 * SMALL_SURVEY_SIZE
-    total_2 = LARGE_SURVEY_SIZE + SMALL_SURVEY_SIZE
-    print(f"4-survey plan needs: {total_4} questions (2×{LARGE_SURVEY_SIZE} + 2×{SMALL_SURVEY_SIZE})")
-    print(f"2-survey plan needs: {total_2} questions (1×{LARGE_SURVEY_SIZE} + 1×{SMALL_SURVEY_SIZE})\n")
+    # Filter out answers that are too long for labeling tasks
+    original_len = len(df)
+    df = df[df['Human Answer'].str.len() <= MAX_ANSWER_LENGTH]
+    filtered_count = original_len - len(df)
+    print(f"Filtered out {filtered_count} rows with answers > {MAX_ANSWER_LENGTH} chars")
+    print(f"Remaining rows: {len(df)}")
+    
+    if args.large:
+        print(f"Large-only plan needs: {LARGE_SURVEY_SIZE} questions\n")
+    else:
+        total_2 = LARGE_SURVEY_SIZE + SMALL_SURVEY_SIZE
+        print(f"2-survey plan needs: {total_2} questions (1×{LARGE_SURVEY_SIZE} + 1×{SMALL_SURVEY_SIZE})\n")
     
     # Show distribution
     print("Current metric distribution:")
@@ -532,12 +579,18 @@ def main():
         neg = (df[m] <= THRESHOLD).sum()
         print(f"  {short_name(m)}: {pos} pos, {neg} neg ({100*pos/len(df):.1f}% pos)")
     
-    # ========== BEST ACHIEVABLE ==========
-    print("\n" + "#"*70)
-    print("# BEST ACHIEVABLE BALANCE (2 surveys: 1×{} + 1×{})".format(LARGE_SURVEY_SIZE, SMALL_SURVEY_SIZE))
-    print("#"*70)
+    # ========== ANALYSIS ==========
+    if args.large:
+        print("\n" + "#"*70)
+        print("# LARGE SURVEY ONLY (1×{})".format(LARGE_SURVEY_SIZE))
+        print("#"*70)
+        best_surveys = analyze_large_only(df)
+    else:
+        print("\n" + "#"*70)
+        print("# BEST ACHIEVABLE BALANCE (2 surveys: 1×{} + 1×{})".format(LARGE_SURVEY_SIZE, SMALL_SURVEY_SIZE))
+        print("#"*70)
+        best_surveys = analyze_best_achievable(df)
     
-    best_surveys = analyze_best_achievable(df)
     if best_surveys:
         print_survey_stats(best_surveys, "best achievable")
         
