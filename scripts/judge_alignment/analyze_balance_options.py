@@ -23,6 +23,10 @@ from pathlib import Path
 import pandas as pd
 from tqdm import tqdm
 
+# Set random seed for deterministic output
+RANDOM_SEED = 42
+random.seed(RANDOM_SEED)
+
 # Constants
 THRESHOLD = 0.5
 LARGE_SURVEY_SIZE = 30
@@ -40,6 +44,15 @@ ALL_METRICS = [
     'analogy_v2_score', 
     'connection_to_everyday_life_v2_score', 
     'scaffolding_score'
+]
+
+# Reason columns corresponding to each metric
+ALL_REASON_COLUMNS = [
+    'humor_v2_reason',
+    'metaphor_v2_reason',
+    'analogy_v2_reason',
+    'connection_to_everyday_life_v2_reason',
+    'scaffolding_reason'
 ]
 
 # Column rename mapping for output (to match balanced_dataset.csv format)
@@ -365,6 +378,22 @@ def save_balanced_datasets(df, surveys, output_dir):
     """Save the balanced datasets to CSV files."""
     output_dir.mkdir(parents=True, exist_ok=True)
     
+    # Determine which columns to include in output
+    # Base columns that are always included
+    base_columns = ['Question', 'Human Answer']
+    
+    # Include all score columns
+    output_columns = base_columns + ALL_METRICS
+    
+    # Include reason columns if they exist in the dataframe
+    available_reason_columns = [col for col in ALL_REASON_COLUMNS if col in df.columns]
+    output_columns += available_reason_columns
+    
+    if available_reason_columns:
+        print(f"Including {len(available_reason_columns)} reason columns in output")
+    else:
+        print("Note: No reason columns found in source data")
+    
     for name, size, indices, counts in surveys:
         # Create filename from survey name
         if "Large" in name:
@@ -376,7 +405,8 @@ def save_balanced_datasets(df, surveys, output_dir):
             filename = name.lower().replace(" ", "_").replace("(", "").replace(")", "").replace("questions", "q") + ".csv"
         
         output_path = output_dir / filename
-        survey_df = df.loc[indices].copy()
+        # Select only the columns we want to include
+        survey_df = df.loc[indices, [col for col in output_columns if col in df.columns]].copy()
         
         # Rename columns to match balanced_dataset.csv format
         survey_df = survey_df.rename(columns=OUTPUT_COLUMN_RENAME)
@@ -430,7 +460,7 @@ def setup_deepeval():
     return LLMTestCase, V2_METRICS
 
 
-async def evaluate_row(index, row, metric_name, metric_function, scores, semaphore, LLMTestCase, pbar=None):
+async def evaluate_row(index, row, metric_name, metric_function, scores, reasons, semaphore, LLMTestCase, pbar=None):
     """Evaluate a single row with a single metric."""
     async with semaphore:
         test_case = LLMTestCase(
@@ -452,8 +482,13 @@ async def evaluate_row(index, row, metric_name, metric_function, scores, semapho
         
         if success:
             scores[index] = metric_function.score
+            if hasattr(metric_function, "reason") and metric_function.reason:
+                reasons[index] = metric_function.reason
+            else:
+                reasons[index] = None
         else:
             scores[index] = None
+            reasons[index] = None
             print(f"Warning: Row {index} failed for {metric_name}")
         
         if pbar:
@@ -463,24 +498,26 @@ async def evaluate_row(index, row, metric_name, metric_function, scores, semapho
 
 async def process_batch(batch_df, semaphore, LLMTestCase, V2_METRICS):
     """Process a batch of questions with all metrics."""
-    SCORE_COLUMNS = [f"{name}_score" for name in V2_METRICS.keys()]
+    indices = list(batch_df.index)
     
-    for col in SCORE_COLUMNS:
-        batch_df[col] = None
-
     total_tasks = len(batch_df) * len(V2_METRICS)
     pbar = tqdm(total=total_tasks, desc="Processing batch")
     
     for metric_name, metric_function in V2_METRICS.items():
         scores = {}
+        reasons = {}
         tasks = [
-            evaluate_row(index, row, metric_name, metric_function, scores, semaphore, LLMTestCase, pbar)
+            evaluate_row(index, row, metric_name, metric_function, scores, reasons, semaphore, LLMTestCase, pbar)
             for index, row in batch_df.iterrows()
         ]
         await asyncio.gather(*tasks)
         
-        for idx, score in scores.items():
-            batch_df.at[idx, f"{metric_name}_score"] = score
+        # Convert dicts to lists with consistent ordering
+        scores_list = [scores.get(i, None) for i in indices]
+        reasons_list = [reasons.get(i, None) for i in indices]
+        
+        batch_df[f"{metric_name}_score"] = scores_list
+        batch_df[f"{metric_name}_reason"] = reasons_list
     
     pbar.close()
     return batch_df
