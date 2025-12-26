@@ -312,10 +312,6 @@ def main():
             df['original_question'] = df[question_col]
         if 'original_answer' not in df.columns:
             df['original_answer'] = df[answer_col]
-        if 'formatted_question' not in df.columns:
-            df['formatted_question'] = ''
-        if 'formatted_answer' not in df.columns:
-            df['formatted_answer'] = ''
         if 'reddit_url' not in df.columns:
             df['reddit_url'] = ''
         if 'match_score' not in df.columns:
@@ -333,8 +329,8 @@ def main():
             result = search_reddit_post(reddit, driver, question, answer, args.subreddit)
             
             if result:
-                df.loc[idx, 'formatted_question'] = result['formatted_question']
-                df.loc[idx, 'formatted_answer'] = result['formatted_answer']
+                df.loc[idx, question_col] = result['formatted_question']
+                df.loc[idx, answer_col] = result['formatted_answer']
                 df.loc[idx, 'reddit_url'] = result['reddit_url']
                 df.loc[idx, 'match_score'] = result['match_score']
                 matched_count += 1
