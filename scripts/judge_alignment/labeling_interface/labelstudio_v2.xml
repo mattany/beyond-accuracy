@@ -1,0 +1,183 @@
+<View style="max-width: 700px; margin: 0 auto; font-family: system-ui, sans-serif;">
+    <Header value="Question:"/>
+    <Text name="question" value="$question"/>
+
+    <Header value="Answer:"/>
+    <Text name="answer" value="$answer"/>
+
+    <Header value="Guidelines:"/>
+    <Text name="guidelines" value="Read the question and answer, then determine if it contains the following features:"/>
+
+    <!-- HUMOR -->
+    <View style="margin-left: 1em; margin-top: 1em; padding: 0.5em; background: #f8f9fa; border-left: 3px solid #6c757d;">
+        <Header size="4" value="🎭 Humor"/>
+        <Text name="humor_def" value="HUMOR includes explicit jokes AND ironic language."/>
+        
+        <View style="margin-top: 0.5em;">
+            <Text name="humor_look_for" value="✓ Look for:"/>
+            <View style="margin-left: 1em;">
+                <Text name="humor_1" value="• Explicit jokes (with or without a punchline)"/>
+                <Text name="humor_2" value="• Puns or wordplay meant to amuse"/>
+                <Text name="humor_3" value="• Ironic language: understatement, tongue-in-cheek, wry observations"/>
+            </View>
+        </View>
+        
+        <View style="margin-top: 0.5em;">
+            <Text name="humor_ex_header" value="✓ Examples of humor PRESENT:"/>
+            <View style="margin-left: 1em; font-style: italic;">
+                <Text name="humor_ex1" value="• '...killing our own cells, which wouldn't be very wise' (ironic understatement)"/>
+                <Text name="humor_ex2" value="• 'Atoms are like tiny LEGO blocks, except you can't step on them at 3 AM' (joke)"/>
+                <Text name="humor_ex3" value="• 'Why did the electron leave the atom? Because it had no potential' (pun)"/>
+                <Text name="humor_ex4" value="• 'Evolution doesn't plan ahead – if it did, it would have given us better knees' (ironic)"/>
+            </View>
+        </View>
+        
+        <View style="margin-top: 0.5em;">
+            <Text name="humor_not_header" value="✗ NOT humor:"/>
+            <View style="margin-left: 1em;">
+                <Text name="humor_not1" value="• Creative analogies/metaphors without irony"/>
+                <Text name="humor_not2" value="• Engaging tone without actual jokes"/>
+                <Text name="humor_not3" value="• Personification without irony"/>
+                <Text name="humor_not4" value="• Playful language lacking actual jokes or ironic statements"/>
+            </View>
+        </View>
+    </View>
+
+    <!-- ANALOGY -->
+    <View style="margin-left: 1em; margin-top: 1em; padding: 0.5em; background: #f8f9fa; border-left: 3px solid #6c757d;">
+        <Header size="4" value="🔗 Analogy"/>
+        <Text name="analogy_def" value="An ANALOGY explicitly compares TWO DIFFERENT DOMAINS to explain a concept."/>
+        
+        <View style="margin-top: 0.5em;">
+            <Text name="analogy_must_have" value="✓ Must have all three:"/>
+            <View style="margin-left: 1em;">
+                <Text name="analogy_1" value="• SOURCE: a familiar, concrete situation (e.g., 'a library', 'traffic on a highway')"/>
+                <Text name="analogy_2" value="• TARGET: the scientific/abstract concept being explained"/>
+                <Text name="analogy_3" value="• EXPLICIT comparison words: 'like', 'similar to', 'just as', 'think of X as Y', 'imagine', 'consider'"/>
+            </View>
+        </View>
+        
+        <View style="margin-top: 0.5em;">
+            <Text name="analogy_ex_header" value="✓ Examples of analogies:"/>
+            <View style="margin-left: 1em; font-style: italic;">
+                <Text name="analogy_ex1" value="• 'Think of DNA like a recipe book' (source: recipe book → target: DNA)"/>
+                <Text name="analogy_ex2" value="• 'The immune system works like an army defending a castle'"/>
+                <Text name="analogy_ex3" value="• 'Electrons orbit the nucleus similar to how planets orbit the sun'"/>
+            </View>
+        </View>
+        
+        <View style="margin-top: 0.5em;">
+            <Text name="analogy_not_header" value="✗ NOT analogies:"/>
+            <View style="margin-left: 1em;">
+                <Text name="analogy_not1" value="• Simple examples without cross-domain comparison"/>
+                <Text name="analogy_not2" value="• Within-domain comparisons ('Viruses are smaller than bacteria')"/>
+                <Text name="analogy_not3" value="• Metaphors without explicit comparison markers ('The brain is a computer')"/>
+            </View>
+        </View>
+    </View>
+
+    <!-- METAPHOR -->
+    <View style="margin-left: 1em; margin-top: 1em; padding: 0.5em; background: #f8f9fa; border-left: 3px solid #6c757d;">
+        <Header size="4" value="🎨 Metaphor"/>
+        <Text name="metaphor_def" value="A METAPHOR describes one thing AS IF it were another, WITHOUT comparison words like 'like' or 'similar to'."/>
+        
+        <View style="margin-top: 0.5em;">
+            <Text name="metaphor_types_header" value="✓ Types to look for:"/>
+            <View style="margin-left: 1em;">
+                <Text name="metaphor_type1" value="• Direct identity: 'The cell is a factory', 'Genes are blueprints'"/>
+                <Text name="metaphor_type2" value="• Personification: 'The virus wants to spread', 'Evolution selects for traits'"/>
+                <Text name="metaphor_type3" value="• Cross-domain vocabulary: 'genetic code', 'cellular machinery'"/>
+            </View>
+        </View>
+        
+        <View style="margin-top: 0.5em;">
+            <Text name="metaphor_ex_header" value="✓ Examples of metaphors:"/>
+            <View style="margin-left: 1em; font-style: italic;">
+                <Text name="metaphor_ex1" value="• 'The heart is a pump' (direct metaphor)"/>
+                <Text name="metaphor_ex2" value="• 'Cancer cells are invaders' (personification)"/>
+                <Text name="metaphor_ex3" value="• 'The genetic code contains instructions' (vocabulary transfer)"/>
+            </View>
+        </View>
+        
+        <View style="margin-top: 0.5em;">
+            <Text name="metaphor_not_header" value="✗ NOT metaphors:"/>
+            <View style="margin-left: 1em;">
+                <Text name="metaphor_not1" value="• Comparisons using 'like', 'similar to' (these are analogies)"/>
+                <Text name="metaphor_not2" value="• Literal descriptions ('The heart pumps blood')"/>
+                <Text name="metaphor_not3" value="• Simple examples or definitions"/>
+            </View>
+        </View>
+    </View>
+
+    <!-- CONNECTION TO EVERYDAY LIFE -->
+    <View style="margin-left: 1em; margin-top: 1em; padding: 0.5em; background: #f8f9fa; border-left: 3px solid #6c757d;">
+        <Header size="4" value="🌍 Connection to everyday life"/>
+        <Text name="connection_def" value="An EXPLICIT reference to a NAMED external entity."/>
+        
+        <View style="margin-top: 0.5em;">
+            <Text name="connection_look_for" value="✓ Look for named references to:"/>
+            <View style="margin-left: 1em;">
+                <Text name="connection_1" value="• Specific news/current events: 'the H1N1 outbreak', 'the 2008 financial crisis'"/>
+                <Text name="connection_2" value="• Named historical events: 'World War II', 'the Chernobyl disaster'"/>
+                <Text name="connection_3" value="• Public figures, brands, culture: 'Einstein', 'Tesla', 'Star Wars'"/>
+            </View>
+        </View>
+        
+        <View style="margin-top: 0.5em;">
+            <Text name="connection_not_header" value="✗ NOT connections:"/>
+            <View style="margin-left: 1em;">
+                <Text name="connection_not1" value="• Generic examples without named entities ('like boiling water')"/>
+                <Text name="connection_not2" value="• Vague references ('as we all know', 'in everyday life')"/>
+                <Text name="connection_not3" value="• Scientific analogies or metaphors"/>
+                <Text name="connection_not4" value="• References already in the original question"/>
+            </View>
+        </View>
+    </View>
+
+    <!-- SCAFFOLDING -->
+    <View style="margin-left: 1em; margin-top: 1em; padding: 0.5em; background: #f8f9fa; border-left: 3px solid #6c757d;">
+        <Header size="4" value="🪜 Scaffolding"/>
+        <Text name="scaffolding_def" value="The explanation builds understanding INCREMENTALLY in a logical sequence."/>
+        
+        <View style="margin-top: 0.5em;">
+            <Text name="scaffolding_look_for" value="✓ Look for:"/>
+            <View style="margin-left: 1em;">
+                <Text name="scaffolding_1" value="• A clear starting point (basic concept or motivation)"/>
+                <Text name="scaffolding_2" value="• Progressive steps that build on each other"/>
+                <Text name="scaffolding_3" value="• Each step is appropriately sized (not too big a jump)"/>
+                <Text name="scaffolding_4" value="• Reader can follow logical development from simple → complex"/>
+            </View>
+        </View>
+        
+        <View style="margin-top: 0.5em;">
+            <Text name="scaffolding_ex_present_header" value="✓ Example PRESENT:"/>
+            <View style="margin-left: 1em; font-style: italic;">
+                <Text name="scaffolding_ex_present" value="'Two facts motivate my research—first, diverse systems are healthier... My research asks if it matters that species are being gained and lost... By manipulating plant number and type, I can uncover the mechanisms...'"/>
+                <Text name="scaffolding_ex_present_why" value="→ motivation → question → method (clear progression)"/>
+            </View>
+        </View>
+        
+        <View style="margin-top: 0.5em;">
+            <Text name="scaffolding_ex_absent_header" value="✗ Example ABSENT:"/>
+            <View style="margin-left: 1em; font-style: italic;">
+                <Text name="scaffolding_ex_absent" value="'My research uses plant manipulation experiments to study biodiversity mechanisms in communities where species turnover affects ecosystem health.'"/>
+                <Text name="scaffolding_ex_absent_why" value="→ All concepts at once, no progressive building"/>
+            </View>
+        </View>
+    </View>
+
+    <View style="margin-top: 1.5em;">
+        <Header value="The answer contains:"/>
+        <Choices name="answer_features" toName="answer" choice="multiple" showInLine="true">
+            <Choice value="Humor"/>
+            <Choice value="Analogy"/>
+            <Choice value="Metaphor"/>
+            <Choice value="Connection to everyday life"/>
+            <Choice value="Scaffolding"/>
+        </Choices>
+    </View>
+</View>
+
+        <!-- Sample task:
+        {"question":"what is the minimum number of individuals required to establish a long-term viable population?","answer":"...ion efforts to maintain populations above this minimum threshold to ensure their long-term survival."}
+        -->
