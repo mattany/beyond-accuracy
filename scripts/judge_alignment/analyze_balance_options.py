@@ -57,7 +57,7 @@ METRIC_PREVIOUS_VERSIONS = {
 
 ALL_METRICS = [
     'humor_v2_score',
-    'metaphor_v3_score',
+    'metaphor_v4_score',
     'analogy_v2_score', 
     'connection_to_everyday_life_v2_score', 
     'scaffolding_score'
@@ -66,7 +66,7 @@ ALL_METRICS = [
 # Reason columns corresponding to each metric
 ALL_REASON_COLUMNS = [
     'humor_v2_reason',
-    'metaphor_v3_reason',
+    'metaphor_v4_reason',
     'analogy_v2_reason',
     'connection_to_everyday_life_v2_reason',
     'scaffolding_reason'
@@ -353,6 +353,13 @@ def analyze_large_only(df, metrics_list=None):
     print("\n=== Finding BEST achievable balance for LARGE SURVEY ONLY ===\n")
     print(f"Balancing on metrics: {[short_name(m) for m in score_cols]}")
     
+    # Check if all required columns exist
+    missing_cols = [col for col in score_cols if col not in df.columns]
+    if missing_cols:
+        print(f"  ✗ Missing columns in dataset: {missing_cols}")
+        print(f"    Run --generate to create data for these metrics first.")
+        return None, score_cols, None
+    
     # Only keep rows that have values for ALL selected metrics
     valid_df = df.dropna(subset=score_cols)
     print(f"Rows with all selected metrics evaluated: {len(valid_df)}")
@@ -526,6 +533,7 @@ def setup_deepeval(metrics_to_run=None):
         humor_metric_explicit_v2,
         metaphor_metric_explicit_v2,
         metaphor_metric_explicit_v3,
+        metaphor_metric_explicit_v4,
         analogy_metric_explicit_v2,
         connection_to_everyday_life_metric_explicit_v2,
         scaffolding_metric,
@@ -536,6 +544,7 @@ def setup_deepeval(metrics_to_run=None):
         "humor_v2": humor_metric_explicit_v2,
         "metaphor_v2": metaphor_metric_explicit_v2,
         "metaphor_v3": metaphor_metric_explicit_v3,
+        "metaphor_v4": metaphor_metric_explicit_v4,
         "analogy_v2": analogy_metric_explicit_v2,
         "connection_to_everyday_life_v2": connection_to_everyday_life_metric_explicit_v2,
         "scaffolding": scaffolding_metric,
