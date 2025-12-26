@@ -387,7 +387,10 @@ metaphor_metric_explicit_v5 = GEval(
     **g_eval_default_params
 )
 
-
+# **v6 clarifies and formalizes the overlap between metaphors and analogies**, allowing explicit comparisons
+# (e.g., “like”) to be metaphorical when they introduce novel, expressive framing, while keeping strict binary scoring.
+# It tightens alignment with standard definitions while making the operational boundaries clearer and more
+# robust for annotation.
 metaphor_metric_explicit_v6 = GEval(
     name="Metaphor Explicit (v6)",
     evaluation_steps=[
