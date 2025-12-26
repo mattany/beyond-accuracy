@@ -1,0 +1,90 @@
+<View style="max-width: 700px; margin: 0 auto; font-family: system-ui, sans-serif;">
+    <Header value="Question:"/>
+    <Text name="question" value="$question"/>
+
+    <Header value="Answer:"/>
+    <Text name="answer" value="$answer"/>
+
+    <Header value="Guidelines:"/>
+    <Text name="guidelines" value="Read the question and answer, then determine if it contains a metaphor:"/>
+
+    <!-- METAPHOR (v6) -->
+    <View style="margin-left: 1em; margin-top: 1em; padding: 0.5em; background: #f8f9fa; border-left: 3px solid #6c757d;">
+        <Header size="4" value="🎨 Metaphor (v6)"/>
+        
+        <View style="margin-top: 0.5em; background: #e7f3ff; padding: 0.5em;">
+            <Text name="metaphor_def_header" value="📖 DEFINITION:"/>
+            <View style="margin-left: 1em;">
+                <Text name="metaphor_def1" value="A METAPHOR is ACTIVE/LIVE figurative language in which a concept is framed, evaluated, or described using another domain in a NON-LITERAL way."/>
+                <Text name="metaphor_def2" value="Metaphors must be NOVEL (fresh, invented, not conventional)."/>
+                <Text name="metaphor_def3" value="Metaphors may appear WITH or WITHOUT explicit comparison words such as 'like' or 'similar to'."/>
+            </View>
+        </View>
+        
+        <View style="margin-top: 0.5em;">
+            <Text name="core_test_header" value="🔍 CORE METAPHOR TEST:"/>
+            <View style="margin-left: 1em;">
+                <Text name="core_test" value="Ask: Does the passage introduce novel, expressive, or unexpected conceptual framing beyond literal or textbook description?"/>
+                <Text name="core_test_yes" value="• If YES → metaphor present"/>
+                <Text name="core_test_no" value="• If NO → not a metaphor"/>
+            </View>
+        </View>
+        
+        <View style="margin-top: 0.5em;">
+            <Text name="personification_header" value="👤 PERSONIFICATION TEST (KEY RULE):"/>
+            <View style="margin-left: 1em;">
+                <Text name="personification_q" value="For personification, ask: Is the attributed action, intention, or behavior vivid, surprising, playful, or clearly invented?"/>
+                <Text name="personification_yes" value="• YES → metaphor"/>
+                <Text name="personification_no" value="• NO, sounds normal in news, textbooks, or everyday speech → NOT metaphor"/>
+            </View>
+        </View>
+        
+        <View style="margin-top: 0.5em; background: #fff3cd; padding: 0.5em;">
+            <Text name="analogy_header" value="⚠️ METAPHORICAL ANALOGIES (IMPORTANT):"/>
+            <View style="margin-left: 1em;">
+                <Text name="analogy_rule1" value="The presence of explicit comparison language ('like', 'similar to', 'think of X as Y', etc.) does NOT exclude a metaphor."/>
+                <Text name="analogy_rule2" value="An analogy IS ALSO a metaphor if it introduces novel, expressive, or imaginative figurative framing beyond neutral explanation."/>
+                <Text name="analogy_example" value="Example: 'Debugging this system is like performing surgery with oven mitts.'"/>
+            </View>
+        </View>
+        
+        <View style="margin-top: 0.5em;">
+            <Text name="metaphor_clear_header" value="✓ CLEAR METAPHORS — Examples:"/>
+            <View style="margin-left: 1em; font-style: italic;">
+                <Text name="metaphor_ex1" value="• 'rogue proteins throwing a tantrum inside your cells'"/>
+                <Text name="metaphor_ex2" value="• 'Your DNA is a recipe book written in a 4-letter alphabet'"/>
+                <Text name="metaphor_ex3" value="• 'electrons waltzing around the nucleus'"/>
+                <Text name="metaphor_ex4" value="• 'molecules whispering secrets'"/>
+                <Text name="metaphor_ex5" value="• 'antibodies going to war'"/>
+                <Text name="metaphor_ex6" value="• 'a tsunami of medication swept through'"/>
+                <Text name="metaphor_ex7" value="• 'The star is a cosmic pressure cooker slowly boiling itself'"/>
+            </View>
+        </View>
+        
+        <View style="margin-top: 0.5em;">
+            <Text name="metaphor_not_header" value="✗ NOT METAPHORS"/>
+            <Text name="metaphor_not_intro" value="Exclude all of the following:"/>
+            <View style="margin-left: 1em;">
+                <Text name="metaphor_not1" value="• DEAD or CONVENTIONAL METAPHORS / TECHNICAL TERMS: 'the cell is a factory', 'DNA is a blueprint', 'genetic code'"/>
+                <Text name="metaphor_not2" value="• STANDARD PERSONIFICATION: 'the market fears', 'the algorithm decides', 'evolution favors'"/>
+                <Text name="metaphor_not3" value="• IDIOMS: 'tip of the iceberg', 'here be dragons', 'play mind tricks'"/>
+                <Text name="metaphor_not4" value="• METONYMY: 'Science says', 'The USA wants'"/>
+                <Text name="metaphor_not5" value="• SHAPE OR LITERAL RESEMBLANCE: 'mushroom cloud', 'potato-shaped asteroid'"/>
+                <Text name="metaphor_not6" value="• PURELY LITERAL STATEMENTS: 'The heart pumps blood'"/>
+            </View>
+        </View>
+    </View>
+
+    <View style="margin-top: 1.5em;">
+        <Header value="Does the answer contain a metaphor?"/>
+        <Choices name="answer_features" toName="answer" choice="single" showInLine="true">
+            <Choice value="Yes"/>
+            <Choice value="No"/>
+        </Choices>
+    </View>
+</View>
+
+        <!-- Sample task:
+        {"question":"what is the minimum number of individuals required to establish a long-term viable population?","answer":"...ion efforts to maintain populations above this minimum threshold to ensure their long-term survival."}
+        -->
+
