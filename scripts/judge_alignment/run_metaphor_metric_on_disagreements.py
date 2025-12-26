@@ -134,7 +134,7 @@ async def evaluate_row(index, question, answer, human_data, metric, scores, reas
             scores[index] = {
                 'index': index,
                 'question': question,
-                'answer_preview': answer[:200] + '...' if len(answer) > 200 else answer,
+                'answer': answer,  # Full answer
                 'metaphor_v2_score': metric.score,
                 'metaphor_v2_reason': getattr(metric, 'reason', None),
                 'metaphor_mattan': human_data.get('metaphor_mattan_yeroushalmi', None),
@@ -145,7 +145,7 @@ async def evaluate_row(index, question, answer, human_data, metric, scores, reas
             scores[index] = {
                 'index': index,
                 'question': question,
-                'answer_preview': answer[:200] + '...' if len(answer) > 200 else answer,
+                'answer': answer,  # Full answer
                 'metaphor_v2_score': None,
                 'metaphor_v2_reason': 'EVALUATION FAILED',
                 'metaphor_mattan': human_data.get('metaphor_mattan_yeroushalmi', None),
@@ -220,7 +220,7 @@ async def run_metrics():
     results_df = add_analysis_columns(results_df)
     
     # Reorder columns for better readability
-    column_order = ['index', 'question', 'answer_preview', 'metaphor_v2_score', 'llm_binary',
+    column_order = ['index', 'question', 'answer', 'metaphor_v2_score', 'llm_binary',
                     'metaphor_mattan', 'metaphor_nir', 'disagreement_type', 'metaphor_v2_reason']
     results_df = results_df[column_order]
     
@@ -236,11 +236,20 @@ def analyze_existing():
     print(f"Loading existing results from {OUTPUT_PATH}")
     df = pd.read_csv(OUTPUT_PATH)
     
+    # If we only have answer_preview, load full answers from source
+    if 'answer_preview' in df.columns and 'answer' not in df.columns:
+        print("Loading full answers from source data...")
+        source_df = pd.read_csv('/Users/mattan.yeroushalmi/studies/thesis/scripts/judge_alignment/balanced_dataset_v2_human/ask_science_human_metrics.csv')
+        # Create mapping from Index to full answer
+        answer_map = source_df.set_index('Index')['Human Answer'].to_dict()
+        df['answer'] = df['index'].map(answer_map)
+        df = df.drop(columns=['answer_preview'])
+    
     # Add/update analysis columns
     df = add_analysis_columns(df)
     
     # Reorder columns for better readability
-    column_order = ['index', 'question', 'answer_preview', 'metaphor_v2_score', 'llm_binary',
+    column_order = ['index', 'question', 'answer', 'metaphor_v2_score', 'llm_binary',
                     'metaphor_mattan', 'metaphor_nir', 'disagreement_type', 'metaphor_v2_reason']
     df = df[[col for col in column_order if col in df.columns]]
     
