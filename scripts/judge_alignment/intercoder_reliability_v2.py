@@ -616,17 +616,30 @@ def plot_combined_analysis(
     threshold: float = 0.5
 ) -> None:
     """
-    Create a combined figure with all four analysis plots.
+    Create a combined figure with all analysis plots.
     
     Layout:
     - Row 0: Intercoder reliability bar chart | Human-LLM correlations bar chart
     - Row 1: Inter-coder confusion matrices (5 metrics)
-    - Row 2: LLM vs Human confusion matrices (5 metrics)
+    - Row 2: LLM vs Human (mean) confusion matrices (5 metrics)
+    - Rows 3+: Per-annotator LLM confusion matrices (one row per annotator)
     """
-    fig = plt.figure(figsize=(18, 16))
+    n_annotators = len(annotators)
+    n_rows = 3 + n_annotators  # bar charts + intercoder + mean LLM + per-annotator rows
     
-    # Use GridSpec for flexible layout
-    gs = fig.add_gridspec(3, 5, height_ratios=[1.2, 1, 1], hspace=0.4, wspace=0.3)
+    # Get short names for annotators
+    short_names = []
+    for a in annotators:
+        if "@" in a:
+            short_names.append(a.split("@")[0])
+        else:
+            short_names.append(a[:15])
+    
+    fig = plt.figure(figsize=(18, 4 + 3.2 * n_rows))
+    
+    # Use GridSpec for flexible layout with space for titles
+    height_ratios = [1.2, 1, 1] + [1] * n_annotators
+    gs = fig.add_gridspec(n_rows, 5, height_ratios=height_ratios, hspace=0.5, wspace=0.3)
     
     # === Row 0: Bar charts (spanning columns) ===
     ax_icr = fig.add_subplot(gs[0, :2])
@@ -645,16 +658,67 @@ def plot_combined_analysis(
         intercoder_axes, df, mode="intercoder", annotators=annotators,
         fontsize=9, tick_labels=("0", "1"), pct_decimals=0, show_first_ylabel_only=True
     )
-    fig.text(0.5, 0.64, "C) Inter-coder Agreement Matrices", ha="center", fontsize=12, fontweight="bold")
+    # Add title above the middle axis
+    intercoder_axes[2].annotate(
+        "C) Inter-coder Agreement Matrices", xy=(0.5, 1.25), xycoords="axes fraction",
+        ha="center", fontsize=12, fontweight="bold"
+    )
     
-    # === Row 2: LLM vs Human confusion matrices ===
+    # === Row 2: LLM vs Human (mean) confusion matrices ===
     llm_axes = [fig.add_subplot(gs[2, idx]) for idx in range(len(METRIC_NAMES))]
     _plot_confusion_matrices_on_axes(
         llm_axes, df, mode="llm_vs_human", threshold=threshold,
         fontsize=9, tick_labels=("0", "1"), pct_decimals=0, show_first_ylabel_only=True
     )
-    fig.text(0.5, 0.32, f"D) LLM vs Human Agreement Matrices (threshold={threshold})", 
-             ha="center", fontsize=12, fontweight="bold")
+    llm_axes[2].annotate(
+        f"D) LLM vs Mean Human (threshold={threshold})", xy=(0.5, 1.25), xycoords="axes fraction",
+        ha="center", fontsize=12, fontweight="bold"
+    )
+    
+    # === Rows 3+: Per-annotator LLM confusion matrices ===
+    first_per_annotator_axes = None
+    for ann_idx, short_name in enumerate(short_names):
+        row_idx = 3 + ann_idx
+        axes = [fig.add_subplot(gs[row_idx, metric_idx]) for metric_idx in range(len(METRIC_NAMES))]
+        
+        if ann_idx == 0:
+            first_per_annotator_axes = axes
+        
+        for metric_idx, metric in enumerate(METRIC_NAMES):
+            ax = axes[metric_idx]
+            
+            # Get annotator's labels
+            per_annotator = df[f"{metric}_per_annotator"].tolist()
+            annotator_labels = np.array([row[ann_idx] for row in per_annotator], dtype=int)
+            
+            # Get LLM predictions
+            llm_col = f"LLM_{metric}"
+            mask = ~df[llm_col].isna()
+            llm_vals = df.loc[mask, llm_col].values
+            llm_binary = (llm_vals >= threshold).astype(int)
+            annotator_labels_valid = annotator_labels[mask]
+            
+            _plot_confusion_matrix_on_ax(
+                ax, annotator_labels_valid, llm_binary, metric,
+                row_axis_label=short_name if metric_idx == 0 else "",
+                col_axis_label="LLM" if ann_idx == n_annotators - 1 else "",
+                cmap="Purples", fontsize=9,
+                tick_labels=("0", "1"), pct_decimals=0
+            )
+            
+            # Only show metric name for first per-annotator row
+            if ann_idx > 0:
+                title_text = ax.get_title()
+                pct_part = title_text.split('\n')[-1] if '\n' in title_text else title_text
+                ax.set_title(pct_part, fontsize=10, fontweight="bold")
+    
+    # Add section title above first per-annotator row
+    if first_per_annotator_axes:
+        first_per_annotator_axes[2].annotate(
+            f"E) Per-Annotator LLM Agreement (threshold={threshold})", 
+            xy=(0.5, 1.25), xycoords="axes fraction",
+            ha="center", fontsize=12, fontweight="bold"
+        )
     
     # Adjust layout and save
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
@@ -716,28 +780,10 @@ def main(v2_csv_path: str, json_path: str) -> None:
     print(f"  {corr_mean_path.name}")
     print(f"  {corr_maj_path.name}")
 
-    # Generate plots
-    print("\nGenerating plots...")
-    
-    # Combined plot with all four analyses
+    # Generate combined plot with all analyses
+    print("\nGenerating plot...")
     combined_plot_path = output_dir / "combined_analysis.png"
     plot_combined_analysis(df, annotators, icr_df, corr_mean_df, corr_maj_df, combined_plot_path)
-    
-    # Also save individual plots
-    icr_plot_path = output_dir / "intercoder_reliability.png"
-    human_llm_plot_path = output_dir / "human_llm_correlations.png"
-    confusion_plot_path = output_dir / "confusion_matrices.png"
-    intercoder_confusion_plot_path = output_dir / "intercoder_confusion_matrices.png"
-
-    plot_intercoder_reliability(icr_df, icr_plot_path)
-    plot_human_llm_correlations(corr_mean_df, corr_maj_df, human_llm_plot_path)
-    plot_confusion_matrices(df, confusion_plot_path)
-    if len(annotators) == 2:
-        plot_intercoder_confusion_matrices(df, annotators, intercoder_confusion_plot_path)
-    
-    # Per-annotator LLM agreement
-    per_annotator_plot_path = output_dir / "per_annotator_llm_confusion.png"
-    plot_per_annotator_llm_confusion_matrices(df, annotators, per_annotator_plot_path)
 
 
 if __name__ == "__main__":
