@@ -35,9 +35,6 @@ BATCH_SIZE = 100
 GEVAL_RETRIES = 3
 MAX_ANSWER_LENGTH = 2560  # Exclude answers longer than this for labeling tasks
 
-# Indexes to exclude (already used in balanced_10.csv test tagging)
-EXCLUDE_INDICES = [1217, 549, 1188, 1575, 128]
-
 ALL_METRICS = [
     'humor_v2_score', 
     'metaphor_v2_score', 
@@ -66,6 +63,15 @@ SCRIPT_DIR = Path(__file__).parent
 OUTPUT_DIR = SCRIPT_DIR / "balanced_dataset_v2_human"
 METRICS_PATH = OUTPUT_DIR / "ask_science_human_metrics.csv"
 SOURCE_PATH = SCRIPT_DIR.parent.parent / "SFT" / "data" / "ask_science_human.csv"
+EXCLUDE_INDICES_PATH = SCRIPT_DIR / "exclude_indices.csv"
+
+
+def load_exclude_indices():
+    """Load indices to exclude from CSV file."""
+    if EXCLUDE_INDICES_PATH.exists():
+        exclude_df = pd.read_csv(EXCLUDE_INDICES_PATH)
+        return exclude_df['index'].tolist()
+    return []
 
 
 def short_name(m):
@@ -316,8 +322,9 @@ def analyze_large_only(df):
     all_indices = set(valid_df.index.tolist())
     
     # Exclude indices already used in balanced_10.csv
-    if EXCLUDE_INDICES:
-        excluded = set(EXCLUDE_INDICES) & all_indices
+    exclude_indices = load_exclude_indices()
+    if exclude_indices:
+        excluded = set(exclude_indices) & all_indices
         all_indices = all_indices - excluded
         print(f"Excluding {len(excluded)} indices from previous survey: {sorted(excluded)}")
     
