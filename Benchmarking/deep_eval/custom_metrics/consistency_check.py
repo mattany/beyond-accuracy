@@ -1,5 +1,25 @@
+"""
+Test metric consistency/stability by running the same metric multiple times on the same inputs.
+Measures variance to understand how deterministic the LLM-based metric is.
+
+Usage:
+    cd Benchmarking/deep_eval && poetry run python custom_metrics/consistency_check.py
+    
+    # Run all metrics on random samples (default)
+    poetry run python custom_metrics/consistency_check.py
+    
+    # Run only metaphor_v2 metric
+    poetry run python custom_metrics/consistency_check.py --metric metaphor_v2
+    
+    # Use disagreement examples instead of random sampling
+    poetry run python custom_metrics/consistency_check.py --use_disagreements --metric metaphor_v2
+    
+    # Custom sample size and repetitions
+    poetry run python custom_metrics/consistency_check.py --samples 20 --reps 5
+"""
 import os
 import sys
+import argparse
 import pandas as pd
 import asyncio
 import random
@@ -23,29 +43,34 @@ from deepeval.test_case import LLMTestCase
 # Set OpenAI Key
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
-# Import Metrics (Baram Tsabari Cluster)
+# Import Metrics
 from custom_metrics.metrics import (
     jargon_metric,
-    explanation_type_metric_explicit,
-    metaphor_metric_explicit,
-    content_units_metric_explicit,
-    humor_metric_explicit,
-    analogy_metric_explicit,
-    connection_to_everyday_life_metric_explicit,
+    metaphor_metric_explicit_v2,
+    metaphor_metric_explicit_v3,
+    humor_metric_explicit_v2,
+    analogy_metric_explicit_v2,
+    connection_to_everyday_life_metric_explicit_v2,
+    explanation_type_metric_explicit_v2,
+    scaffolding_metric,
 )
 
-# Metrics Map
-METRICS = {
+# All available metrics
+ALL_METRICS = {
     "jargon": jargon_metric,
-    "explanation_type": explanation_type_metric_explicit,
-    "metaphor_explicit": metaphor_metric_explicit,
-    "content_units_explicit": content_units_metric_explicit,
-    "humor_explicit": humor_metric_explicit,
-    "analogy_explicit": analogy_metric_explicit,
-    "connection_to_everyday_life": connection_to_everyday_life_metric_explicit,
+    "metaphor_v2": metaphor_metric_explicit_v2,
+    "metaphor_v3": metaphor_metric_explicit_v3,
+    "humor_v2": humor_metric_explicit_v2,
+    "analogy_v2": analogy_metric_explicit_v2,
+    "connection_to_everyday_life_v2": connection_to_everyday_life_metric_explicit_v2,
+    "explanation_type_v2": explanation_type_metric_explicit_v2,
+    "scaffolding": scaffolding_metric,
 }
 
-# Run 7 Models
+# Default metrics (all v2)
+DEFAULT_METRICS = ALL_METRICS.copy()
+
+# Models for random sampling
 MODELS = [
     'Meta-Llama-3.1-8B-Instruct-bnb-4bit',
     'Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt',
@@ -56,13 +81,11 @@ MODELS = [
 ]
 
 DATASET_PATH = f"{PROJECT_DIR}/Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv"
+HUMAN_ANSWERS_PATH = f"{PROJECT_DIR}/scripts/judge_alignment/balanced_dataset_v2_human/ask_science_human_metrics.csv"
+DISAGREEMENT_DATA_PATH = f"{PROJECT_DIR}/scripts/judge_alignment/metaphor_metric_disagreement_analysis.csv"
 
-REPETITIONS = 10  # Number of times to run each metric per pair
-SAMPLE_SIZE = 15
 
-OUTPUT_DIR = f"{PROJECT_DIR}/Benchmarking/deep_eval/data/consistency_check/{SAMPLE_SIZE}_samples_{REPETITIONS}_tries/"
-
-async def evaluate_pair(metric_name, metric_func, question, answer, model_name, row_idx, repetition_idx):
+async def evaluate_pair(metric_name, metric_func, question, answer, row_idx, repetition_idx, model_name=None):
     """Evaluates a single pair with a single metric."""
     test_case = LLMTestCase(
         input=question,
@@ -73,30 +96,33 @@ async def evaluate_pair(metric_name, metric_func, question, answer, model_name, 
         await metric_func.a_measure(test_case)
         score = metric_func.score
         reason = metric_func.reason
-        return {
+        result = {
             "question_idx": row_idx,
-            "model": model_name,
             "metric": metric_name,
             "repetition": repetition_idx,
             "score": score,
             "explanation": reason,
             "question": question,
-            "answer": answer[:100] + "..." if len(answer) > 100 else answer # Truncate for CSV readability if needed, but keeping full is better for debugging.
+            "answer": answer
         }
+        if model_name:
+            result["model"] = model_name
+        return result
     except Exception as e:
-        print(f"Error evaluating {metric_name} for model {model_name} (idx {row_idx}, rep {repetition_idx}): {e}")
+        print(f"Error evaluating {metric_name} (idx {row_idx}, rep {repetition_idx}): {e}")
         return None
 
-async def main():
+
+def get_random_pairs(sample_size):
+    """Select random question-answer pairs from the evaluation dataset."""
     print(f"Loading dataset from {DATASET_PATH}...")
     df = pd.read_csv(DATASET_PATH)
     
-    # 1. Select SAMPLE_SIZE Random Pairs
-    print(f"Selecting {SAMPLE_SIZE} random pairs...")
+    print(f"Selecting {sample_size} random pairs...")
     selected_pairs = []
     
-    # Randomly sample SAMPLE_SIZE indices
-    indices = random.sample(range(len(df)), SAMPLE_SIZE)
+    # Randomly sample indices
+    indices = random.sample(range(len(df)), min(sample_size, len(df)))
     
     for idx in indices:
         row = df.iloc[idx]
@@ -106,8 +132,6 @@ async def main():
         
         # Check if model column exists
         if model not in df.columns:
-            print(f"Warning: Model {model} not found in dataset columns. Picking another...")
-            # Fallback to finding a valid model column
             valid_models = [m for m in MODELS if m in df.columns]
             if not valid_models:
                 print(f"No valid models found for row {idx}. Skipping.")
@@ -118,8 +142,8 @@ async def main():
         
         # Handle NaN answers
         if pd.isna(answer):
-             print(f"Answer is NaN for model {model} at row {idx}. Skipping.")
-             continue
+            print(f"Answer is NaN for model {model} at row {idx}. Skipping.")
+            continue
 
         selected_pairs.append({
             "idx": idx,
@@ -127,29 +151,79 @@ async def main():
             "model": model,
             "answer": answer
         })
+    
+    return selected_pairs
 
-    print(f"Selected {len(selected_pairs)} pairs.")
+
+def get_disagreement_pairs():
+    """Load question-answer pairs from the disagreement analysis."""
+    print(f"Loading disagreement data from {DISAGREEMENT_DATA_PATH}...")
+    df = pd.read_csv(DISAGREEMENT_DATA_PATH)
     
-    # 2. Run Metrics
-    all_results = []
+    selected_pairs = []
+    for _, row in df.iterrows():
+        selected_pairs.append({
+            "idx": row['index'],
+            "question": row['question'],
+            "answer": row['answer'],
+            "model": None  # No model info for disagreement data
+        })
     
-    print(f"Running metrics ({REPETITIONS} repetitions each)...")
+    return selected_pairs
+
+
+def get_human_answer_pairs(sample_size):
+    """Select random question-answer pairs from the human answers dataset (ask_science)."""
+    print(f"Loading human answers from {HUMAN_ANSWERS_PATH}...")
+    df = pd.read_csv(HUMAN_ANSWERS_PATH)
     
-    tasks = []
+    print(f"Selecting {sample_size} random pairs from human answers...")
+    selected_pairs = []
+    
+    # Randomly sample indices
+    indices = random.sample(range(len(df)), min(sample_size, len(df)))
+    
+    for idx in indices:
+        row = df.iloc[idx]
+        question = row['Question']
+        answer = row['Human Answer']
+        original_idx = row['Index'] if 'Index' in df.columns else idx
+        
+        # Handle NaN answers
+        if pd.isna(answer):
+            print(f"Answer is NaN at row {idx}. Skipping.")
+            continue
+
+        selected_pairs.append({
+            "idx": original_idx,
+            "question": question,
+            "answer": answer,
+            "model": "human"  # Mark as human answer
+        })
+    
+    return selected_pairs
+
+
+async def run_consistency_check(metrics, selected_pairs, repetitions, output_dir):
+    """Run the consistency check with given metrics and pairs."""
+    print(f"Using {len(selected_pairs)} pairs for consistency check.")
+    print(f"Running {len(metrics)} metrics ({repetitions} repetitions each)...")
+    
     # Create tasks for all metrics * all pairs * all repetitions
-    # To avoid rate limits, we might want to batch or use a semaphore.
-    semaphore = asyncio.Semaphore(20) # Limit concurrency
+    semaphore = asyncio.Semaphore(20)  # Limit concurrency
     
     async def wrapped_eval(metric_name, metric_func, pair, rep):
         async with semaphore:
             return await evaluate_pair(
                 metric_name, metric_func, 
-                pair['question'], pair['answer'], pair['model'], pair['idx'], rep
+                pair['question'], pair['answer'], pair['idx'], rep,
+                model_name=pair.get('model')
             )
 
-    for metric_name, metric_func in METRICS.items():
+    tasks = []
+    for metric_name, metric_func in metrics.items():
         for pair in selected_pairs:
-            for i in range(REPETITIONS):
+            for i in range(repetitions):
                 tasks.append(wrapped_eval(metric_name, metric_func, pair, i+1))
     
     # Run with progress bar
@@ -159,68 +233,162 @@ async def main():
         if res:
             results.append(res)
             
-    # 3. Save Intermediate Results
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    # Save Intermediate Results
+    os.makedirs(output_dir, exist_ok=True)
     intermediate_df = pd.DataFrame(results)
-    intermediate_path = os.path.join(OUTPUT_DIR, "intermediate_results.csv")
+    intermediate_path = os.path.join(output_dir, "intermediate_results.csv")
     intermediate_df.to_csv(intermediate_path, index=False)
     print(f"Intermediate results saved to {intermediate_path}")
     
-    # 4. Calculate Statistics
+    # Calculate Statistics
     print("Calculating statistics...")
     stats = []
     
-    # Group by Metric, Question, Model
-    grouped = intermediate_df.groupby(['metric', 'question_idx', 'model'])
+    # Group by Metric, Question (and Model if available)
+    group_cols = ['metric', 'question_idx']
+    if 'model' in intermediate_df.columns and intermediate_df['model'].notna().any():
+        group_cols.append('model')
     
-    for (metric, q_idx, model), group in grouped:
+    grouped = intermediate_df.groupby(group_cols)
+    
+    for group_key, group in grouped:
         scores = group['score'].values
         
         mean_score = np.mean(scores)
-        std_dev = np.std(scores, ddof=1) # Sample std dev
+        std_dev = np.std(scores, ddof=1) if len(scores) > 1 else 0
         
-        # Confidence Interval (95%) for the Mean using t-distribution or just simple normal approx since N is small
         # SE = s / sqrt(n)
-        se = std_dev / np.sqrt(len(scores))
-        # 95% CI approx Mean +/- 1.96 * SE (or use t-value for N-1 dof, e.g. 2.776 for N=5)
-        # Using 1.96 for simplicity or t-value for N=5 is better.
-        # t_value for 4 dof, 95% is 2.776
-        t_value = 2.776 if len(scores) == 5 else 1.96 # Approx
+        se = std_dev / np.sqrt(len(scores)) if len(scores) > 1 else 0
+        
+        # 95% CI using t-value
+        t_values = {5: 2.776, 10: 2.262, 15: 2.145, 20: 2.093}
+        t_value = t_values.get(len(scores), 1.96)
         
         ci_lower = mean_score - (t_value * se)
         ci_upper = mean_score + (t_value * se)
         
-        # Consistency Score (Inverse of Std Dev, or just report Std Dev)
-        # We'll report Std Dev as "Inconsistency"
+        # Binary consistency: how often does the binary decision (>0.5) agree?
+        binary_scores = (scores > 0.5).astype(int)
+        binary_mode = 1 if binary_scores.mean() > 0.5 else 0
+        binary_agreement = (binary_scores == binary_mode).mean()
         
-        stats.append({
-            "metric": metric,
-            "question_idx": q_idx,
-            "model": model,
+        stat_row = {
+            "metric": group_key[0],
+            "question_idx": group_key[1],
             "n_samples": len(scores),
             "mean_score": mean_score,
             "std_dev": std_dev,
             "se": se,
             "ci_lower": ci_lower,
             "ci_upper": ci_upper,
+            "binary_agreement": binary_agreement,
             "scores_list": str(list(scores))
-        })
+        }
+        if len(group_cols) > 2:
+            stat_row["model"] = group_key[2]
+        
+        stats.append(stat_row)
         
     stats_df = pd.DataFrame(stats)
-    stats_path = os.path.join(OUTPUT_DIR, "consistency_stats.csv")
+    stats_path = os.path.join(output_dir, "consistency_stats.csv")
     stats_df.to_csv(stats_path, index=False)
     
-    # 5. Unified Report (Average Consistency per Metric)
-    metric_summary = stats_df.groupby('metric')[['std_dev', 'se']].mean().reset_index()
-    metric_summary.columns = ['metric', 'avg_std_dev (inconsistency)', 'avg_se']
-    summary_path = os.path.join(OUTPUT_DIR, "metric_consistency_summary.csv")
+    # Unified Report (Average Consistency per Metric)
+    metric_summary = stats_df.groupby('metric').agg({
+        'std_dev': 'mean',
+        'se': 'mean',
+        'binary_agreement': 'mean'
+    }).reset_index()
+    metric_summary.columns = ['metric', 'avg_std_dev (inconsistency)', 'avg_se', 'avg_binary_agreement']
+    summary_path = os.path.join(output_dir, "metric_consistency_summary.csv")
     metric_summary.to_csv(summary_path, index=False)
     
-    print(f"Stats saved to {stats_path}")
+    print(f"\nStats saved to {stats_path}")
     print(f"Summary saved to {summary_path}")
     print("\nMetric Consistency Summary:")
     print(metric_summary)
+    
+    # Print detailed per-question stats
+    print("\n" + "="*80)
+    print("PER-QUESTION CONSISTENCY")
+    print("="*80)
+    for _, row in stats_df.iterrows():
+        model_info = f" (model: {row['model']})" if 'model' in row and pd.notna(row.get('model')) else ""
+        print(f"\nQuestion {row['question_idx']}{model_info}:")
+        print(f"  Metric: {row['metric']}")
+        print(f"  Mean: {row['mean_score']:.3f} ± {row['std_dev']:.3f}")
+        print(f"  95% CI: [{row['ci_lower']:.3f}, {row['ci_upper']:.3f}]")
+        print(f"  Binary agreement: {row['binary_agreement']*100:.1f}%")
+    
+    return stats_df, metric_summary
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Test metric consistency/stability")
+    parser.add_argument("--metric", type=str, default=None,
+                        help=f"Run only a specific metric. Available: {', '.join(ALL_METRICS.keys())}")
+    parser.add_argument("--use_disagreements", action="store_true",
+                        help="Use disagreement examples instead of random sampling")
+    parser.add_argument("--human_answers", action="store_true",
+                        help="Sample from human answers (ask_science) instead of model outputs")
+    parser.add_argument("--samples", type=int, default=15,
+                        help="Number of random samples (ignored if --use_disagreements)")
+    parser.add_argument("--reps", type=int, default=10,
+                        help="Number of repetitions per sample")
+    parser.add_argument("--seed", type=int, default=42,
+                        help="Random seed for reproducibility")
+    parser.add_argument("--run", type=int, default=None,
+                        help="Run number suffix for output directory (for sister experiments)")
+    args = parser.parse_args()
+    
+    # Set random seed
+    random.seed(args.seed)
+    
+    # Select metrics
+    if args.metric:
+        if args.metric not in ALL_METRICS:
+            print(f"Error: Unknown metric '{args.metric}'")
+            print(f"Available metrics: {', '.join(ALL_METRICS.keys())}")
+            return
+        metrics = {args.metric: ALL_METRICS[args.metric]}
+        metric_suffix = args.metric
+    else:
+        metrics = DEFAULT_METRICS
+        metric_suffix = "all"
+    
+    # Get pairs
+    if args.use_disagreements:
+        selected_pairs = get_disagreement_pairs()
+        source_suffix = "disagreements"
+    elif args.human_answers:
+        selected_pairs = get_human_answer_pairs(args.samples)
+        source_suffix = f"human_{args.samples}_samples"
+    else:
+        selected_pairs = get_random_pairs(args.samples)
+        source_suffix = f"{args.samples}_samples"
+    
+    # Output directory
+    run_suffix = f"_run{args.run}" if args.run else ""
+    output_dir = f"{PROJECT_DIR}/Benchmarking/deep_eval/data/consistency_check/{metric_suffix}_{source_suffix}_{args.reps}_tries{run_suffix}/"
+    
+    print(f"\n{'='*60}")
+    print(f"CONSISTENCY CHECK CONFIGURATION")
+    print(f"{'='*60}")
+    print(f"Metrics: {', '.join(metrics.keys())}")
+    data_source = "disagreement examples" if args.use_disagreements else ("human answers (ask_science)" if args.human_answers else "model outputs")
+    print(f"Data source: {data_source}")
+    print(f"Number of pairs: {len(selected_pairs)}")
+    print(f"Repetitions: {args.reps}")
+    print(f"Output: {output_dir}")
+    print(f"{'='*60}\n")
+    
+    # Run
+    asyncio.run(run_consistency_check(metrics, selected_pairs, args.reps, output_dir))
+    
+    print("\n" + "="*60)
+    print("CONSISTENCY CHECK COMPLETE")
+    print("="*60)
+
 
 if __name__ == "__main__":
-    asyncio.run(main())
-
+    main()

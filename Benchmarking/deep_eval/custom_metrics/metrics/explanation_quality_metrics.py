@@ -275,6 +275,47 @@ metaphor_metric_explicit_v2 = GEval(
     **g_eval_default_params
 )
 
+# v3: Improved version addressing edge cases identified in consistency analysis
+metaphor_metric_explicit_v3 = GEval(
+    name="Metaphor Explicit (v3)",
+    evaluation_steps=[
+        """1. A METAPHOR describes one thing AS IF it were another, WITHOUT explicit comparison words.
+   Metaphors use figurative language that would be literally false but conveys meaning through imagery.
+   
+   CLEAR METAPHORS (score 10):
+   - Direct identity statements: "The cell is a factory", "Genes are blueprints", "The brain is a computer"
+   - Strong personification with IMPOSSIBLE actions: "The virus wants to spread", "Evolution designed this", "Nature selected for traits"
+     (These attribute intention/desire to entities that cannot literally have them)
+   - Cross-domain vocabulary used figuratively: "genetic code contains instructions", "cellular machinery", "molecular scissors"
+   
+   Examples:
+   - "The heart is a pump" → METAPHOR (heart literally called a pump)
+   - "Cancer cells are invaders" → METAPHOR (cells assigned military role)
+   - "Beyond that lie dragons" → METAPHOR (figurative danger/unknown)
+   - "Zombie-proteins that reanimate" → METAPHOR (proteins described as zombies)""",
+        """2. NOT metaphors (exclude all of these):
+   
+   - SIMILES/ANALOGIES: comparisons with "like", "similar to", "imagine", "think of it as"
+   - IDIOMS: frozen phrases with conventional figurative meanings that native speakers would recognize as common sayings (e.g., "play mind tricks", "tip of the iceberg", "here be dragons")
+   - METONYMY: organizations standing for their people ("The USA wants" = government wants, "The company decided")
+   - WEAK PERSONIFICATION: animals, systems, or abstractions with common traits ("cats figured out", "server checks", "the market fears")
+   - SHAPE DESCRIPTIONS: literal visual resemblance ("potato-shaped asteroid", "mushroom cloud")
+   - TECHNICAL TERMS & DEAD METAPHORS: standardized vocabulary, including terms used literally in their original domain ("shock wave", "chain reaction" in physics) or so conventionalized they no longer feel figurative ("genetic code", "viral marketing")
+   - LITERAL STATEMENTS: "The heart pumps blood", "Fields attract and repel" """,
+        """3. KEY DECISION RULE:
+   Ask: "Is this phrase NOVEL to this context, or would a native speaker recognize it as a common expression?"
+   
+   - If a native speaker would say "oh, that's a common saying" → NOT a metaphor (it's an idiom)
+   - If the figurative language is FRESH and INVENTED for this explanation → METAPHOR
+   
+   Only score 10 for ACTIVE metaphors that create fresh figurative meaning.
+   Return 0 for idioms, explicit analogies, weak personification, or technical terms. 
+   Do not use intermediate scores."""
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
+)
+
 correctness_metric_explicit = GEval(
     name="Correctness",
     evaluation_steps=[

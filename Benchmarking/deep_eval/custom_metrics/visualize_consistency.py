@@ -1,8 +1,22 @@
+"""
+Visualize metric consistency/stability results.
+
+Usage:
+    cd Benchmarking/deep_eval && poetry run python custom_metrics/visualize_consistency.py
+    poetry run python custom_metrics/visualize_consistency.py --dir /path/to/results
+"""
 import os
+import sys
+import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+
+# Add parent directory to path to import config
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from config import PROJECT_DIR
+
 
 def visualize_consistency(output_dir):
     graphs_dir = os.path.join(output_dir, "graphs")
@@ -41,9 +55,7 @@ def visualize_consistency(output_dir):
     plt.close()
     
     # 2. Box Plot: Distribution of Std Devs across Questions for each Metric
-    # This shows if a metric is consistently stable or if it has outliers (some questions are very unstable)
     plt.figure(figsize=(12, 8))
-    # Order by median inconsistency
     order = stats_df.groupby('metric')['std_dev'].median().sort_values().index
     sns.boxplot(
         data=stats_df,
@@ -53,14 +65,13 @@ def visualize_consistency(output_dir):
         palette='coolwarm'
     )
     plt.title('Distribution of Instability across Questions', fontsize=15)
-    plt.xlabel('Standard Deviation per Question (N=15 Repetitions)', fontsize=12)
+    plt.xlabel('Standard Deviation per Question', fontsize=12)
     plt.ylabel('Metric', fontsize=12)
     plt.tight_layout()
     plt.savefig(os.path.join(graphs_dir, "inconsistency_distribution.png"), dpi=300)
     plt.close()
 
     # 3. Scatter Plot: Mean Score vs. Standard Deviation
-    # Does the model get more inconsistent when it gives higher/lower scores?
     plt.figure(figsize=(10, 6))
     sns.scatterplot(
         data=stats_df,
@@ -78,8 +89,25 @@ def visualize_consistency(output_dir):
     plt.savefig(os.path.join(graphs_dir, "score_vs_inconsistency.png"), dpi=300)
     plt.close()
     
-    # 4. (Optional) Heatmap of Raw Scores if intermediate data exists
-    # Visualizing one random question's repetitions to see the "flicker"
+    # 4. Binary Agreement Bar Plot (if available)
+    if 'avg_binary_agreement' in summary_df.columns:
+        plt.figure(figsize=(12, 6))
+        summary_df_sorted_binary = summary_df.sort_values('avg_binary_agreement', ascending=False)
+        sns.barplot(
+            data=summary_df_sorted_binary,
+            x='avg_binary_agreement',
+            y='metric',
+            palette='RdYlGn'
+        )
+        plt.title('Binary Decision Agreement (>0.5 threshold)', fontsize=15)
+        plt.xlabel('Average Agreement Rate (Higher is Better)', fontsize=12)
+        plt.ylabel('Metric', fontsize=12)
+        plt.xlim(0, 1)
+        plt.tight_layout()
+        plt.savefig(os.path.join(graphs_dir, "binary_agreement.png"), dpi=300)
+        plt.close()
+    
+    # 5. Heatmap of Raw Scores if intermediate data exists
     if intermediate_df is not None:
         # Pick the metric with highest average inconsistency to visualize
         worst_metric = summary_df_sorted.iloc[-1]['metric']
@@ -87,27 +115,86 @@ def visualize_consistency(output_dir):
         # Filter for that metric
         subset = intermediate_df[intermediate_df['metric'] == worst_metric].copy()
         
-        # We need to pivot: Rows=Questions, Cols=Repetitions, Values=Scores
-        # Create a label for each question (e.g., "Q1 (Model X)")
-        subset['label'] = "Q" + subset['question_idx'].astype(str) + "\n" + subset['model']
+        if len(subset) > 0:
+            # Create a label for each question
+            subset['label'] = "Q" + subset['question_idx'].astype(str)
+            if 'model' in subset.columns and subset['model'].notna().any():
+                subset['label'] = subset['label'] + "\n" + subset['model'].fillna('')
+            
+            pivot_df = subset.pivot(index='label', columns='repetition', values='score')
+            
+            plt.figure(figsize=(12, max(6, len(pivot_df) * 0.5)))
+            sns.heatmap(pivot_df, cmap="YlGnBu", annot=True, fmt=".2f", cbar_kws={'label': 'Score'})
+            plt.title(f'Raw Score Variance: {worst_metric} (Most Unstable Metric)', fontsize=15)
+            plt.xlabel('Repetition #', fontsize=12)
+            plt.ylabel('Question', fontsize=12)
+            plt.tight_layout()
+            plt.savefig(os.path.join(graphs_dir, f"heatmap_raw_scores_{worst_metric}.png"), dpi=300)
+            plt.close()
+    
+    # 6. Per-question CI plot for single metric runs
+    if len(summary_df) == 1:
+        metric_name = summary_df.iloc[0]['metric']
         
-        pivot_df = subset.pivot(index='label', columns='repetition', values='score')
+        plt.figure(figsize=(14, max(6, len(stats_df) * 0.4)))
         
-        plt.figure(figsize=(12, 10))
-        sns.heatmap(pivot_df, cmap="YlGnBu", annot=True, fmt=".2f", cbar_kws={'label': 'Score'})
-        plt.title(f'Raw Score Variance: {worst_metric} (Most Unstable Metric)', fontsize=15)
-        plt.xlabel('Repetition #', fontsize=12)
-        plt.ylabel('Question / Model', fontsize=12)
+        # Sort by mean score
+        stats_sorted = stats_df.sort_values('mean_score', ascending=True).reset_index(drop=True)
+        
+        # Plot error bars
+        plt.errorbar(
+            stats_sorted['mean_score'],
+            range(len(stats_sorted)),
+            xerr=[stats_sorted['mean_score'] - stats_sorted['ci_lower'],
+                  stats_sorted['ci_upper'] - stats_sorted['mean_score']],
+            fmt='o',
+            capsize=3,
+            capthick=1,
+            color='steelblue'
+        )
+        
+        # Add vertical line at 0.5 threshold
+        plt.axvline(x=0.5, color='red', linestyle='--', alpha=0.7, label='Binary threshold (0.5)')
+        
+        plt.yticks(range(len(stats_sorted)), [f"Q{idx}" for idx in stats_sorted['question_idx']])
+        plt.xlabel('Score (Mean ± 95% CI)', fontsize=12)
+        plt.ylabel('Question Index', fontsize=12)
+        plt.title(f'{metric_name}: Score Distribution with 95% Confidence Intervals', fontsize=15)
+        plt.legend()
         plt.tight_layout()
-        plt.savefig(os.path.join(graphs_dir, f"heatmap_raw_scores_{worst_metric}.png"), dpi=300)
+        plt.savefig(os.path.join(graphs_dir, f"confidence_intervals_{metric_name}.png"), dpi=300)
         plt.close()
 
     print(f"Graphs saved to {graphs_dir}")
 
-if __name__ == "__main__":
-    # Define directory
-    # Assuming relative path from where script is run, or absolute path
-    # Using the path defined in your project structure
-    target_dir = "/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/consistency_check/15_samples_10_tries/"
+
+def main():
+    parser = argparse.ArgumentParser(description="Visualize metric consistency results")
+    parser.add_argument("--dir", type=str, default=None,
+                        help="Path to consistency check results directory")
+    args = parser.parse_args()
+    
+    if args.dir:
+        target_dir = args.dir
+    else:
+        # Default: find most recent results directory
+        base_dir = f"{PROJECT_DIR}/Benchmarking/deep_eval/data/consistency_check/"
+        if os.path.exists(base_dir):
+            subdirs = [d for d in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, d))]
+            if subdirs:
+                # Sort by modification time, most recent first
+                subdirs.sort(key=lambda d: os.path.getmtime(os.path.join(base_dir, d)), reverse=True)
+                target_dir = os.path.join(base_dir, subdirs[0])
+                print(f"Using most recent results: {target_dir}")
+            else:
+                print("No results found. Run consistency_check.py first.")
+                return
+        else:
+            print(f"Results directory not found: {base_dir}")
+            return
+    
     visualize_consistency(target_dir)
 
+
+if __name__ == "__main__":
+    main()
