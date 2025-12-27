@@ -1,0 +1,21 @@
+metric,question_idx,n_samples,mean_score,std_dev,se,ci_lower,ci_upper,binary_agreement,scores_list,model
+metaphor_v8_deepseek,0,8,0.125,0.3535533905932738,0.125,-0.12,0.37,0.875,"[np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(1.0), np.float64(0.0), np.float64(0.0)]",custom
+metaphor_v8_deepseek,1,10,0.0,0.0,0.0,0.0,0.0,1.0,"[np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)]",custom
+metaphor_v8_deepseek,2,6,1.0,0.0,0.0,1.0,1.0,1.0,"[np.float64(1.0), np.float64(1.0), np.float64(1.0), np.float64(1.0), np.float64(1.0), np.float64(1.0)]",custom
+metaphor_v8_deepseek,3,9,1.0,0.0,0.0,1.0,1.0,1.0,"[np.float64(1.0), np.float64(1.0), np.float64(1.0), np.float64(1.0), np.float64(1.0), np.float64(1.0), np.float64(1.0), np.float64(1.0), np.float64(1.0)]",custom
+metaphor_v8_deepseek,4,5,0.8,0.4472135954999579,0.19999999999999998,0.24480000000000013,1.3552,0.8,"[np.float64(1.0), np.float64(1.0), np.float64(1.0), np.float64(1.0), np.float64(0.0)]",custom
+metaphor_v8_deepseek,5,5,1.0,0.0,0.0,1.0,1.0,1.0,"[np.float64(1.0), np.float64(1.0), np.float64(1.0), np.float64(1.0), np.float64(1.0)]",custom
+metaphor_v8_deepseek,6,5,0.0,0.0,0.0,0.0,0.0,1.0,"[np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)]",custom
+metaphor_v8_deepseek,7,10,0.0,0.0,0.0,0.0,0.0,1.0,"[np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)]",custom
+metaphor_v8_deepseek,8,6,0.8333333333333334,0.408248290463863,0.16666666666666669,0.5066666666666666,1.1600000000000001,0.8333333333333334,"[np.float64(1.0), np.float64(0.0), np.float64(1.0), np.float64(1.0), np.float64(1.0), np.float64(1.0)]",custom
+metaphor_v8_deepseek,9,10,0.0,0.0,0.0,0.0,0.0,1.0,"[np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)]",custom
+metaphor_v8_deepseek,10,10,0.0,0.0,0.0,0.0,0.0,1.0,"[np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)]",custom
+metaphor_v8_deepseek,11,10,0.0,0.0,0.0,0.0,0.0,1.0,"[np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)]",custom
+metaphor_v8_deepseek,12,8,0.0,0.0,0.0,0.0,0.0,1.0,"[np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)]",custom
+metaphor_v8_deepseek,13,10,0.0,0.0,0.0,0.0,0.0,1.0,"[np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)]",custom
+metaphor_v8_deepseek,14,10,0.0,0.0,0.0,0.0,0.0,1.0,"[np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)]",custom
+metaphor_v8_deepseek,15,10,0.0,0.0,0.0,0.0,0.0,1.0,"[np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)]",custom
+metaphor_v8_deepseek,16,10,0.0,0.0,0.0,0.0,0.0,1.0,"[np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)]",custom
+metaphor_v8_deepseek,17,7,0.0,0.0,0.0,0.0,0.0,1.0,"[np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)]",custom
+metaphor_v8_deepseek,18,10,0.0,0.0,0.0,0.0,0.0,1.0,"[np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)]",custom
+metaphor_v8_deepseek,19,10,0.0,0.0,0.0,0.0,0.0,1.0,"[np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)]",custom
