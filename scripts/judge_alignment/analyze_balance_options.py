@@ -45,6 +45,9 @@ MAX_ANSWER_LENGTH = 2560  # Exclude answers longer than this for labeling tasks
 # Mapping from metric name to previous versions (for smart sampling)
 # List is ordered by preference: try first, then fallback to next
 METRIC_PREVIOUS_VERSIONS = {
+    'metaphor_v12_1': ['metaphor_v12', 'metaphor_v11', 'metaphor_v10', 'metaphor_v9', 'metaphor_v8', 'metaphor_v7', 'metaphor_v6', 'metaphor_v5', 'metaphor_v4', 'metaphor_v3', 'metaphor_v2'],
+    'metaphor_v12': ['metaphor_v11', 'metaphor_v10', 'metaphor_v9', 'metaphor_v8', 'metaphor_v7', 'metaphor_v6', 'metaphor_v5', 'metaphor_v4', 'metaphor_v3', 'metaphor_v2'],
+    'metaphor_v8': ['metaphor_v7', 'metaphor_v6', 'metaphor_v5', 'metaphor_v4', 'metaphor_v3', 'metaphor_v2'],
     'metaphor_v6': ['metaphor_v5', 'metaphor_v4', 'metaphor_v3', 'metaphor_v2'],
     'metaphor_v5': ['metaphor_v4', 'metaphor_v3', 'metaphor_v2'],
     'metaphor_v4': ['metaphor_v3', 'metaphor_v2'],
@@ -59,16 +62,16 @@ METRIC_PREVIOUS_VERSIONS = {
 
 ALL_METRICS = [
     'humor_v2_score',
-    'metaphor_v6_score',
-    'analogy_v2_score', 
-    'connection_to_everyday_life_v2_score', 
+    'metaphor_v8_score',
+    'analogy_v2_score',
+    'connection_to_everyday_life_v2_score',
     'scaffolding_score'
 ]
 
 # Reason columns corresponding to each metric
 ALL_REASON_COLUMNS = [
     'humor_v2_reason',
-    'metaphor_v6_reason',
+    'metaphor_v8_reason',
     'analogy_v2_reason',
     'connection_to_everyday_life_v2_reason',
     'scaffolding_reason'
@@ -490,10 +493,13 @@ def save_balanced_datasets(df, surveys, output_dir, metrics_list=None):
         output_path = output_dir / filename
         # Select only the columns we want to include
         survey_df = df.loc[indices, [col for col in output_columns if col in df.columns]].copy()
-        
+
+        # Add index column
+        survey_df['Index'] = indices
+
         # Rename columns to match balanced_dataset.csv format
         survey_df = survey_df.rename(columns=OUTPUT_COLUMN_RENAME)
-        
+
         survey_df.to_csv(output_path, index=False)
         print(f"Saved {output_path.name} with {len(survey_df)} rows")
     
@@ -538,6 +544,12 @@ def setup_deepeval(metrics_to_run=None):
         metaphor_metric_explicit_v4,
         metaphor_metric_explicit_v5,
         metaphor_metric_explicit_v6,
+        metaphor_metric_explicit_v7,
+        metaphor_metric_explicit_v8,
+        metaphor_metric_explicit_v9,
+        metaphor_metric_explicit_v10,
+        metaphor_metric_explicit_v11,
+        metaphor_metric_explicit_v12,
         analogy_metric_explicit_v2,
         connection_to_everyday_life_metric_explicit_v2,
         scaffolding_metric,
@@ -551,6 +563,12 @@ def setup_deepeval(metrics_to_run=None):
         "metaphor_v4": metaphor_metric_explicit_v4,
         "metaphor_v5": metaphor_metric_explicit_v5,
         "metaphor_v6": metaphor_metric_explicit_v6,
+        "metaphor_v7": metaphor_metric_explicit_v7,
+        "metaphor_v8": metaphor_metric_explicit_v8,
+        "metaphor_v9": metaphor_metric_explicit_v9,
+        "metaphor_v10": metaphor_metric_explicit_v10,
+        "metaphor_v11": metaphor_metric_explicit_v11,
+        "metaphor_v12": metaphor_metric_explicit_v12,
         "analogy_v2": analogy_metric_explicit_v2,
         "connection_to_everyday_life_v2": connection_to_everyday_life_metric_explicit_v2,
         "scaffolding": scaffolding_metric,

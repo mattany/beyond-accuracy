@@ -37,11 +37,16 @@ logging.getLogger("main_logger").setLevel(logging.INFO)
 # Add parent directory to path to import config
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from config import PROJECT_DIR, OPENAI_API_KEY
+from config import PROJECT_DIR, OPENAI_API_KEY, DEEPSEEK_API_KEY
 from deepeval.test_case import LLMTestCase
 
-# Set OpenAI Key
+# Set API Keys
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+if DEEPSEEK_API_KEY:
+    os.environ["DEEPSEEK_API_KEY"] = DEEPSEEK_API_KEY
+    # DeepSeek pricing for deepeval cost tracking
+    os.environ["OPENAI_COST_PER_INPUT_TOKEN"] = "0.00000028"
+    os.environ["OPENAI_COST_PER_OUTPUT_TOKEN"] = "0.00000042"
 
 # Import Metrics
 from custom_metrics.metrics import (
@@ -52,9 +57,17 @@ from custom_metrics.metrics import (
     metaphor_metric_explicit_v6,
     metaphor_metric_explicit_v7,
     metaphor_metric_explicit_v8,
+    metaphor_metric_explicit_v8_deepseek,
+    metaphor_metric_explicit_v8_deepseek_chat,
+    metaphor_metric_explicit_v8_gpt4o_mini,
     metaphor_metric_explicit_v9,
     metaphor_metric_explicit_v10,
     metaphor_metric_explicit_v11,
+    metaphor_metric_explicit_v12,
+    metaphor_metric_explicit_v12_deepseek,
+    metaphor_metric_explicit_v12_deepseek_chat,
+    metaphor_metric_explicit_v12_gpt4o_mini,
+    metaphor_metric_explicit_v12_1,
     humor_metric_explicit_v2,
     analogy_metric_explicit_v2,
     connection_to_everyday_life_metric_explicit_v2,
@@ -71,9 +84,17 @@ ALL_METRICS = {
     "metaphor_v6": metaphor_metric_explicit_v6,
     "metaphor_v7": metaphor_metric_explicit_v7,
     "metaphor_v8": metaphor_metric_explicit_v8,
+    "metaphor_v8_deepseek": metaphor_metric_explicit_v8_deepseek,
+    "metaphor_v8_deepseek_chat": metaphor_metric_explicit_v8_deepseek_chat,
+    "metaphor_v8_gpt4o_mini": metaphor_metric_explicit_v8_gpt4o_mini,
     "metaphor_v9": metaphor_metric_explicit_v9,
     "metaphor_v10": metaphor_metric_explicit_v10,
     "metaphor_v11": metaphor_metric_explicit_v11,
+    "metaphor_v12": metaphor_metric_explicit_v12,
+    "metaphor_v12_deepseek": metaphor_metric_explicit_v12_deepseek,
+    "metaphor_v12_deepseek_chat": metaphor_metric_explicit_v12_deepseek_chat,
+    "metaphor_v12_gpt4o_mini": metaphor_metric_explicit_v12_gpt4o_mini,
+    "metaphor_v12_1": metaphor_metric_explicit_v12_1,
     "humor_v2": humor_metric_explicit_v2,
     "analogy_v2": analogy_metric_explicit_v2,
     "connection_to_everyday_life_v2": connection_to_everyday_life_metric_explicit_v2,
@@ -99,6 +120,24 @@ HUMAN_ANSWERS_PATH = f"{PROJECT_DIR}/scripts/judge_alignment/balanced_dataset_v2
 DISAGREEMENT_DATA_PATH = f"{PROJECT_DIR}/scripts/judge_alignment/metaphor_metric_disagreement_analysis.csv"
 
 
+def get_eval_model_name(metric_func):
+    """Extract the evaluation model name from a metric."""
+    try:
+        # For GEval metrics with custom model wrapper
+        if hasattr(metric_func, 'model') and hasattr(metric_func.model, 'get_model_name'):
+            return metric_func.model.get_model_name()
+        # For GEval metrics with string model name
+        if hasattr(metric_func, 'model') and isinstance(metric_func.model, str):
+            return metric_func.model
+        # For GEval using native model
+        if hasattr(metric_func, 'using_native_model') and metric_func.using_native_model:
+            if hasattr(metric_func.model, 'model_name'):
+                return metric_func.model.model_name
+        return "unknown"
+    except Exception:
+        return "unknown"
+
+
 async def evaluate_pair(metric_name, metric_func, question, answer, row_idx, repetition_idx, model_name=None):
     """Evaluates a single pair with a single metric."""
     test_case = LLMTestCase(
@@ -117,7 +156,8 @@ async def evaluate_pair(metric_name, metric_func, question, answer, row_idx, rep
             "score": score,
             "explanation": reason,
             "question": question,
-            "answer": answer
+            "answer": answer,
+            "eval_model": get_eval_model_name(metric_func)
         }
         if model_name:
             result["model"] = model_name

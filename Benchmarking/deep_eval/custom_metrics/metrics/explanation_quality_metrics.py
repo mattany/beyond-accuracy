@@ -1,7 +1,7 @@
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCaseParams
 
-from custom_metrics.metrics.constants import g_eval_default_params
+from custom_metrics.metrics.constants import g_eval_default_params, g_eval_deepseek_params
 
 explanation_type_metric_explicit = GEval(
     name="Explanation Type",
@@ -806,6 +806,32 @@ metaphor_metric_explicit_v8 = GEval(
     **g_eval_default_params
 )
 
+# v8_deepseek: Same as v8 but using deepseek-reasoner model (slow, chain-of-thought)
+# Requires DEEPSEEK_API_KEY environment variable
+from custom_metrics.metrics.deepseek_model import deepseek_reasoner, deepseek_chat
+metaphor_metric_explicit_v8_deepseek = GEval(
+    name="Metaphor Explicit (v8-deepseek)",
+    evaluation_steps=metaphor_metric_explicit_v8.evaluation_steps,
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    model=deepseek_reasoner
+)
+
+# v8_deepseek_chat: Same as v8 but using deepseek-chat model (fast)
+metaphor_metric_explicit_v8_deepseek_chat = GEval(
+    name="Metaphor Explicit (v8-deepseek-chat)",
+    evaluation_steps=metaphor_metric_explicit_v8.evaluation_steps,
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    model=deepseek_chat
+)
+
+# v8_gpt4o_mini: Same as v8 but using gpt-4o-mini (cheaper, faster)
+metaphor_metric_explicit_v8_gpt4o_mini = GEval(
+    name="Metaphor Explicit (v8-gpt4o-mini)",
+    evaluation_steps=metaphor_metric_explicit_v8.evaluation_steps,
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    model="gpt-4o-mini"
+)
+
 # v9 is a streamlined version focusing on cognitive accessibility of source domains,
 # clearer frozen/active distinction, and reduced prompt length for better consistency.
 metaphor_metric_explicit_v9 = GEval(
@@ -1055,6 +1081,240 @@ metaphor_metric_explicit_v11 = GEval(
         
         When uncertain, score 0.
         """
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
+)
+
+#
+# v12: tighten v8 to reduce ambiguity across different evaluator models.
+# Key changes vs v8:
+# - Force a binary 0/1 score (not 0/10, not intermediate decimals).
+# - Treat stock idioms + technicalized metaphor terms as Score 0.
+# - Tighten analogy/personification rules: require mapped structure or vivid, central framing.
+#
+metaphor_metric_explicit_v12 = GEval(
+    name="Metaphor Explicit (v12)",
+    evaluation_steps=[
+        """SCORING OUTPUT (MANDATORY)
+
+Return ONLY a single number: 10 or 0.
+- 10 = an ACTIVE metaphor is present
+- 0  = no active metaphor is present
+
+Do NOT output any other text.
+Do NOT use intermediate scores.
+""",
+
+        """1. DEFINITION (WHAT COUNTS)
+
+Score 10 ONLY if the text contains an ACTIVE metaphorical framing:
+- A NON-LITERAL source domain is imported, AND
+- it does real explanatory or evaluative work (not just a throwaway label), AND
+- the meaning would change if rewritten literally.
+
+Otherwise score 0.
+""",
+
+        """2. STRONG POSITIVE SIGNALS (Score 10)
+
+Score 10 when at least one of the following is present:
+- An explicit cross-domain scenario used to explain the target
+  (e.g., comparing a mental process to a traffic jam caused by a poorly-timed lane closure)
+- A vivid, specific simile/analogy with a concrete mechanism/scene
+  (e.g., "like trying to push a rope uphill" or "like sandpaper on glass")
+- Reactivated figurative language where the source domain is clearly invoked
+  with extra source-domain detail (not just a fixed phrase).
+
+Additional positive examples (Score 10):
+- "Your experience of 'now' is like standing on a moving walkway that keeps carrying you forward." (experience domain → time)
+- "The usual rules briefly take a coffee break here." (personification of abstractions)
+""",
+
+        """3. AUTOMATIC NEGATIVES (Score 0) — COMMON AMBIGUITIES
+
+Score 0 if the only figurative language is any of the following:
+
+- Stock idioms / clichés used as fixed labels:
+  Examples (Score 0):
+  - "a whole new ballgame"
+  - "a different kettle of fish"
+  - "the last straw"
+  (Clichés used as fixed labels, not active framing.)
+
+- Technicalized metaphor terms / domain jargon that function as labels:
+  Examples (Score 0):
+  - "bottleneck" used as a standard technical label with no vivid mapping
+  - "pipeline" used as a standard engineering label
+
+- Generic imagery that does not introduce mapped structure:
+  Example (Score 0):
+  - "The explanation was clear as day." (a generic vivid phrase; no cross-domain mapped structure)
+
+- Historical models reported as history (not used as live framing):
+  Example (Score 0):
+  - "People once modeled heat as a weightless substance called 'caloric'."
+    (If the text is merely reporting this historical view, not using it as live framing.)
+""",
+
+        """4. ANALOGY VS METAPHOR (STRICT RULE)
+
+Score 0 for purely didactic label-mappings with no mapped structure:
+- "Memory is like a hard drive." (generic teaching analogy)
+- Calling someone “a robot” purely as a label (meaning emotionally flat/automatic), with no mapped scenario or source-domain structure.
+
+Score 10 if the analogy includes specific source-domain roles/actions/constraints
+that are mapped onto the target. Clear examples (Score 10):
+- "Trying to do X while monitoring yourself is like driving with the parking brake slightly on: you can move, but every action fights resistance."
+- "The system behaves like an assembly line where one stuck station backs up the entire belt, slowing everything downstream."
+- "The components act like teammates pulling a rope in opposite directions, so progress stalls until one side yields."
+""",
+
+        """5. PERSONIFICATION (STRICT RULE)
+
+Score 10 only if the personification is vivid AND central (it changes understanding),
+typically with specific agentive actions that are impossible for the domain.
+
+Score 0 for routine, conventional scientific shorthand
+(e.g., \"cells attack\", \"the market responded\") unless extended into a concrete scene.
+""",
+
+        """6. TIE-BREAKER
+
+If borderline or uncertain, score 0.
+"""
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
+)
+
+# v12 variants for other evaluator models (same prompt)
+metaphor_metric_explicit_v12_deepseek = GEval(
+    name="Metaphor Explicit (v12-deepseek)",
+    evaluation_steps=metaphor_metric_explicit_v12.evaluation_steps,
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    model=deepseek_reasoner
+)
+
+metaphor_metric_explicit_v12_deepseek_chat = GEval(
+    name="Metaphor Explicit (v12-deepseek-chat)",
+    evaluation_steps=metaphor_metric_explicit_v12.evaluation_steps,
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    model=deepseek_chat
+)
+
+metaphor_metric_explicit_v12_gpt4o_mini = GEval(
+    name="Metaphor Explicit (v12-gpt4o-mini)",
+    evaluation_steps=metaphor_metric_explicit_v12.evaluation_steps,
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    model="gpt-4o-mini"
+)
+
+# v12.1: targeted tightening to remove the two biggest remaining instabilities in v12:
+# - Single-clause “vibe” similes used as generic descriptors → Score 0 unless extended mapping.
+# - Colloquial quantity/speed intensifiers → Score 0 unless extended mapping.
+metaphor_metric_explicit_v12_1 = GEval(
+    name="Metaphor Explicit (v12.1)",
+    evaluation_steps=[
+        """SCORING OUTPUT (MANDATORY)
+
+Return ONLY a single number: 10 or 0.
+- 10 = an ACTIVE metaphor is present
+- 0  = no active metaphor is present
+
+Do NOT output any other text.
+Do NOT use intermediate scores.
+""",
+
+        """1. DEFINITION (WHAT COUNTS)
+
+Score 10 ONLY if the text contains an ACTIVE metaphorical framing:
+- A NON-LITERAL source domain is imported, AND
+- it does real explanatory or evaluative work (not just a throwaway label), AND
+- the meaning would change if rewritten literally.
+
+Otherwise score 0.
+""",
+
+        """2. STRONG POSITIVE SIGNALS (Score 10)
+
+Score 10 when at least one of the following is present:
+- A cross-domain scenario with specific roles/actions/constraints mapped onto the target
+  (e.g., an assembly line jam, a parking brake adding drag, etc.).
+- A vivid simile/analogy that explains mechanism, not just vibes.
+- Reactivated figurative language with extra source-domain detail beyond a fixed phrase.
+
+Examples (Score 10):
+- "Trying to do X while monitoring yourself is like driving with the parking brake slightly on: you can move, but every action fights resistance."
+- "One stuck station on the assembly line backs up the whole belt, slowing everything downstream."
+""",
+
+        """3. AUTOMATIC NEGATIVES (Score 0) — KEY EDGE CASES
+
+Score 0 if the only figurative language is any of the following:
+
+3A) SINGLE-CLAUSE “VIBE” SIMILES (Score 0)
+- One-off comparisons that only communicate a generic property (mysterious / intangible / effortless / fast)
+  without adding mapped structure.
+Examples (Score 0):
+- "It was like a mirage." (just “hard to pin down”)
+- "It moved like a whisper." (just “quiet/subtle”)
+
+3B) COLLOQUIAL QUANTITY/SPEED INTENSIFIERS (Score 0)
+- Casual hyperbole used for emphasis, not a sustained source-domain frame.
+Examples (Score 0):
+- "They crank out updates nonstop."
+- "The bacteria multiply like crazy."
+
+If and ONLY if the text EXTENDS these into a concrete mapped scene (roles/actions/constraints),
+you may score 10.
+""",
+
+        """4. FROZEN / IDIOMATIC EXPRESSIONS (Score 0)
+
+Score 0 for stock idioms / clichés used as fixed labels (no mapped structure).
+Examples (Score 0):
+- "a whole new ballgame"
+- "a different kettle of fish"
+- "the last straw"
+""",
+
+        """5. ANALOGY VS METAPHOR (STRICT RULE)
+
+DECISION RULE (YES/NO)
+
+Does the text explicitly state at least ONE role/action/constraint correspondence
+between the source and target AND use it to infer something about the target (a consequence)?
+
+YES → Score 10
+NO  → Score 0
+
+Clear Score 0 examples (label-only / didactic):
+- "Memory is like a hard drive." (no role/action/constraint correspondence; no inference)
+- Calling someone “a robot” purely as a label. (no role/action/constraint correspondence; no inference)
+
+Clear Score 10 examples (mapping USED to explain):
+- "Treat the cache like a pantry: if the shelf is empty you must go shopping (slow), but if it’s stocked you can cook immediately (fast)."
+  (role/action/constraint correspondence: cache state ↔ pantry stock level; inference: empty ↔ slow, stocked ↔ fast)
+- "It’s like a relay race: one runner can’t finish until the baton is passed, so delays propagate to the whole team."
+  (role/action/constraint correspondence: dependency ↔ baton handoff constraint; inference: delay propagates)
+- "The process behaves like a bouncer at a club: it lets some requests in and turns others away based on a rule."
+  (role/action/constraint correspondence: gatekeeper admits/rejects ↔ bouncer admits/rejects; inference: some requests allowed, others denied)
+""",
+
+        """6. PERSONIFICATION (STRICT RULE)
+
+Score 10 only if personification is vivid AND central (it changes understanding),
+with specific agentive actions that are impossible for the domain.
+
+Score 0 for routine, conventional shorthand (e.g., \"cells attack\", \"the market responded\")
+unless extended into a concrete scene.
+""",
+
+        """7. TIE-BREAKER
+
+If borderline or uncertain, score 0.
+"""
     ],
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
     **g_eval_default_params
