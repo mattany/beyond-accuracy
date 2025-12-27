@@ -46,8 +46,15 @@ os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 # Import Metrics
 from custom_metrics.metrics import (
     jargon_metric,
+    metaphor_metric_explicit,
     metaphor_metric_explicit_v2,
     metaphor_metric_explicit_v3,
+    metaphor_metric_explicit_v6,
+    metaphor_metric_explicit_v7,
+    metaphor_metric_explicit_v8,
+    metaphor_metric_explicit_v9,
+    metaphor_metric_explicit_v10,
+    metaphor_metric_explicit_v11,
     humor_metric_explicit_v2,
     analogy_metric_explicit_v2,
     connection_to_everyday_life_metric_explicit_v2,
@@ -58,8 +65,15 @@ from custom_metrics.metrics import (
 # All available metrics
 ALL_METRICS = {
     "jargon": jargon_metric,
+    "metaphor_v1": metaphor_metric_explicit,
     "metaphor_v2": metaphor_metric_explicit_v2,
     "metaphor_v3": metaphor_metric_explicit_v3,
+    "metaphor_v6": metaphor_metric_explicit_v6,
+    "metaphor_v7": metaphor_metric_explicit_v7,
+    "metaphor_v8": metaphor_metric_explicit_v8,
+    "metaphor_v9": metaphor_metric_explicit_v9,
+    "metaphor_v10": metaphor_metric_explicit_v10,
+    "metaphor_v11": metaphor_metric_explicit_v11,
     "humor_v2": humor_metric_explicit_v2,
     "analogy_v2": analogy_metric_explicit_v2,
     "connection_to_everyday_life_v2": connection_to_everyday_life_metric_explicit_v2,
@@ -204,6 +218,50 @@ def get_human_answer_pairs(sample_size):
     return selected_pairs
 
 
+def get_custom_csv_pairs(csv_path):
+    """Load question-answer pairs from a custom CSV file."""
+    print(f"Loading pairs from {csv_path}...")
+    df = pd.read_csv(csv_path)
+    
+    # Try to find question and answer columns
+    q_col = None
+    a_col = None
+    
+    for col in ['question', 'Question', 'original_question']:
+        if col in df.columns:
+            q_col = col
+            break
+    
+    for col in ['answer', 'Answer', 'original_answer', 'Human Answer']:
+        if col in df.columns:
+            a_col = col
+            break
+    
+    if not q_col or not a_col:
+        raise ValueError(f"Could not find question/answer columns. Available: {list(df.columns)}")
+    
+    print(f"Using columns: question='{q_col}', answer='{a_col}'")
+    
+    selected_pairs = []
+    for idx, row in df.iterrows():
+        question = row[q_col]
+        answer = row[a_col]
+        
+        # Handle NaN
+        if pd.isna(question) or pd.isna(answer):
+            continue
+        
+        selected_pairs.append({
+            "idx": idx,
+            "question": question,
+            "answer": answer,
+            "model": "custom"
+        })
+    
+    print(f"Loaded {len(selected_pairs)} pairs")
+    return selected_pairs
+
+
 async def run_consistency_check(metrics, selected_pairs, repetitions, output_dir):
     """Run the consistency check with given metrics and pairs."""
     print(f"Using {len(selected_pairs)} pairs for consistency check.")
@@ -331,6 +389,8 @@ def main():
                         help="Use disagreement examples instead of random sampling")
     parser.add_argument("--human_answers", action="store_true",
                         help="Sample from human answers (ask_science) instead of model outputs")
+    parser.add_argument("--csv", type=str, default=None,
+                        help="Path to custom CSV file with question/answer columns")
     parser.add_argument("--samples", type=int, default=15,
                         help="Number of random samples (ignored if --use_disagreements)")
     parser.add_argument("--reps", type=int, default=10,
@@ -357,7 +417,12 @@ def main():
         metric_suffix = "all"
     
     # Get pairs
-    if args.use_disagreements:
+    if args.csv:
+        selected_pairs = get_custom_csv_pairs(args.csv)
+        # Use CSV filename as suffix
+        csv_name = os.path.basename(args.csv).replace('.csv', '')
+        source_suffix = f"csv_{csv_name}"
+    elif args.use_disagreements:
         selected_pairs = get_disagreement_pairs()
         source_suffix = "disagreements"
     elif args.human_answers:

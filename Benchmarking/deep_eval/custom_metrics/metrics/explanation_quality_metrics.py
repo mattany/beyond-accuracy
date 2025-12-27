@@ -482,6 +482,584 @@ metaphor_metric_explicit_v6 = GEval(
     **g_eval_default_params
 )
 
+# v7 tightens metaphor detection by explicitly excluding idioms and other frozen expressions while preserving
+# human-accepted abstract metaphors, reducing both false positives and false negatives. It also adds clearer decision
+# tests and a conservative tie-breaking rule to better align LLM judgments with human annotation behavior.
+metaphor_metric_explicit_v7 = GEval(
+    name="Metaphor Explicit (v7)",
+    evaluation_steps=[
+        """1. DEFINITION
+        
+        A METAPHOR is ACTIVE / LIVE figurative language in which a concept
+        is framed, evaluated, or described using another domain
+        in a NON-LITERAL way.
+        
+        For this task, ONLY score ACTIVE (NON-FROZEN) metaphors.
+        Conventional, idiomatic, or dead metaphors must be scored 0.
+        
+        Metaphors may be imagistic OR abstract.
+        Metaphors may appear WITH or WITHOUT explicit comparison words
+        such as "like", "as", or "similar to".
+        
+        Score 10 if an active metaphor is present.
+        Score 0 otherwise.
+        Do not use intermediate scores.
+        """,
+
+        """2. CORE METAPHOR TEST
+        
+        Ask:
+        Does the passage introduce a NON-LITERAL conceptual framing
+        that changes how the concept is understood, evaluated,
+        or interpreted?
+        
+        If YES → metaphor present (Score 10).
+        If NO → Score 0.
+        """,
+
+        """3. CLEAR METAPHORS (Score 10) — EXAMPLES
+        
+        These are examples of ACTIVE / LIVE metaphors:
+        
+        - "rogue proteins throwing a tantrum inside your cells"
+        - "Your DNA is a recipe book written in a 4-letter alphabet"
+        - "electrons waltzing around the nucleus"
+        - "molecules whispering secrets"
+        - "antibodies going to war"
+        - "a tsunami of medication swept through"
+        - "The star is a cosmic pressure cooker slowly boiling itself"
+        
+        These examples show novel, non-literal conceptual framing.
+        """,
+
+        """4. NOVELTY & FROZENNESS TEST (CRITICAL)
+        
+        Before scoring a metaphor, ask:
+        
+        “Would this phrasing be recognized by most native speakers
+        as a common, idiomatic, or stock expression?”
+        
+        If YES → NOT a metaphor (Score 0),
+        even if the phrase is figurative in origin.
+        
+        Examples of expressions that should be treated as FROZEN:
+        - common idioms ("tip of the iceberg")
+        - clichés and high-frequency figurative phrases
+        - textbook metaphors treated as terminology
+        """,
+
+        """5. LITERAL FALLBACK TEST
+        
+        Ask:
+        
+        “Can this sentence be interpreted fully literally,
+        with no loss of meaning or intent?”
+        
+        If YES → NOT a metaphor (Score 0).
+        
+        Metaphors require meaning that DEPENDS on
+        non-literal conceptual transfer.
+        """,
+
+        """6. ABSTRACT METAPHORS (ALLOWED, WITH EXAMPLES)
+        
+        Metaphors do NOT need to be visual or imagistic.
+        
+        Abstract metaphors SHOULD be scored 10 if:
+        - a non-literal domain is clearly imported
+        - the framing alters how the concept is understood
+        - the meaning cannot be preserved under a literal reading
+        
+        Examples (Score 10):
+        - "This argument collapses under its own ambition."
+        - "Ideas gain momentum as they spread."
+        - "The theory rests on a fragile foundation."
+        """,
+
+        """7. PERSONIFICATION TEST
+        
+        For personification, ask:
+        
+        “Is the attributed action, intention, or behavior
+        clearly impossible or unexpected for the domain?”
+        
+        - YES → metaphor (Score 10)
+        - NO, sounds like standard descriptive language → NOT metaphor
+        
+        Examples:
+        - "White blood cells throwing punches at invaders" → metaphor
+        - "The market fears inflation" → NOT metaphor
+        """,
+
+        """8. METAPHORICAL ANALOGIES
+        
+        The presence of explicit comparison language
+        ("like", "similar to", "think of X as Y", etc.)
+        does NOT exclude a metaphor.
+        
+        An analogy is ALSO a metaphor if it introduces
+        novel, expressive, or non-standard figurative framing,
+        rather than neutral explanation.
+        
+        Example (Score 10):
+        - "Debugging this problem is like trying to untangle headphones in the dark."
+        """,
+
+        """9. NOT METAPHORS (ALWAYS SCORE 0)
+        
+        Exclude all of the following:
+        
+        - DEAD or CONVENTIONAL METAPHORS / TECHNICAL TERMS:
+          "the cell is a factory", "genetic code"
+        
+        - IDIOMS and FROZEN PHRASES:
+          "tip of the iceberg", "here be dragons"
+        
+        - STANDARD PERSONIFICATION:
+          "the algorithm decides", "evolution favors traits"
+        
+        - METONYMY:
+          "Science says", "The White House announced"
+        
+        - SHAPE OR LITERAL RESEMBLANCE:
+          "mushroom cloud", "potato-shaped asteroid"
+        
+        - PURELY LITERAL STATEMENTS:
+          "The heart pumps blood"
+        """,
+
+        """10. CONSERVATIVE TIE-BREAKING RULE
+        
+        When the case is borderline or ambiguous:
+        
+        - Prefer Score 0 over Score 10.
+        - Humans apply a conservative standard;
+          match that standard here.
+        """
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
+)
+
+# v8 further refines domain-shift logic, clarifies frozen idiom handling,
+# and adds richer examples throughout to reduce ambiguity in borderline cases.
+metaphor_metric_explicit_v8 = GEval(
+    name="Metaphor Explicit (v8)",
+    evaluation_steps=[
+        """1. DEFINITION
+        
+        A METAPHOR is ACTIVE / LIVE figurative language in which a concept
+        is framed, evaluated, or described using another domain
+        in a NON-LITERAL way.
+        
+        For this task, ONLY score ACTIVE metaphors.
+        Conventional, idiomatic, or dead metaphors must be scored 0,
+        UNLESS they are reactivated via a clear domain shift.
+        
+        Metaphors may be imagistic OR abstract.
+        Metaphors may appear WITH or WITHOUT explicit comparison words
+        such as "like", "as", or "similar to".
+        
+        Score 10 if an active metaphor is present.
+        Score 0 otherwise.
+        Do not use intermediate scores.
+        """,
+
+        """2. CORE METAPHOR TEST (WITH EXAMPLES)
+        
+        Ask:
+        Does the passage DEPEND on a NON-LITERAL conceptual framing
+        that changes how the target concept is understood,
+        explained, or evaluated?
+        
+        If YES → continue evaluation.
+        If NO → NOT a metaphor (Score 0).
+        
+        Examples:
+        - "The theory cannibalizes its own assumptions." → metaphor
+        - "The theory has internal inconsistencies." → NOT metaphor
+        """,
+
+        """3. NOVELTY & DOMAIN-SHIFT TEST (CRITICAL, WITH EXAMPLES)
+        
+        Novelty does NOT require original wording.
+        
+        A metaphor may be ACTIVE if novelty arises from:
+        - the phrasing itself, OR
+        - a DOMAIN SHIFT, where a familiar expression is applied
+          to a domain where it is not conventionally used.
+        
+        HOWEVER:
+        - If an expression is idiomatic and used freely across domains,
+          it should be treated as FROZEN and scored 0.
+        
+        Positive examples (Score 10):
+        - "She put him in the friend zone so hard that a force field
+           seemed to form around him."
+          (physics → social interaction)
+        
+        Negative examples (Score 0):
+        - "That policy change was the final nail in the coffin."
+          (domain-agnostic idiom)
+        """,
+
+        """4. FROZEN / IDIOMATIC METAPHORS (WITH EXAMPLES)
+        
+        Treat expressions as FROZEN (Score 0) if they are:
+        - idiomatic and widely recognized
+        - processed without invoking their source domain
+        - commonly used across many topics
+        
+        Examples (Score 0):
+        - "tip of the iceberg"
+        - "double-edged sword"
+        - "final nail in the coffin"
+        
+        These do NOT become active merely by appearing in
+        technical, scientific, or abstract contexts.
+        """,
+
+        """5. LITERAL FALLBACK TEST (WITH EXAMPLES)
+        
+        Ask:
+        Can the sentence be interpreted fully literally,
+        with no loss of meaning or intent?
+        
+        If YES → NOT a metaphor (Score 0).
+        
+        Examples:
+        - "The committee rejected the proposal." → NOT metaphor
+        - "The proposal was smothered before it could take shape." → metaphor
+        """,
+
+        """6. ABSTRACT METAPHORS (ALLOWED, WITH EXAMPLES)
+        
+        Metaphors do NOT need to be visual or imagistic.
+        
+        Abstract metaphors SHOULD be scored 10 if:
+        - a non-literal source domain is imported
+        - the framing alters how the concept is understood
+        - the meaning cannot be preserved under a literal reading
+        
+        Examples (Score 10):
+        - "The policy devours the resources it was meant to protect."
+        - "The algorithm starves certain outcomes of attention."
+        
+        Abstract, academic, or technical language alone
+        does NOT qualify as metaphor.
+        """,
+
+        """7. PERSONIFICATION TEST (WITH EXAMPLES)
+        
+        For personification, ask:
+        Is the attributed action, intention, or behavior
+        clearly impossible or unexpected for the domain?
+        
+        If YES → metaphor (Score 10).
+        If NO → NOT metaphor (Score 0).
+        
+        Examples:
+        - "White blood cells ambushing invaders." → metaphor
+        - "The market responded to new data." → NOT metaphor
+        """,
+
+        """8. METAPHORICAL ANALOGIES (WITH EXAMPLES)
+        
+        Explicit comparison language ("like", "similar to",
+        "think of X as Y", etc.) does NOT exclude a metaphor.
+        
+        An analogy is ALSO a metaphor if it introduces
+        novel, expressive, or domain-shifting figurative framing,
+        rather than neutral explanation.
+        
+        Examples:
+        - "Debugging this problem is like trying to untangle
+           headphones while wearing gloves." → metaphor
+        - "DNA is like a recipe book." → NOT metaphor
+        """,
+
+        """9. NOT METAPHORS (SUMMARY WITH EXAMPLES)
+        
+        Always score 0 for:
+        - purely literal descriptions
+        - standard technical terminology
+        - metonymy (institutions standing for people)
+        - shape or visual resemblance only
+        - routine evaluative or descriptive verbs
+        
+        Examples (Score 0):
+        - "The heart pumps blood."
+        - "The White House announced new measures."
+        - "a mushroom-shaped cloud"
+        """,
+
+        """10. CONSERVATIVE TIE-BREAKING RULE
+        
+        When the case is borderline or ambiguous:
+        
+        - Prefer Score 0 over Score 10.
+        - Humans apply a conservative standard;
+          match that standard here.
+        """
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
+)
+
+# v9 is a streamlined version focusing on cognitive accessibility of source domains,
+# clearer frozen/active distinction, and reduced prompt length for better consistency.
+metaphor_metric_explicit_v9 = GEval(
+    name="Metaphor Explicit (v9)",
+    evaluation_steps=[
+        """1. DEFINITION
+        
+        A METAPHOR is ACTIVE / LIVE figurative language in which a concept
+        is framed using another domain in a NON-LITERAL way.
+        
+        Score 10 only for ACTIVE metaphors.
+        Score 0 for frozen, idiomatic, or literal language.
+        Do not use intermediate scores.
+        """,
+
+        """2. CORE TEST
+        
+        Ask:
+        Does the sentence REQUIRE a non-literal source domain
+        to convey its meaning?
+        
+        If NO → Score 0.
+        If YES → continue.
+        
+        Examples:
+        - "The proposal was smothered before it could take shape." → 10
+        - "The proposal was rejected." → 0
+        """,
+
+        """3. NOVELTY & DOMAIN USE
+        
+        A metaphor may be ACTIVE if novelty comes from:
+        - the phrasing itself, OR
+        - applying a source domain to a target where it is not normally used.
+        
+        Novelty is about CONCEPTUAL REFRAMING,
+        not surface creativity or topic change alone.
+        """,
+
+        """4. FROZEN METAPHORS (CRITICAL EXCLUSION)
+        
+        Treat an expression as FROZEN (Score 0) if:
+        - it is widely used as a fixed label for an abstract property, AND
+        - speakers do NOT cognitively access the source domain in normal use,
+          even if the source can be reconstructed.
+        
+        This includes domain-agnostic idioms and fully lexicalized metaphors.
+        
+        Example (Score 0):
+        - "That policy change was the final nail in the coffin."
+        """,
+
+        """5. DOMAIN-SHIFT REACTIVATION (ALLOWED)
+        
+        A familiar expression MAY be scored 10 if:
+        - its source domain is still cognitively accessible, AND
+        - it is applied to a target where that domain is atypical,
+          creating clear ontological tension.
+        
+        Example (Score 10):
+        - "She put him in the friend zone so hard
+           that a force field seemed to form around him."
+        """,
+
+        """6. ABSTRACT & PERSONIFICATION CASES
+        
+        Metaphors need not be visual.
+        Abstract or technical language may be metaphorical
+        if it imports a non-literal source domain that does real work.
+        
+        Personification counts ONLY if the action would be impossible
+        or clearly unexpected for the domain.
+        
+        Examples:
+        - "The algorithm starves certain outcomes of attention." → 10
+        - "The market reacted to the news." → 0
+        """,
+
+        """7. ANALOGIES
+        
+        Explicit comparisons ("like", "as", etc.) do NOT exclude metaphors.
+        
+        An analogy is ALSO a metaphor if it introduces
+        expressive or domain-shifting framing,
+        not just neutral explanation.
+        
+        Examples:
+        - "Debugging this is like untangling headphones in the dark." → 10
+        - "DNA is like a recipe book." → 0
+        """,
+
+        """8. TIE-BREAKING RULE
+        
+        If the case is borderline or uncertain:
+        prefer Score 0.
+        """
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
+)
+
+# v10 is a minimal, highly condensed prompt focusing on the core active/frozen distinction
+# with clear examples and conservative tie-breaking.
+metaphor_metric_explicit_v10 = GEval(
+    name="Metaphor Explicit (v10)",
+    evaluation_steps=[
+        """1. METAPHOR DEFINITION
+        
+        A METAPHOR is present ONLY if the sentence REQUIRES
+        a NON-LITERAL source domain to convey its meaning.
+        
+        If the meaning is fully clear without invoking another domain,
+        score 0.
+        Otherwise, continue.
+        """,
+
+        """2. ACTIVE VS FROZEN TEST (CRITICAL)
+        
+        Score 10 ONLY if:
+        - the source domain is cognitively accessed by speakers, AND
+        - it creates clear conceptual tension with the target domain.
+        
+        Score 0 if the expression is a fixed, idiomatic label
+        whose source domain is no longer accessed,
+        even if it can be reconstructed.
+        
+        Domain change alone is NOT enough.
+        """,
+
+        """3. FINAL DECISION RULE (WITH EXAMPLES)
+        
+        Score 10 (metaphor):
+        - "The policy devours the resources it was meant to protect."
+        - "A force field seemed to form around him socially."
+        
+        Score 0 (not metaphor):
+        - "That decision was the final nail in the coffin."
+        - "The market reacted to the news."
+        
+        If uncertain, score 0.
+        """
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
+)
+
+# v11 balances detail and structure: includes necessity test, frozenness override rule,
+# and clearer examples while maintaining moderate prompt length.
+metaphor_metric_explicit_v11 = GEval(
+    name="Metaphor Explicit (v11)",
+    evaluation_steps=[
+        """1. DEFINITION
+        
+        A METAPHOR is ACTIVE / LIVE figurative language in which a concept
+        is framed, evaluated, or described using another domain
+        in a NON-LITERAL way.
+        
+        Score 10 ONLY for ACTIVE metaphors.
+        Score 0 for literal, idiomatic, or dead metaphors.
+        
+        Metaphors may be imagistic OR abstract.
+        Metaphors may appear WITH or WITHOUT explicit comparison words
+        such as "like", "as", or "similar to".
+        
+        Do not use intermediate scores.
+        """,
+
+        """2. NECESSITY TEST (PRIMARY GATE)
+        
+        Ask:
+        Does the sentence REQUIRE importing a source domain
+        (beyond literal meaning) to convey its point?
+        
+        If the meaning is fully preserved under a literal paraphrase,
+        score 0 and STOP.
+        
+        Examples:
+        - "The theory cannibalizes its own assumptions." → 10 (domain import)
+        - "The theory has a fatal flaw." → 0 (fixed label)
+        """,
+
+        """3. FROZENNESS TEST (DECISIVE)
+        
+        Even if figurative in origin, score 0 if the expression:
+        - functions as a fixed label for an abstract property, AND
+        - is normally processed without accessing its source domain.
+        
+        These expressions do NOT become active merely by being applied
+        to a new topic or technical domain.
+        
+        Examples (Score 0):
+        - "final nail in the coffin" (idiomatic)
+        - "double-edged sword" (lexicalized)
+        - "tip of the iceberg" (semantic bleaching)
+        """,
+
+        """4. DOMAIN-SHIFT ACTIVATION (ALLOWED BUT RESTRICTED)
+        
+        A metaphor may be ACTIVE if:
+        - the source domain is still cognitively accessed, AND
+        - applying it to the target creates clear ontological tension
+          (the target is not normally described this way).
+        
+        Domain change alone is NOT sufficient;
+        the source domain must do conceptual work.
+        
+        Example (Score 10):
+        - "She put him in the friend zone so hard that a force field
+           seemed to form around him." (physics → social)
+        """,
+
+        """5. ABSTRACT & PERSONIFICATION CASES
+        
+        Metaphors need not be visual.
+        
+        Abstract metaphors count ONLY when the imported domain
+        changes how the concept is reasoned about,
+        not merely how it is described.
+        
+        Personification counts ONLY if the action would be
+        impossible or clearly unexpected for the domain.
+        
+        Examples:
+        - "The policy devours the resources it was meant to protect." → 10 (agent transfer)
+        - "The algorithm starves certain outcomes of attention." → 10 (biological framing)
+        - "The market reacted to the news." → 0 (standard usage)
+        """,
+
+        """6. ANALOGIES
+        
+        Explicit comparison language ("like", "as", etc.)
+        does NOT exclude metaphors.
+        
+        An analogy is ALSO a metaphor ONLY if it adds expressive
+        or domain-shifting framing beyond neutral explanation.
+        
+        Examples:
+        - "Debugging this is like untangling headphones
+           while wearing gloves." → 10 (expressive mapping)
+        - "DNA is like a recipe book." → 0 (didactic analogy)
+        """,
+
+        """7. FINAL RULE
+        
+        If multiple rules conflict, the FROZENNESS TEST overrides
+        all others.
+        
+        When uncertain, score 0.
+        """
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
+)
+
 
 correctness_metric_explicit = GEval(
     name="Correctness",

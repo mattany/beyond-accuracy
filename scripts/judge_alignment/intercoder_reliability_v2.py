@@ -781,7 +781,68 @@ def plot_combined_analysis(
     print(f"  Saved: {output_path.name}")
 
 
-def main(v2_csv_path: str, json_path: str, active_metrics: List[str] = None) -> None:
+def add_annotations_to_csv(
+    csv_path: str,
+    annotations_df: pd.DataFrame,
+    active_metrics: List[str],
+    annotators: List[str],
+    metric_version: str = "v6"
+) -> None:
+    """
+    Add human annotation columns to the original CSV file.
+    
+    Args:
+        csv_path: Path to the CSV file to update
+        annotations_df: DataFrame with annotation data (from build_item_table)
+        active_metrics: List of metrics that were annotated
+        annotators: List of annotator emails
+        metric_version: Version string for column naming (e.g., "v6")
+    """
+    csv_df = pd.read_csv(csv_path)
+    
+    # Determine if we're matching by Index or question
+    use_index = "Index" in csv_df.columns
+    match_col = "Index" if use_index else "question"
+    
+    # Get short annotator names for column headers (e.g., "john.smith" from "john.smith@gmail.com")
+    short_names = []
+    for a in annotators:
+        if "@" in a:
+            short_names.append(a.split("@")[0])
+        else:
+            short_names.append(a[:15])
+    
+    added_cols = []
+    
+    # Add annotation columns for each active metric
+    for metric in active_metrics:
+        metric_lower = metric.lower()
+        
+        # Add per-annotator columns (always, even for single annotator)
+        for short_name in short_names:
+            col_name = f"{short_name}_{metric_lower}_{metric_version}"
+            csv_df[col_name] = np.nan
+            added_cols.append(col_name)
+        
+        # Fill in values from annotations_df
+        for _, row in annotations_df.iterrows():
+            qid = row["qid"]
+            mask = csv_df[match_col] == qid
+            
+            if mask.any():
+                per_annotator = row[f"{metric}_per_annotator"]
+                for i, short_name in enumerate(short_names):
+                    col_name = f"{short_name}_{metric_lower}_{metric_version}"
+                    csv_df.loc[mask, col_name] = per_annotator[i]
+    
+    # Save updated CSV
+    csv_df.to_csv(csv_path, index=False)
+    
+    print(f"  Added columns: {added_cols}")
+    print(f"  Updated: {csv_path}")
+
+
+def main(v2_csv_path: str, json_path: str, active_metrics: List[str] = None, metric_version: str = "v6") -> None:
     """
     Main analysis function.
     
@@ -790,6 +851,7 @@ def main(v2_csv_path: str, json_path: str, active_metrics: List[str] = None) -> 
         json_path: Path to labelstudio_output.json with human annotations
         active_metrics: For Yes/No format labeling, which metrics to analyze.
                        Defaults to all METRIC_NAMES.
+        metric_version: Version string for column naming (e.g., "v6")
     """
     if active_metrics is None:
         active_metrics = METRIC_NAMES
@@ -839,6 +901,10 @@ def main(v2_csv_path: str, json_path: str, active_metrics: List[str] = None) -> 
     print(f"  {icr_path.name}")
     print(f"  {corr_mean_path.name}")
     print(f"  {corr_maj_path.name}")
+    
+    # Add annotation columns to the original CSV
+    print("\nAdding annotation columns to CSV...")
+    add_annotations_to_csv(v2_csv_path, df, active_metrics, annotators, metric_version)
 
     # Generate combined plot with all analyses
     if len(annotators) >= 2:
@@ -880,8 +946,13 @@ if __name__ == "__main__":
         default=None,
         help="Active metrics for Yes/No format labeling (default: all)"
     )
+    parser.add_argument(
+        "--version",
+        default="v6",
+        help="Metric version for column naming, e.g., 'v6' creates 'john.smith_metaphor_v6' (default: v6)"
+    )
     
     args = parser.parse_args()
     
-    main(args.v2_csv, args.json_file, args.metrics)
+    main(args.v2_csv, args.json_file, args.metrics, args.version)
 
