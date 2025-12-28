@@ -52,10 +52,12 @@ METRIC_PREVIOUS_VERSIONS = {
     'metaphor_v5': ['metaphor_v4', 'metaphor_v3', 'metaphor_v2'],
     'metaphor_v4': ['metaphor_v3', 'metaphor_v2'],
     'metaphor_v3': ['metaphor_v2'],
+    'humor_v5': ['humor_v4', 'humor_v3', 'humor_v2'],
     'humor_v4': ['humor_v3', 'humor_v2'],
     'humor_v3': ['humor_v2'],
     'analogy_v4': ['analogy_v3', 'analogy_v2'],
     'analogy_v3': ['analogy_v2'],
+    'connection_to_everyday_life_v5': ['connection_to_everyday_life_v4', 'connection_to_everyday_life_v3', 'connection_to_everyday_life_v2'],
     'connection_to_everyday_life_v4': ['connection_to_everyday_life_v3', 'connection_to_everyday_life_v2'],
     'connection_to_everyday_life_v3': ['connection_to_everyday_life_v2'],
 }
@@ -97,6 +99,29 @@ def load_exclude_indices():
         exclude_df = pd.read_csv(EXCLUDE_INDICES_PATH)
         return exclude_df['index'].tolist()
     return []
+
+
+def add_to_exclude_indices(new_indices):
+    """Add new indices to the exclusion list.
+    
+    Args:
+        new_indices: List of indices to add to exclusion list
+    
+    Returns:
+        Number of new indices actually added (excludes duplicates)
+    """
+    existing = set(load_exclude_indices())
+    new_to_add = set(new_indices) - existing
+    
+    if not new_to_add:
+        return 0
+    
+    # Combine and save
+    all_indices = sorted(existing | new_to_add)
+    exclude_df = pd.DataFrame({'index': all_indices})
+    exclude_df.to_csv(EXCLUDE_INDICES_PATH, index=False)
+    
+    return len(new_to_add)
 
 
 def short_name(m):
@@ -521,6 +546,17 @@ def save_balanced_datasets(df, surveys, output_dir, metrics_list=None):
             pos = counts[m]
             neg = size - pos
             print(f"  {short_name(m)}: {pos} pos / {neg} neg ({100*pos/size:.0f}%)")
+    
+    # Add all saved indices to exclusion list
+    all_saved_indices = []
+    for name, size, indices, counts in surveys:
+        all_saved_indices.extend(indices)
+    
+    added_count = add_to_exclude_indices(all_saved_indices)
+    if added_count > 0:
+        print(f"\n✓ Added {added_count} indices to exclusion list ({EXCLUDE_INDICES_PATH.name})")
+    else:
+        print(f"\n• All indices already in exclusion list")
 
 
 # =============================================================================
@@ -551,6 +587,7 @@ def setup_deepeval(metrics_to_run=None):
         humor_metric_explicit_v2,
         humor_metric_explicit_v3,
         humor_metric_explicit_v4,
+        humor_metric_explicit_v5,
         metaphor_metric_explicit_v2,
         metaphor_metric_explicit_v3,
         metaphor_metric_explicit_v4,
@@ -565,6 +602,7 @@ def setup_deepeval(metrics_to_run=None):
         analogy_metric_explicit_v2,
         connection_to_everyday_life_metric_explicit_v2,
         connection_to_everyday_life_metric_explicit_v3,
+        connection_to_everyday_life_metric_explicit_v4,
         scaffolding_metric,
     )
     
@@ -573,6 +611,7 @@ def setup_deepeval(metrics_to_run=None):
         "humor_v2": humor_metric_explicit_v2,
         "humor_v3": humor_metric_explicit_v3,
         "humor_v4": humor_metric_explicit_v4,
+        "humor_v5": humor_metric_explicit_v5,
         "metaphor_v2": metaphor_metric_explicit_v2,
         "metaphor_v3": metaphor_metric_explicit_v3,
         "metaphor_v4": metaphor_metric_explicit_v4,
@@ -587,6 +626,7 @@ def setup_deepeval(metrics_to_run=None):
         "analogy_v2": analogy_metric_explicit_v2,
         "connection_to_everyday_life_v2": connection_to_everyday_life_metric_explicit_v2,
         "connection_to_everyday_life_v3": connection_to_everyday_life_metric_explicit_v3,
+        "connection_to_everyday_life_v4": connection_to_everyday_life_metric_explicit_v4,
         "scaffolding": scaffolding_metric,
     }
     

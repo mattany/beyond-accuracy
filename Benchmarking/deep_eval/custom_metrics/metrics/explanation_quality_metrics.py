@@ -230,6 +230,107 @@ connection_to_everyday_life_metric_explicit_v3 = GEval(
 )
 
 
+# v4: More permissive on named references - historical figures, organizations, publications all count
+# Key fixes:
+# 1. Historical figures (Galileo, Napoleon) ARE valid named references
+# 2. Organizations (NASA, FCC) ARE valid named references  
+# 3. Publications (Psychology Today, The Economist) ARE valid named references
+# 4. Famous weapons/objects (Tsar Bomba) ARE valid named references
+# 5. BUT: Reference in a question ABOUT that topic doesn't count (e.g., Jurassic Park in a dinosaur question that asks about JP)
+connection_to_everyday_life_metric_explicit_v4 = GEval(
+    name="Connection to everyday life (v4)",
+    evaluation_steps=[
+        """STEP 1: Check for ANY named reference from the following categories.
+   
+   SCORE 10 for ANY of these:
+   
+   A) POPULAR CULTURE:
+   - Movies, TV shows, books, documentaries (e.g., "Jurassic Park", "Game of Thrones", "The Matrix")
+   - Music, bands, songs (e.g., "like a Beatles song", "Beethoven's 5th")
+   - Video games, board games (e.g., "Monopoly", "Minecraft", "chess")
+   - Internet culture, memes, viral moments
+   - Fictional characters (e.g., "Batman", "Sherlock Holmes")
+   
+   B) HISTORICAL FIGURES AND EVENTS:
+   - Famous scientists, leaders, artists (e.g., "Galileo", "Einstein", "Napoleon", "Carl Sagan")
+   - Historical events (e.g., "the French Revolution", "World War II", "the Cold War")
+   - Famous inventions or discoveries (e.g., "the Tsar Bomba", "the Manhattan Project")
+   
+   C) ORGANIZATIONS AND BRANDS:
+   - Companies, brands, products (e.g., "Google", "Netflix", "American Apparel", "Teflon")
+   - Government agencies (e.g., "NASA", "FBI", "FCC")
+   - Well-known institutions (e.g., "Harvard", "the Smithsonian")
+   
+   D) PUBLICATIONS AND MEDIA:
+   - Magazines, newspapers (e.g., "The Economist", "Psychology Today", "Time Magazine")
+   - Websites, platforms (e.g., "Yahoo Answers", "Wikipedia", "Reddit")
+   
+   E) FAMOUS PLACES:
+   - Landmarks (e.g., "Times Square", "the Eiffel Tower", "Chernobyl")
+   - Well-known locations used as reference points""",
+
+        """STEP 2: ALSO check for concrete everyday activities.
+   
+   SCORE 10 for relatable human experiences that ground abstract concepts:
+   - Household tasks: "like doing laundry", "like vacuuming"
+   - Food & cooking: "like mixing cake batter", "like grocery shopping"  
+   - Common experiences: "like getting stuck in traffic", "like waiting for coffee"
+   - Childhood activities: "like a child spinning in a circle with arms outstretched"
+   - Social activities: "like hosting a dinner party"
+   
+   KEY: The activity must be something a general audience experiences personally.""",
+
+        """STEP 3: CHECK THE "EXTERNAL TO TOPIC" RULE.
+   
+   IMPORTANT: The reference must be EXTERNAL to the question topic.
+   
+   SCORE 0 if the reference is ALREADY PART of the question:
+   - Question asks "how has our knowledge of dinosaurs changed since Jurassic Park" 
+     → Mentioning "Jurassic Park" in the answer does NOT count (it's part of the question)
+   - Question asks about NASA missions → Mentioning "NASA" does NOT count
+   - Question asks about Einstein's theories → Mentioning "Einstein" does NOT count
+   
+   SCORE 10 if the reference is EXTERNAL:
+   - Question about physics → Mentioning "Galileo" DOES count (external historical figure)
+   - Question about nuclear reactors → Mentioning "the Cold War" or "Tsar Bomba" DOES count
+   - Question about space → Mentioning "NASA" DOES count (if NASA wasn't in the question)""",
+   
+        """STEP 4: What does NOT count (Score 0).
+   
+   - Generic physics analogies: "like a ball rolling downhill", "like waves in water"
+   - Nature analogies: "like a river flowing", "like clouds forming"
+   - Abstract comparisons: "like a sponge absorbing", "like a balloon"
+   - Vague references: "as we all know", "in everyday life"
+   - Technical jargon without cultural grounding
+   - References already embedded in the original question (see Step 3)""",
+
+        """STEP 5: FINAL DECISION.
+   
+   Score 10 if:
+   - You found ANY named reference from Step 1 categories, AND
+   - The reference is EXTERNAL to the question topic (passes Step 3)
+   
+   OR:
+   - You found a concrete everyday activity from Step 2, AND
+   - The activity is EXTERNAL to the question topic
+   
+   Score 0 otherwise.
+   
+   EXAMPLES:
+   - "Galileo discovered the moons of Jupiter" in a question about CERN → Score 10 (Galileo is external)
+   - "the Tsar Bomba" in a question about killing stars → Score 10 (famous Cold War bomb, external)
+   - "Psychology Today" in any answer → Score 10 (named publication)
+   - "NASA" in a question NOT about NASA → Score 10 (famous organization)
+   - "like a child spinning" in a physics question → Score 10 (relatable everyday activity)
+   - "Jurassic Park" in a question asking about Jurassic Park → Score 0 (NOT external)
+   
+   Do not use intermediate scores."""
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.INPUT],
+    **g_eval_default_params
+)
+
+
 humor_metric_explicit = GEval(
     name="Humor Explicit",
     evaluation_steps=["1. Determine if the explanation includes explicit jokes or ironic language.",
@@ -403,6 +504,81 @@ Do not use scores between 0 and 10."""
     **g_eval_default_params
 )
 
+
+# v5: More conservative - distinguishes intentional humor from casual/informal tone
+# Key fix: Casual language, candid remarks, and informal tone are NOT humor
+# Also catches absurdist/deadpan humor (unexpected non-sequiturs)
+humor_metric_explicit_v5 = GEval(
+    name="Humor Explicit (v5)",
+    evaluation_steps=[
+        """STEP 1: Look for INTENTIONAL JOKES.
+
+Does the text contain any of these INTENTIONAL comedic elements?
+- A joke with a clear punchline or comedic setup
+- A pun or deliberate wordplay
+- A pop culture reference used for comedic effect (not just as an example)
+- A clearly sarcastic or mocking statement that subverts expectations
+
+EXAMPLES of intentional jokes (Score 10):
+- "Schrodinger's cat walks into a bar... and doesn't" (punchline joke)
+- "holy proofreading batman" (pop culture catchphrase used for comedic effect)
+- "you would not pass go, nor would you collect $200, you would go directly to nobel prize" (Monopoly reference twisted for humor)
+
+If you found an intentional joke → Score 10. Otherwise continue to Step 2.""",
+
+        """STEP 2: Look for ABSURDIST or DEADPAN humor.
+
+Does the text contain any of these?
+- An unexpected non-sequitur at the end that breaks the serious tone
+- A brand name, product, or random word dropped without explanation for comedic effect
+- A jarring tonal shift that seems intentionally funny
+- Self-deprecating or self-aware comments that acknowledge absurdity
+
+EXAMPLES of absurdist/deadpan humor (Score 10):
+- A serious scientific answer that ends with "...and partially because **american apparel**" (non-sequitur brand drop)
+- "I'd be lying if I said I've seen it" in a technical explanation (self-aware honesty)
+- "at which point you have big problems^(tm)" (fake trademark = comedic aside)
+- "now, i must go masturbate before the shakes set in" (absurd self-deprecating callback)
+
+If you found absurdist or deadpan humor → Score 10. Otherwise continue to Step 3.""",
+
+        """STEP 3: Look for IRONY, SARCASM, or DARK HUMOR.
+
+Does the text contain any of these?
+- Saying the opposite of what you mean with clear comedic intent
+- Dark understatement: making something serious sound trivially unimportant
+- Violent, morbid, or extreme language used casually for shock-comedy value
+
+EXAMPLES of irony/dark humor (Score 10):
+- "The surgery went well, apart from the patient dying" (dark understatement)
+- "It's perfectly safe, unless you count the possibility of horrible death" (dark humor)
+- "telescopes were played out" (ironic dismissal of something obviously important)
+
+If you found clear irony or dark humor → Score 10. Otherwise continue to Step 4.""",
+
+        """STEP 4: CRITICAL - Distinguish HUMOR from CASUAL TONE.
+
+The following are NOT humor - they are just informal/casual writing:
+- Candid admissions: "I would recommend staying away from Yahoo Answers" (just honest advice)
+- Casual language: "[pretty good summary here]" (informal tone, not sarcasm)
+- Enthusiastic phrases: "great question!" (friendly, not funny)
+- Mild exaggeration without comedic intent: "scrounge up enough firepower" (vivid language)
+- Informal asides that don't subvert expectations: "which is why it's not used much on earth"
+- Rhetorical questions: "good question" (engaging, not joking)
+
+KEY TEST: Would a reader actually laugh or smile? 
+- Casual/informal tone = reader thinks "that's friendly" → Score 0
+- Intentional humor = reader thinks "that's funny" → Score 10
+
+FINAL DECISION:
+- If you found intentional humor in Steps 1-3 that passes the laugh test → Score 10
+- If you only found casual tone, informal language, or vivid explanations → Score 0
+
+Do not use scores between 0 and 10."""
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
+)
 
 
 analogy_metric_explicit = GEval(

@@ -1,0 +1,253 @@
+<View style="max-width: 700px; margin: 0 auto; font-family: system-ui, sans-serif;">
+    <Header value="Question:"/>
+    <Text name="question" value="$question"/>
+
+    <Header value="Answer:"/>
+    <Text name="answer" value="$answer"/>
+
+    <Header value="Guidelines:"/>
+    <Text name="guidelines" value="Read the question and answer, then determine if it contains the following features:"/>
+
+    <!-- HUMOR (v4) -->
+    <View style="margin-left: 1em; margin-top: 1em; padding: 0.5em;">
+        <Header size="4" value="🎭 Humor (v4)"/>
+
+        <!-- STEP 1 -->
+        <View style="margin-top: 0.5em; padding: 0.5em; background: #e7f3ff;">
+            <Text name="humor_step1_header" value="🎯 STEP 1: Look for JOKES."/>
+
+            <View style="margin-left: 1em;">
+                <Text name="humor_step1_q" value="Does the text contain any of these?"/>
+                <Text name="humor_step1_item1" value="- A joke with a punchline"/>
+                <Text name="humor_step1_item2" value="- A pun or wordplay"/>
+                <Text name="humor_step1_item3" value="- A reference to movies, TV, or pop culture used to be funny"/>
+                <Text name="humor_step1_item4" value="- A sarcastic or mocking comment"/>
+            </View>
+
+            <View style="margin-left: 1em; margin-top: 0.5em;">
+                <Text name="humor_step1_ex_header" value="✓ EXAMPLES of jokes (Mark Yes):"/>
+                <View style="margin-left: 1em; font-style: italic;">
+                    <Text name="humor_step1_ex1" value="- 'Schrodinger's cat walks into a bar... and doesn't' (joke about superposition in quantum physics)"/>
+                    <Text name="humor_step1_ex2" value="- 'Pluto was demoted to dwarf planet - talk about a mid-life crisis' (personification joke)"/>
+                    <Text name="humor_step1_ex3" value="- 'If you think nobody cares about you, try missing a few tax payments' (sarcastic observation)"/>
+                </View>
+            </View>
+
+            <Text name="humor_step1_result" value="If you found a joke → Mark Yes. Otherwise continue to Step 2."/>
+        </View>
+
+        <!-- STEP 2 -->
+        <View style="margin-top: 0.5em; padding: 0.5em; background: #e7f3ff;">
+            <Text name="humor_step2_header" value="😏 STEP 2: Look for IRONY or SARCASM."/>
+
+            <View style="margin-left: 1em;">
+                <Text name="humor_step2_q" value="Does the text contain any of these?"/>
+                <Text name="humor_step2_item1" value="- Saying the opposite of what you mean to be funny"/>
+                <Text name="humor_step2_item2" value="- Making something serious sound unimportant on purpose (understatement)"/>
+                <Text name="humor_step2_item3" value="- A side comment in brackets or parentheses that is dismissive or mocking"/>
+                <Text name="humor_step2_item4" value="- Colorful or silly imagery used in a serious context (the contrast is funny)"/>
+                <Text name="humor_step2_item5" value="- Dark humor: violent, morbid, or extreme language used casually for shock value"/>
+            </View>
+
+            <View style="margin-left: 1em; margin-top: 0.5em;">
+                <Text name="humor_step2_ex_header" value="✓ EXAMPLES of irony (Mark Yes):"/>
+                <View style="margin-left: 1em; font-style: italic;">
+                    <Text name="humor_step2_ex1" value="- 'The surgery went well, apart from the patient dying' (dark understatement)"/>
+                    <Text name="humor_step2_ex2" value="- 'It's perfectly safe, unless you count the possibility of horrible death' (dark humor - casual mention of death)"/>
+                    <Text name="humor_step2_ex3" value="- 'Nature is beautiful, if you ignore all the things trying to eat you' (dark humor - unexpected violent twist)"/>
+                    <Text name="humor_step2_ex4" value="- 'String theory (which nobody actually understands)' (dismissive side comment)"/>
+                    <Text name="humor_step2_ex5" value="- 'You'd basically become a very expensive puddle' about extreme pressure (silly image + serious topic)"/>
+                </View>
+            </View>
+
+            <Text name="humor_step2_result" value="If you found irony or sarcasm → Mark Yes. Otherwise continue to Step 3."/>
+        </View>
+
+        <!-- STEP 3 -->
+        <View style="margin-top: 0.5em; padding: 0.5em; background: #e7f3ff;">
+            <Text name="humor_step3_header" value="🤪 STEP 3: Look for RIDICULOUS comparisons."/>
+
+            <View style="margin-left: 1em;">
+                <Text name="humor_step3_desc1" value="Does the text make a comparison that is SO silly or extreme that it's meant to be funny?"/>
+                <Text name="humor_step3_desc2" value="The humor comes from the absurdity - the comparison is intentionally too extreme or too silly."/>
+            </View>
+
+            <View style="margin-left: 1em; margin-top: 0.5em;">
+                <Text name="humor_step3_ex_header" value="✓ EXAMPLES of ridiculous comparisons (Mark Yes):"/>
+                <View style="margin-left: 1em; font-style: italic;">
+                    <Text name="humor_step3_ex1" value="- 'Saying magnets work by magic is like saying cars run on wishes' (exaggerated comparison)"/>
+                    <Text name="humor_step3_ex2" value="- 'Expecting your immune system to fight off everything is like expecting one security guard to defend a shopping mall from an army' (absurd scale mismatch)"/>
+                    <Text name="humor_step3_ex3" value="- 'The odds are about the same as finding a specific grain of sand on every beach on Earth' (comically extreme)"/>
+                </View>
+            </View>
+
+            <Text name="humor_step3_result" value="If you found a ridiculous comparison meant to amuse → Mark Yes. Otherwise continue to Step 4."/>
+        </View>
+
+        <!-- STEP 4 -->
+        <View style="margin-top: 0.5em; padding: 0.5em; background: #e7f3ff;">
+            <Text name="humor_step4_header" value="✗ STEP 4: Check it's NOT just vivid language."/>
+
+            <View style="margin-left: 1em;">
+                <Text name="humor_step4_desc" value="The following are NOT humor - they are just good explanations:"/>
+                <Text name="humor_step4_not1" value="- Normal comparisons: 'DNA is like a blueprint', 'electricity flows like water'"/>
+                <Text name="humor_step4_not2" value="- Lively descriptions: 'neurons firing like a symphony'"/>
+                <Text name="humor_step4_not3" value="- Personification: 'the virus hijacks the cell'"/>
+                <Text name="humor_step4_not4" value="- Enthusiastic tone without actual jokes"/>
+            </View>
+
+            <View style="margin-left: 1em; margin-top: 0.5em;">
+                <Text name="humor_final_header" value="⚖️ FINAL DECISION:"/>
+                <Text name="humor_final1" value="- If you found a joke, irony, sarcasm, or ridiculous comparison in Steps 1-3 → Mark Yes"/>
+                <Text name="humor_final2" value="- If you only found vivid language or good explanations → Mark No"/>
+            </View>
+        </View>
+    </View>
+
+    <!-- CONNECTION TO EVERYDAY LIFE (v3) -->
+    <View style="margin-left: 1em; margin-top: 1em; padding: 0.5em;">
+        <Header size="4" value="🌍 Connection to everyday life (v3)"/>
+
+        <!-- STEP 1 -->
+        <View style="margin-top: 0.5em; padding: 0.5em; background: #e7f3ff;">
+            <Text name="conn_step1_header" value="🎨 1. Check if the answer contains a NAMED reference from popular culture."/>
+
+            <View style="margin-left: 1em;">
+                <Text name="conn_step1_desc" value="Mark Yes - Any of the following:"/>
+                <Text name="conn_step1_item1" value="- Named TV shows, movies, books, documentaries (e.g., 'Friends', 'Game of Thrones', 'The Matrix')"/>
+                <Text name="conn_step1_item2" value="- Named magazines, newspapers, publications (e.g., 'Time Magazine', 'Vogue', 'BBC')"/>
+                <Text name="conn_step1_item3" value="- Named historical figures commonly known (e.g., 'Napoleon', 'Julius Caesar', 'Cleopatra')"/>
+                <Text name="conn_step1_item4" value="- Named historical events (e.g., 'the French Revolution', 'the Renaissance')"/>
+                <Text name="conn_step1_item5" value="- Named brands, products, companies (e.g., 'Google', 'Netflix', 'Amazon')"/>
+                <Text name="conn_step1_item6" value="- Named games (e.g., 'Monopoly', 'Scrabble', 'basketball')"/>
+                <Text name="conn_step1_item7" value="- Pop culture jokes or memes (e.g., references to viral internet moments)"/>
+                <Text name="conn_step1_item8" value="- Famous landmarks (e.g., 'crowded like Times Square', 'tall as the Eiffel Tower')"/>
+            </View>
+        </View>
+
+        <!-- STEP 2 -->
+        <View style="margin-top: 0.5em; padding: 0.5em; background: #e7f3ff;">
+            <Text name="conn_step2_header" value="🍳 2. ALSO Mark Yes: Concrete everyday activities that people commonly do."/>
+
+            <View style="margin-left: 1em;">
+                <Text name="conn_step2_desc1" value="These are relatable human experiences that ground abstract concepts in daily life."/>
+                <Text name="conn_step2_desc2" value="The activity must be something a general audience does or understands from personal experience."/>
+            </View>
+
+            <View style="margin-left: 1em; margin-top: 0.5em;">
+                <Text name="conn_step2_ex_header" value="✓ Mark Yes EXAMPLES:"/>
+                <View style="margin-left: 1em; font-style: italic;">
+                    <Text name="conn_step2_ex1" value="- Household tasks: 'like doing laundry', 'similar to washing dishes', 'like vacuuming'"/>
+                    <Text name="conn_step2_ex2" value="- Errands: 'like mailing a letter', 'similar to shopping for groceries', 'like waiting at the DMV'"/>
+                    <Text name="conn_step2_ex3" value="- Food &amp; cooking: 'like mixing ingredients for a cake', 'similar to marinating meat', 'like seasoning a soup'"/>
+                    <Text name="conn_step2_ex4" value="- Social activities: 'like hosting a dinner party', 'similar to playing board games with friends'"/>
+                    <Text name="conn_step2_ex5" value="- Common experiences: 'like getting stuck in traffic', 'similar to waiting for your coffee to brew'"/>
+                    <Text name="conn_step2_ex6" value="- Work/school: 'like organizing your desk', 'similar to studying for an exam'"/>
+                </View>
+            </View>
+
+            <View style="margin-left: 1em; margin-top: 0.5em;">
+                <Text name="conn_step2_key" value="KEY: The activity must be EXTERNAL to the scientific topic being explained."/>
+                <Text name="conn_step2_key2" value="It should make the reader think 'Oh, I know what that's like!'"/>
+            </View>
+        </View>
+
+        <!-- STEP 3 -->
+        <View style="margin-top: 0.5em; padding: 0.5em; background: #e7f3ff;">
+            <Text name="conn_step3_header" value="✗ 3. Mark No - The following do NOT count:"/>
+
+            <View style="margin-left: 1em;">
+                <Text name="conn_step3_abstract_header" value="ABSTRACT ANALOGIES (too generic):"/>
+                <Text name="conn_step3_abstract1" value="- Natural phenomena: 'like a river flowing', 'like waves in the ocean', 'like a pebble dropping'"/>
+                <Text name="conn_step3_abstract2" value="- Abstract physics: 'like a ball rolling downhill', 'like a spring bouncing'"/>
+                <Text name="conn_step3_abstract3" value="- Generic objects: 'like a sponge absorbing', 'like a balloon inflating'"/>
+            </View>
+
+            <View style="margin-left: 1em; margin-top: 0.5em;">
+                <Text name="conn_step3_also_header" value="ALSO Mark No:"/>
+                <Text name="conn_step3_also1" value="- Scientific terminology (e.g., 'mitochondria', 'quantum entanglement', 'oxidation')"/>
+                <Text name="conn_step3_also2" value="- Technical concepts without cultural grounding (e.g., 'the process involves hydrolysis')"/>
+                <Text name="conn_step3_also3" value="- Vague references (e.g., 'as we all know', 'in everyday life', 'people often')"/>
+                <Text name="conn_step3_also4" value="- References already embedded in the original question"/>
+                <Text name="conn_step3_also5" value="- Geographic/astronomical names used technically (e.g., 'the Pacific plate', 'the Andromeda galaxy')"/>
+                <Text name="conn_step3_also6" value="- Answers with no cultural or everyday life references at all"/>
+            </View>
+        </View>
+
+        <!-- STEP 4 -->
+        <View style="margin-top: 0.5em; padding: 0.5em; background: #e7f3ff;">
+            <Text name="conn_step4_header" value="⚠️ 4. IMPORTANT: Everyday content directly relevant to the question topic does NOT count as a connection."/>
+
+            <View style="margin-left: 1em;">
+                <Text name="conn_step4_desc1" value="A 'connection to everyday life' must bring in something EXTERNAL to the topic being discussed."/>
+                <Text name="conn_step4_desc2" value="If the everyday reference is just part of answering the question, it's not a connection."/>
+            </View>
+
+            <View style="margin-left: 1em; margin-top: 0.5em;">
+                <Text name="conn_step4_score0_header" value="✗ Mark No EXAMPLES (content is directly relevant to question):"/>
+                <View style="margin-left: 1em; font-style: italic;">
+                    <Text name="conn_step4_score0_ex1" value="- Question about babies → mentioning 'breastfeeding' or 'diapers' (directly relevant, not a connection)"/>
+                    <Text name="conn_step4_score0_ex2" value="- Question about cooking → mentioning 'your kitchen stove' (directly relevant, not a connection)"/>
+                    <Text name="conn_step4_score0_ex3" value="- Question about cars → mentioning 'your gas tank' (directly relevant, not a connection)"/>
+                    <Text name="conn_step4_score0_ex4" value="- Question about sleep → mentioning 'your bed' or 'pajamas' (directly relevant, not a connection)"/>
+                </View>
+            </View>
+
+            <View style="margin-left: 1em; margin-top: 0.5em;">
+                <Text name="conn_step4_score10_header" value="✓ Mark Yes EXAMPLES (content brings in external reference):"/>
+                <View style="margin-left: 1em; font-style: italic;">
+                    <Text name="conn_step4_score10_ex1" value="- Question about physics → mentioning 'like a scene from Interstellar' (external movie reference)"/>
+                    <Text name="conn_step4_score10_ex2" value="- Question about biology → mentioning 'like that episode of House M.D.' (external TV reference)"/>
+                    <Text name="conn_step4_score10_ex3" value="- Question about chemistry → mentioning 'like mixing ingredients for a cake' (external everyday activity)"/>
+                </View>
+            </View>
+        </View>
+
+        <!-- STEP 5 -->
+        <View style="margin-top: 0.5em; padding: 0.5em; background: #e7f3ff;">
+            <Text name="conn_step5_header" value="⚖️ 5. Mark Yes if ANY item from steps 1-2 is present AND it passes the test in step 4."/>
+            <Text name="conn_step5_desc" value="Mark No otherwise."/>
+
+            <View style="margin-left: 1em; margin-top: 0.5em;">
+                <Text name="conn_step5_final_header" value="FINAL EXAMPLES:"/>
+                <View style="margin-left: 1em; font-style: italic;">
+                    <Text name="conn_step5_final1" value="- 'like a factory assembly line' → Mark No (generic analogy)"/>
+                    <Text name="conn_step5_final2" value="- 'like a scene from Jurassic Park' → Mark Yes (named movie, external to topic)"/>
+                    <Text name="conn_step5_final3" value="- 'like mailing a package' → Mark Yes (concrete everyday activity, external to topic)"/>
+                    <Text name="conn_step5_final4" value="- 'like water flowing downhill' → Mark No (abstract nature analogy)"/>
+                </View>
+            </View>
+        </View>
+    </View>
+
+    <View style="margin-top: 1.5em;">
+        <Header value="Does the answer contain humor?"/>
+        <Choices name="humor" toName="answer" choice="single" showInLine="true">
+            <Choice value="Yes"/>
+            <Choice value="No"/>
+        </Choices>
+    </View>
+
+    <View style="margin-top: 1.5em;">
+        <Header value="Reasoning for Humor (optional)"/>
+        <TextArea name="humor_reasoning" toName="answer" rows="3" placeholder="Please explain your decision. Quote the language you recognized, or did not recognize, as humor after your deliberation. Reference the guidelines above."/>
+    </View>
+
+    <View style="margin-top: 1.5em;">
+        <Header value="Does the answer contain a connection to everyday life?"/>
+        <Choices name="connection" toName="answer" choice="single" showInLine="true">
+            <Choice value="Yes"/>
+            <Choice value="No"/>
+        </Choices>
+    </View>
+
+    <View style="margin-top: 1.5em;">
+        <Header value="Reasoning for Connection (optional)"/>
+        <TextArea name="connection_reasoning" toName="answer" rows="3" placeholder="Please explain your decision. Quote the language you recognized, or did not recognize, as a connection to everyday life after your deliberation. Reference the guidelines above."/>
+    </View>
+</View>
+
+        <!-- Sample task:
+        {"question":"what is the minimum number of individuals required to establish a long-term viable population?","answer":"...ion efforts to maintain populations above this minimum threshold to ensure their long-term survival."}
+        -->
+

@@ -21,8 +21,8 @@ METRIC_NAMES = ["Analogy", "Metaphor", "Humor", "Connection", "Scaffolding"]
 V2_SCORE_COLUMNS = {
     "Analogy": ["analogy_v2_score", "analogy_v6_score", "analogy_v8_score", "analogy_score"],
     "Metaphor": ["metaphor_v2_score", "metaphor_v6_score", "metaphor_v8_score", "metaphor_v12_score", "metaphor_v11_score", "metaphor_v10_score", "metaphor_v9_score", "metaphor_v7_score", "metaphor_v5_score", "metaphor_v4_score", "metaphor_v3_score", "metaphor_score"],
-    "Humor": ["humor_v2_score", "humor_v6_score", "humor_v8_score", "humor_score"],
-    "Connection": ["connection_to_everyday_life_v2_score", "connection_v6_score", "connection_v8_score", "connection_score"],
+    "Humor": ["humor_v4_score", "humor_v2_score", "humor_v6_score", "humor_v8_score", "humor_score"],
+    "Connection": ["connection_to_everyday_life_v3_score", "connection_to_everyday_life_v2_score", "connection_v6_score", "connection_v8_score", "connection_score"],
     "Scaffolding": ["scaffolding_score", "scaffolding_v2_score", "scaffolding_v6_score", "scaffolding_v8_score"],
 }
 
@@ -55,14 +55,15 @@ def extract_annotators(tasks: List[Dict[str, Any]]) -> List[str]:
     return annotators
 
 
-def extract_metrics_from_result(result: List[Dict[str, Any]], active_metrics: List[str] = None) -> Tuple[Dict[str, int], str]:
+def extract_metrics_from_result(result: List[Dict[str, Any]], active_metrics: List[str] = None) -> Tuple[Dict[str, int], Dict[str, str]]:
     """
-    Extract binary metrics and reasoning from a single annotation's `result` field.
-    Returns a tuple of (metrics dict, reasoning string).
+    Extract binary metrics and per-metric reasoning from a single annotation's `result` field.
+    Returns a tuple of (metrics dict, per-metric reasoning dict).
     
-    Handles two formats:
-    1. Multi-choice: choices like ["Metaphor", "Analogy", ...]
-    2. Yes/No: choices like ["Yes"] or ["No"] for single-metric labeling
+    Handles three formats:
+    1. Multi-choice: choices like ["Metaphor", "Analogy", ...] with from_name="annotation"
+    2. Yes/No global: choices like ["Yes"] or ["No"] for single-metric labeling (legacy)
+    3. Yes/No per-metric: choices like ["Yes"] with from_name="humor", "connection", etc.
     
     Args:
         result: The annotation result field
@@ -72,35 +73,75 @@ def extract_metrics_from_result(result: List[Dict[str, Any]], active_metrics: Li
         active_metrics = METRIC_NAMES
     
     metrics = {m: 0 for m in METRIC_NAMES}
-    reasoning = ""
+    reasoning = {m: "" for m in METRIC_NAMES}
+    
+    # Mapping from from_name patterns to metric names
+    reasoning_field_map = {
+        "reasoning": None,  # Generic reasoning field (legacy)
+        "humor_reasoning": "Humor",
+        "connection_reasoning": "Connection",
+        "analogy_reasoning": "Analogy",
+        "metaphor_reasoning": "Metaphor",
+        "scaffolding_reasoning": "Scaffolding",
+    }
+    
+    # Mapping from choice from_name to metric names (for per-metric Yes/No format)
+    choice_field_map = {
+        "humor": "Humor",
+        "connection": "Connection",
+        "analogy": "Analogy",
+        "metaphor": "Metaphor",
+        "scaffolding": "Scaffolding",
+    }
     
     for r in result:
         if r.get("type") == "choices":
+            from_name = r.get("from_name", "")
             choices = r.get("value", {}).get("choices", [])
-            for c in choices:
-                # Handle Yes/No format (single-metric labeling)
-                if c == "Yes":
-                    for m in active_metrics:
-                        metrics[m] = 1
-                elif c == "No":
-                    # Explicitly set to 0 (already default, but clear intent)
-                    for m in active_metrics:
-                        metrics[m] = 0
-                # Handle multi-choice format (original)
-                elif c == "Analogy":
-                    metrics["Analogy"] = 1
-                elif c == "Metaphor":
-                    metrics["Metaphor"] = 1
-                elif c == "Humor":
-                    metrics["Humor"] = 1
-                elif c == "Connection to everyday life":
-                    metrics["Connection"] = 1
-                elif c == "Scaffolding":
-                    metrics["Scaffolding"] = 1
-        elif r.get("type") == "textarea" and r.get("from_name") == "reasoning":
-            # Extract reasoning text (list of strings)
+            
+            # Check if this is a per-metric Yes/No field
+            if from_name in choice_field_map:
+                metric = choice_field_map[from_name]
+                for c in choices:
+                    if c == "Yes":
+                        metrics[metric] = 1
+                    elif c == "No":
+                        metrics[metric] = 0
+            else:
+                # Handle global Yes/No or multi-choice format
+                for c in choices:
+                    # Handle Yes/No format (global - applies to all active metrics)
+                    if c == "Yes":
+                        for m in active_metrics:
+                            metrics[m] = 1
+                    elif c == "No":
+                        for m in active_metrics:
+                            metrics[m] = 0
+                    # Handle multi-choice format (original)
+                    elif c == "Analogy":
+                        metrics["Analogy"] = 1
+                    elif c == "Metaphor":
+                        metrics["Metaphor"] = 1
+                    elif c == "Humor":
+                        metrics["Humor"] = 1
+                    elif c == "Connection to everyday life":
+                        metrics["Connection"] = 1
+                    elif c == "Scaffolding":
+                        metrics["Scaffolding"] = 1
+        elif r.get("type") == "textarea":
+            from_name = r.get("from_name", "")
             text_list = r.get("value", {}).get("text", [])
-            reasoning = ". ".join(text_list) if text_list else ""
+            text = ". ".join(text_list) if text_list else ""
+            
+            if from_name in reasoning_field_map:
+                metric = reasoning_field_map[from_name]
+                if metric is None:
+                    # Generic reasoning - apply to all active metrics
+                    for m in active_metrics:
+                        if not reasoning[m]:  # Don't overwrite specific reasoning
+                            reasoning[m] = text
+                else:
+                    reasoning[metric] = text
     
     return metrics, reasoning
 
@@ -151,7 +192,7 @@ def build_item_table(
                 latest[email] = {
                     "ts": ts,
                     "metrics": metrics,
-                    "reasoning": reasoning,
+                    "reasoning": reasoning,  # Now a dict: {metric: reasoning_text}
                 }
 
         # Only keep items where all annotators are present
@@ -165,10 +206,19 @@ def build_item_table(
             row[f"{metric}_per_annotator"] = [
                 latest[email]["metrics"][metric] for email in annotators
             ]
+            # Store per-annotator per-metric reasoning
+            row[f"{metric}_reasoning_per_annotator"] = [
+                latest[email]["reasoning"].get(metric, "") for email in annotators
+            ]
 
-        # Store per-annotator reasoning (joined with period)
-        reasoning_list = [latest[email]["reasoning"] for email in annotators if latest[email]["reasoning"]]
-        row["reasoning"] = ". ".join(reasoning_list) if reasoning_list else ""
+        # Store combined reasoning (legacy, for backward compatibility)
+        all_reasoning = []
+        for email in annotators:
+            for metric in active_metrics:
+                reason = latest[email]["reasoning"].get(metric, "")
+                if reason:
+                    all_reasoning.append(reason)
+        row["reasoning"] = ". ".join(all_reasoning) if all_reasoning else ""
 
         # Human mean metrics
         for metric in METRIC_NAMES:
@@ -845,7 +895,7 @@ def add_annotations_to_csv(
     
     added_cols = []
     
-    # Add reasoning column
+    # Add reasoning column (legacy combined)
     reasoning_col = f"reasoning_{metric_version}"
     csv_df[reasoning_col] = ""
     added_cols.append(reasoning_col)
@@ -854,26 +904,42 @@ def add_annotations_to_csv(
     for metric in active_metrics:
         metric_lower = metric.lower()
         
-        # Add per-annotator columns (always, even for single annotator)
+        # Add per-annotator score columns
         for short_name in short_names:
             col_name = f"{short_name}_{metric_lower}_{metric_version}"
             csv_df[col_name] = np.nan
             added_cols.append(col_name)
         
-        # Fill in values from annotations_df
-        for _, row in annotations_df.iterrows():
-            qid = row["qid"]
-            mask = csv_df[match_col] == qid
+        # Add per-annotator reasoning columns for this metric
+        for short_name in short_names:
+            reason_col_name = f"{short_name}_{metric_lower}_{metric_version}_reason"
+            csv_df[reason_col_name] = ""
+            added_cols.append(reason_col_name)
+    
+    # Fill in values from annotations_df
+    for _, row in annotations_df.iterrows():
+        qid = row["qid"]
+        mask = csv_df[match_col] == qid
+        
+        if mask.any():
+            # Add combined reasoning (legacy)
+            csv_df.loc[mask, reasoning_col] = row.get("reasoning", "")
             
-            if mask.any():
-                # Add reasoning
-                csv_df.loc[mask, reasoning_col] = row.get("reasoning", "")
-                
-                # Add per-annotator scores
+            # Add per-annotator scores and reasoning for each metric
+            for metric in active_metrics:
+                metric_lower = metric.lower()
                 per_annotator = row[f"{metric}_per_annotator"]
+                per_annotator_reasoning = row.get(f"{metric}_reasoning_per_annotator", [""] * len(short_names))
+                
                 for i, short_name in enumerate(short_names):
+                    # Score column
                     col_name = f"{short_name}_{metric_lower}_{metric_version}"
                     csv_df.loc[mask, col_name] = per_annotator[i]
+                    
+                    # Reasoning column
+                    reason_col_name = f"{short_name}_{metric_lower}_{metric_version}_reason"
+                    if i < len(per_annotator_reasoning):
+                        csv_df.loc[mask, reason_col_name] = per_annotator_reasoning[i]
     
     # Save updated CSV
     csv_df.to_csv(csv_path, index=False)
