@@ -38,7 +38,7 @@
         </View>
         
         <View style="margin-top: 0.5em;">
-            <Text name="novelty_header" value="🆕 NOVELTY & DOMAIN-SHIFT TEST (CRITICAL, WITH EXAMPLES):"/>
+            <Text name="novelty_header" value="🆕 NOVELTY &amp; DOMAIN-SHIFT TEST (CRITICAL, WITH EXAMPLES):"/>
             <View style="margin-left: 1em;">
                 <Text name="novelty_desc1" value="Novelty does NOT require original wording."/>
                 <Text name="novelty_desc2" value="A metaphor may be ACTIVE if novelty arises from: the phrasing itself, OR a DOMAIN SHIFT, where a familiar expression is applied to a domain where it is not conventionally used."/>
@@ -156,6 +156,11 @@
             <Choice value="Yes"/>
             <Choice value="No"/>
         </Choices>
+    </View>
+
+    <View style="margin-top: 1.5em;">
+        <Header value="Reasoning (optional)"/>
+        <TextArea name="reasoning" toName="answer" rows="3" placeholder="Please explain your decision. Quote the language you recognized, or did not recognize, as a metaphor after your deliberation. Reference the guidelines above."/>
     </View>
 </View>
 
