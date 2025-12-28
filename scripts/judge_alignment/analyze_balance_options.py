@@ -500,6 +500,9 @@ def save_balanced_datasets(df, surveys, output_dir, metrics_list=None):
         # Rename columns to match balanced_dataset.csv format
         survey_df = survey_df.rename(columns=OUTPUT_COLUMN_RENAME)
 
+        # Shuffle the dataset to mix positive and negative labels
+        survey_df = survey_df.sample(frac=1, random_state=RANDOM_SEED).reset_index(drop=True)
+
         survey_df.to_csv(output_path, index=False)
         print(f"Saved {output_path.name} with {len(survey_df)} rows")
     
