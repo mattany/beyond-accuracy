@@ -1753,6 +1753,131 @@ scaffolding_metric = GEval(
     **g_eval_default_params
 )
 
+
+# Scaffolding v2: Clearer criteria with explicit handling of short answers
+# Key improvements:
+# - Defines minimum requirement: at least 2 distinct ideas with logical order
+# - Short answers CAN have scaffolding if they order ideas simple→complex
+# - Explicit list of what IS and IS NOT scaffolding
+# - Clarifies that length alone doesn't determine scaffolding
+scaffolding_metric_v2 = GEval(
+    name="Scaffolding (v2)",
+    evaluation_steps=[
+        """STEP 1: DEFINITION - What is scaffolding?
+
+Scaffolding means the explanation BUILDS UNDERSTANDING by introducing ideas in order of increasing complexity.
+
+WHAT MAKES AN IDEA "SIMPLER" vs "MORE COMPLEX"?
+
+1. STANDALONE vs DEPENDENT:
+   - Simple: "Atoms are tiny particles" (understood alone)
+   - Complex: "Electrons orbit the nucleus" (requires knowing what atoms are)
+
+2. FEWER vs MORE PREREQUISITES:
+   - Simple: "Plants need sunlight" (common knowledge)
+   - Complex: "Chlorophyll absorbs photons to split water molecules" (requires chemistry background)
+
+3. CONCRETE vs ABSTRACT:
+   - Simple: "Ice melts when heated" (observable)
+   - Complex: "Phase transitions occur when thermal energy exceeds intermolecular bonds" (abstract principle)
+
+4. SINGLE vs COMBINED CONCEPTS:
+   - Simple: "DNA stores genetic information" (one idea)
+   - Complex: "DNA replication errors during cell division cause mutations that may lead to cancer" (combines 4 concepts)
+
+MINIMUM REQUIREMENT: At least 2 ideas where the second DEPENDS ON or DEEPENS the first.
+
+A SINGLE fact or definition is NOT scaffolding (nothing to build on).""",
+
+        """STEP 2: Examples of SCAFFOLDING PRESENT (Score 10):
+
+SHORT ANSWER examples:
+- "Cells are the basic building blocks of life. DNA inside cells contains instructions for making proteins."
+  → First establishes cells, then zooms into DNA - builds from whole to part
+  
+- "When you heat water, molecules move faster. This is why boiling water evaporates."
+  → First explains mechanism (molecules), then applies to observable phenomenon
+  
+- "Gravity pulls things toward Earth. That's why we don't float away."
+  → First states rule, then connects to everyday experience
+
+LONGER ANSWER example:
+- "Two facts motivate my research—first, diverse systems are healthier... My research asks if it matters that species are being gained and lost... By manipulating plant number and type, I can begin to uncover the mechanisms..."
+  → Starts with motivation → poses question → describes method (clear progression)""",
+
+        """STEP 3: Examples of SCAFFOLDING ABSENT (Score 0):
+
+SINGLE FACT (nothing to build on):
+- "Photosynthesis converts sunlight into energy."
+  → Just one idea, no building possible
+  
+- "The mitochondria is the powerhouse of the cell."
+  → Single definition, no progression
+
+UNORDERED LIST of facts:
+- "DNA contains genes. Proteins are made from amino acids. Cells divide through mitosis."
+  → Multiple facts but no logical order or building between them
+
+ALL AT ONCE (no progression):
+- "Quantum entanglement occurs when particles become correlated such that measuring one instantaneously affects the other regardless of distance due to non-local correlations established at particle creation."
+  → All concepts crammed together with no build-up
+
+COMPLEX BEFORE SIMPLE:
+- "The non-local correlations from entanglement happen because... basically, particles can be connected."
+  → Starts with the hard part, then gives the simple explanation
+
+LOGICAL FLOW WITHOUT BUILDING (NOT scaffolding):
+- "Scientists collected samples. They analyzed the samples. They published their findings."
+  → Ideas flow logically but stay at same complexity level - no building
+- "The experiment tested temperature. Results showed higher temps increased reaction speed. This confirmed the hypothesis."
+  → Coherent narrative, but each sentence is equally complex - no scaffolding
+- "Photosynthesis happens in leaves. It uses sunlight. Plants need it to survive."
+  → Related facts that flow, but none requires understanding the previous one
+
+KEY DISTINCTION: Scaffolding requires INCREASING DEPTH, not just logical coherence.""",
+
+        """STEP 4: Common edge cases:
+
+SHORT ≠ NO SCAFFOLDING:
+- A 2-sentence answer CAN have scaffolding if idea #1 prepares for idea #2
+- Length doesn't matter; logical ordering does
+
+TRANSITION WORDS DON'T GUARANTEE SCAFFOLDING:
+- "because", "therefore", "this means" can indicate building, but not always
+
+WITH transitions, IS scaffolding:
+- "Gravity pulls objects toward Earth. Because of this, dropped objects fall."
+  → Simple rule first, then applies it (builds)
+
+WITH transitions, NOT scaffolding:
+- "Entropy increases because systems tend toward disorder because energy spreads out."
+  → "because" used twice but all concepts at same complexity level (no building)
+- "Quantum tunneling occurs because wavefunctions extend beyond barriers."
+  → Single complex statement, transition word doesn't help
+
+WITHOUT transitions, IS scaffolding:
+- "Atoms have electrons. Electrons carry charge. Charge creates electricity."
+  → Clear simple→complex progression despite no explicit connectors
+
+CHRONOLOGICAL ORDER ≠ SCAFFOLDING:
+- "First I added water, then I heated it, then it boiled" is just a sequence
+- Scaffolding requires conceptual building, not just time order
+
+LOGICAL FLOW ≠ SCAFFOLDING:
+- A well-organized answer can flow smoothly without scaffolding
+- Scaffolding requires each idea to be MORE COMPLEX than the previous
+- If all ideas are at the same complexity level, it's NOT scaffolding (even if coherent)
+
+FINAL DECISION:
+- Score 10: Ideas are ordered from simple→complex, with building/dependence
+- Score 0: Single idea, random order, or complex-before-simple
+Do not use intermediate scores."""
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
+)
+
+
 ### Deprecated Metrics ###
 
 # analogy_metric = GEval(

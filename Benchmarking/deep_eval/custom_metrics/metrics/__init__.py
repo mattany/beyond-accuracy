@@ -36,6 +36,7 @@ from custom_metrics.metrics.explanation_quality_metrics import (
     correctness_metric_explicit,
     # New metrics from Baram-Tsabari & Lewenstein (2012)
     scaffolding_metric,
+    scaffolding_metric_v2,
 )
 from custom_metrics.metrics.zemla_metrics import (
     internal_coherence_metric_explicit,
