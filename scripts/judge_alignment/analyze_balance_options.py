@@ -555,6 +555,7 @@ def setup_deepeval(metrics_to_run=None):
         metaphor_metric_explicit_v12,
         analogy_metric_explicit_v2,
         connection_to_everyday_life_metric_explicit_v2,
+        connection_to_everyday_life_metric_explicit_v3,
         scaffolding_metric,
     )
     
@@ -574,6 +575,7 @@ def setup_deepeval(metrics_to_run=None):
         "metaphor_v12": metaphor_metric_explicit_v12,
         "analogy_v2": analogy_metric_explicit_v2,
         "connection_to_everyday_life_v2": connection_to_everyday_life_metric_explicit_v2,
+        "connection_to_everyday_life_v3": connection_to_everyday_life_metric_explicit_v3,
         "scaffolding": scaffolding_metric,
     }
     

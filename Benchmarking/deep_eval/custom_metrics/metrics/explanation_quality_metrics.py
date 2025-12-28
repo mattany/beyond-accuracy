@@ -151,6 +151,84 @@ connection_to_everyday_life_metric_explicit_v2 = GEval(
     **g_eval_default_params
 )
 
+# v3: Focus on NAMED cultural references, exclude generic analogies
+# Key insight: Analogies using generic concepts are NOT connections to everyday life
+# But NAMED references to specific cultural entities ARE connections
+connection_to_everyday_life_metric_explicit_v3 = GEval(
+    name="Connection to everyday life (v3)",
+    evaluation_steps=[
+        """1. Check if the answer contains a NAMED reference from popular culture.
+   
+   SCORE 10 - Any of the following:
+   - Named TV shows, movies, books, documentaries (e.g., "Friends", "Game of Thrones", "The Matrix")
+   - Named magazines, newspapers, publications (e.g., "Time Magazine", "Vogue", "BBC")
+   - Named historical figures commonly known (e.g., "Napoleon", "Julius Caesar", "Cleopatra")
+   - Named historical events (e.g., "the French Revolution", "the Renaissance")
+   - Named brands, products, companies (e.g., "Google", "Netflix", "Amazon")
+   - Named games (e.g., "Monopoly", "Scrabble", "basketball")
+   - Pop culture jokes or memes (e.g., references to viral internet moments)
+   - Famous landmarks (e.g., "crowded like Times Square", "tall as the Eiffel Tower")""",
+
+        """2. ALSO SCORE 10: Concrete everyday activities that people commonly do.
+   
+   These are relatable human experiences that ground abstract concepts in daily life.
+   The activity must be something a general audience does or understands from personal experience.
+   
+   SCORE 10 EXAMPLES:
+   - Household tasks: "like doing laundry", "similar to washing dishes", "like vacuuming"
+   - Errands: "like mailing a letter", "similar to shopping for groceries", "like waiting at the DMV"
+   - Food & cooking: "like mixing ingredients for a cake", "similar to marinating meat", "like seasoning a soup"
+   - Social activities: "like hosting a dinner party", "similar to playing board games with friends"
+   - Common experiences: "like getting stuck in traffic", "similar to waiting for your coffee to brew"
+   - Work/school: "like organizing your desk", "similar to studying for an exam"
+   
+   KEY: The activity must be EXTERNAL to the scientific topic being explained.
+   It should make the reader think "Oh, I know what that's like!" """,
+        
+        """3. SCORE 0 - The following do NOT count:
+   
+   ABSTRACT ANALOGIES (too generic):
+   - Natural phenomena: "like a river flowing", "like waves in the ocean", "like a pebble dropping"
+   - Abstract physics: "like a ball rolling downhill", "like a spring bouncing"
+   - Generic objects: "like a sponge absorbing", "like a balloon inflating"
+   
+   ALSO SCORE 0:
+   - Scientific terminology (e.g., "mitochondria", "quantum entanglement", "oxidation")
+   - Technical concepts without cultural grounding (e.g., "the process involves hydrolysis")
+   - Vague references (e.g., "as we all know", "in everyday life", "people often")
+   - References already embedded in the original question
+   - Geographic/astronomical names used technically (e.g., "the Pacific plate", "the Andromeda galaxy")
+   - Answers with no cultural or everyday life references at all""",
+
+        """4. IMPORTANT: Everyday content directly relevant to the question topic does NOT count as a connection.
+   
+   A "connection to everyday life" must bring in something EXTERNAL to the topic being discussed.
+   If the everyday reference is just part of answering the question, it's not a connection.
+   
+   SCORE 0 EXAMPLES (content is directly relevant to question):
+   - Question about babies → mentioning "breastfeeding" or "diapers" (directly relevant, not a connection)
+   - Question about cooking → mentioning "your kitchen stove" (directly relevant, not a connection)
+   - Question about cars → mentioning "your gas tank" (directly relevant, not a connection)
+   - Question about sleep → mentioning "your bed" or "pajamas" (directly relevant, not a connection)
+   
+   SCORE 10 EXAMPLES (content brings in external reference):
+   - Question about physics → mentioning "like a scene from Interstellar" (external movie reference)
+   - Question about biology → mentioning "like that episode of House M.D." (external TV reference)
+   - Question about chemistry → mentioning "like mixing ingredients for a cake" (external everyday activity)""",
+        
+        """5. Return score 10 if ANY item from steps 1-2 is present AND it passes the test in step 4.
+   Return score 0 otherwise. Do not use intermediate scores.
+   
+   FINAL EXAMPLES:
+   - "like a factory assembly line" → Score 0 (generic analogy)
+   - "like a scene from Jurassic Park" → Score 10 (named movie, external to topic)
+   - "like mailing a package" → Score 10 (concrete everyday activity, external to topic)
+   - "like water flowing downhill" → Score 0 (abstract nature analogy)"""
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
+)
+
 
 humor_metric_explicit = GEval(
     name="Humor Explicit",
