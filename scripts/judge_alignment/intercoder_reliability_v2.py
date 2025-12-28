@@ -21,8 +21,8 @@ METRIC_NAMES = ["Analogy", "Metaphor", "Humor", "Connection", "Scaffolding"]
 V2_SCORE_COLUMNS = {
     "Analogy": ["analogy_v2_score", "analogy_v6_score", "analogy_v8_score", "analogy_score"],
     "Metaphor": ["metaphor_v2_score", "metaphor_v6_score", "metaphor_v8_score", "metaphor_v12_score", "metaphor_v11_score", "metaphor_v10_score", "metaphor_v9_score", "metaphor_v7_score", "metaphor_v5_score", "metaphor_v4_score", "metaphor_v3_score", "metaphor_score"],
-    "Humor": ["humor_v4_score", "humor_v2_score", "humor_v6_score", "humor_v8_score", "humor_score"],
-    "Connection": ["connection_to_everyday_life_v3_score", "connection_to_everyday_life_v2_score", "connection_v6_score", "connection_v8_score", "connection_score"],
+    "Humor": ["humor_v5_score", "humor_v4_score", "humor_v2_score", "humor_v6_score", "humor_v8_score", "humor_score"],
+    "Connection": ["connection_to_everyday_life_v4_score", "connection_to_everyday_life_v3_score", "connection_to_everyday_life_v2_score", "connection_v6_score", "connection_v8_score", "connection_score"],
     "Scaffolding": ["scaffolding_score", "scaffolding_v2_score", "scaffolding_v6_score", "scaffolding_v8_score"],
 }
 

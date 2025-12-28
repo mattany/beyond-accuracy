@@ -60,6 +60,7 @@ METRIC_PREVIOUS_VERSIONS = {
     'connection_to_everyday_life_v5': ['connection_to_everyday_life_v4', 'connection_to_everyday_life_v3', 'connection_to_everyday_life_v2'],
     'connection_to_everyday_life_v4': ['connection_to_everyday_life_v3', 'connection_to_everyday_life_v2'],
     'connection_to_everyday_life_v3': ['connection_to_everyday_life_v2'],
+    'scaffolding_v2': ['scaffolding'],
 }
 
 ALL_METRICS = [
@@ -604,6 +605,7 @@ def setup_deepeval(metrics_to_run=None):
         connection_to_everyday_life_metric_explicit_v3,
         connection_to_everyday_life_metric_explicit_v4,
         scaffolding_metric,
+        scaffolding_metric_v2,
     )
     
     # All available metrics
@@ -628,6 +630,7 @@ def setup_deepeval(metrics_to_run=None):
         "connection_to_everyday_life_v3": connection_to_everyday_life_metric_explicit_v3,
         "connection_to_everyday_life_v4": connection_to_everyday_life_metric_explicit_v4,
         "scaffolding": scaffolding_metric,
+        "scaffolding_v2": scaffolding_metric_v2,
     }
     
     # Filter to requested metrics if specified
