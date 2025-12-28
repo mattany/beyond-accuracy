@@ -18,7 +18,14 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from config import PROJECT_DIR
 
 
-def visualize_consistency(output_dir):
+def visualize_consistency(output_dir, scale_factor=1):
+    """
+    Visualize consistency check results.
+    
+    Args:
+        output_dir: Directory containing consistency check results
+        scale_factor: Factor to multiply scores by (e.g., 10 for count metrics to convert 0-1 to 0-10)
+    """
     graphs_dir = os.path.join(output_dir, "graphs")
     os.makedirs(graphs_dir, exist_ok=True)
     
@@ -34,6 +41,19 @@ def visualize_consistency(output_dir):
     stats_df = pd.read_csv(stats_path)
     summary_df = pd.read_csv(summary_path)
     intermediate_df = pd.read_csv(intermediate_path) if os.path.exists(intermediate_path) else None
+    
+    # Apply scale factor to score-related columns
+    if scale_factor != 1:
+        print(f"Applying scale factor of {scale_factor} to scores...")
+        stats_df['mean_score'] = stats_df['mean_score'] * scale_factor
+        stats_df['std_dev'] = stats_df['std_dev'] * scale_factor
+        stats_df['se'] = stats_df['se'] * scale_factor
+        stats_df['ci_lower'] = stats_df['ci_lower'] * scale_factor
+        stats_df['ci_upper'] = stats_df['ci_upper'] * scale_factor
+        summary_df['avg_std_dev (inconsistency)'] = summary_df['avg_std_dev (inconsistency)'] * scale_factor
+        summary_df['avg_se'] = summary_df['avg_se'] * scale_factor
+        if intermediate_df is not None:
+            intermediate_df['score'] = intermediate_df['score'] * scale_factor
 
     # Set style
     sns.set_theme(style="whitegrid")
@@ -153,11 +173,13 @@ def visualize_consistency(output_dir):
             color='steelblue'
         )
         
-        # Add vertical line at 0.5 threshold
-        plt.axvline(x=0.5, color='red', linestyle='--', alpha=0.7, label='Binary threshold (0.5)')
+        # Add vertical line at threshold (0.5 for binary, or scaled value for count metrics)
+        threshold = 0.5 * scale_factor if scale_factor != 1 else 0.5
+        plt.axvline(x=threshold, color='red', linestyle='--', alpha=0.7, label=f'Binary threshold ({threshold})')
         
         plt.yticks(range(len(stats_sorted)), [f"Q{idx}" for idx in stats_sorted['question_idx']])
-        plt.xlabel('Score (Mean ± 95% CI)', fontsize=12)
+        score_label = 'Count (Mean ± 95% CI)' if scale_factor > 1 else 'Score (Mean ± 95% CI)'
+        plt.xlabel(score_label, fontsize=12)
         plt.ylabel('Question Index', fontsize=12)
         plt.title(f'{metric_name}: Score Distribution with 95% Confidence Intervals', fontsize=15)
         plt.legend()
@@ -172,6 +194,8 @@ def main():
     parser = argparse.ArgumentParser(description="Visualize metric consistency results")
     parser.add_argument("--dir", type=str, default=None,
                         help="Path to consistency check results directory")
+    parser.add_argument("--scale", type=float, default=1,
+                        help="Scale factor for scores (e.g., 10 for count-based metrics to convert 0-1 to 0-10)")
     args = parser.parse_args()
     
     if args.dir:
@@ -193,7 +217,7 @@ def main():
             print(f"Results directory not found: {base_dir}")
             return
     
-    visualize_consistency(target_dir)
+    visualize_consistency(target_dir, scale_factor=args.scale)
 
 
 if __name__ == "__main__":

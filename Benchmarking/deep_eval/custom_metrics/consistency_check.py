@@ -493,6 +493,10 @@ def main():
     print("\n" + "="*60)
     print("CONSISTENCY CHECK COMPLETE")
     print("="*60)
+    
+    # Force clean exit to avoid asyncio hanging on unclosed connections
+    import sys
+    sys.exit(0)
 
 
 if __name__ == "__main__":
