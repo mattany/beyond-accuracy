@@ -480,15 +480,22 @@ def save_balanced_datasets(df, surveys, output_dir, metrics_list=None):
     else:
         print("Note: No reason columns found in source data")
     
+    # Build metric suffix for filename if specific metrics were requested
+    metric_suffix = ""
+    if metrics_list != ALL_METRICS:
+        # Create a compact suffix from metric names (e.g., "_humor_v4" or "_metaphor_v3_humor_v2")
+        metric_names = [short_name(m).replace('_score', '') for m in metrics_list]
+        metric_suffix = "_" + "_".join(metric_names)
+    
     for name, size, indices, counts in surveys:
         # Create filename from survey name
         if "Large" in name:
-            filename = f"balanced_{LARGE_SURVEY_SIZE}.csv"
+            filename = f"balanced_{LARGE_SURVEY_SIZE}{metric_suffix}.csv"
         elif "Small" in name:
-            filename = f"balanced_{SMALL_SURVEY_SIZE}.csv"
+            filename = f"balanced_{SMALL_SURVEY_SIZE}{metric_suffix}.csv"
         else:
             # For numbered surveys (4-survey plan)
-            filename = name.lower().replace(" ", "_").replace("(", "").replace(")", "").replace("questions", "q") + ".csv"
+            filename = name.lower().replace(" ", "_").replace("(", "").replace(")", "").replace("questions", "q") + f"{metric_suffix}.csv"
         
         output_path = output_dir / filename
         # Select only the columns we want to include
@@ -542,6 +549,8 @@ def setup_deepeval(metrics_to_run=None):
     from deepeval.test_case import LLMTestCase
     from custom_metrics.metrics import (
         humor_metric_explicit_v2,
+        humor_metric_explicit_v3,
+        humor_metric_explicit_v4,
         metaphor_metric_explicit_v2,
         metaphor_metric_explicit_v3,
         metaphor_metric_explicit_v4,
@@ -562,6 +571,8 @@ def setup_deepeval(metrics_to_run=None):
     # All available metrics
     ALL_AVAILABLE_METRICS = {
         "humor_v2": humor_metric_explicit_v2,
+        "humor_v3": humor_metric_explicit_v3,
+        "humor_v4": humor_metric_explicit_v4,
         "metaphor_v2": metaphor_metric_explicit_v2,
         "metaphor_v3": metaphor_metric_explicit_v3,
         "metaphor_v4": metaphor_metric_explicit_v4,
