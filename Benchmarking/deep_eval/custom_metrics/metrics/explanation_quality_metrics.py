@@ -271,6 +271,138 @@ humor_metric_explicit_v2 = GEval(
     **g_eval_default_params
 )
 
+# v3: Calibrated version with borderline examples to reduce ambiguity
+# Addresses issues identified in human-model disagreement analysis:
+# - Absurdist analogies that ARE humorous
+# - Parenthetical snark/wry asides
+# - Ironic understatement without explicit markers
+# - Dark humor through violent/extreme imagery
+humor_metric_explicit_v3 = GEval(
+    name="Humor Explicit (v3)",
+    evaluation_steps=[
+        """1. HUMOR includes explicit jokes AND ironic language.
+   
+   Look for ANY of the following:
+   - Explicit jokes (with or without a formal punchline)
+   - Puns or wordplay meant to amuse
+   - Ironic language: understatement, tongue-in-cheek remarks, or wry observations
+   - Absurdist comparisons that highlight ridiculousness through exaggeration or juxtaposition
+   - Parenthetical snark or dismissive/wry asides
+   - Dark humor using violent or extreme imagery for comic effect
+   
+   CALIBRATION EXAMPLES - These ARE humor (Score 10):
+   - "It would be like saying you've falsified the round earth hypothesis by driving on a flat road" 
+     (absurdist analogy - the ridiculousness IS the joke)
+   - "U-238 (mostly useless)" 
+     (parenthetical snark - dismissive aside meant to amuse)
+   - "That's it, really. The whole process is about five undergrad courses worth of material" 
+     (ironic understatement - trivializing complexity)
+   - "...it can be used to build something or to cave someone's head in" 
+     (dark humor - violent imagery for ironic effect)
+   - "I hope it tastes and smells like bacon" (about nuclear annihilation) 
+     (dark humor - absurd juxtaposition)
+   - "zombie-proteins, you need to go for the head-shot, and remember to double tap" 
+     (pop culture joke reference)
+   - "I'm guessing your crowd has read too much Twilight" 
+     (sarcastic/ironic jab)""",
+        """2. The following are NOT humor:
+   - Creative or vivid analogies/metaphors without irony or absurdity 
+     (e.g., "DNA is like a blueprint", "electrons flow like water")
+   - Engaging or enthusiastic tone without jokes or irony
+   - Personification without irony (e.g., "the virus wants to replicate")
+   - Vivid or dramatic descriptions that lack comedic intent
+   - Playful language that lacks actual jokes or ironic statements
+   
+   CALIBRATION EXAMPLES - These are NOT humor (Score 0):
+   - "like a pebble rolling down a hill" (straightforward analogy, no absurdity)
+   - "bacteria are like tiny factories" (vivid but not ironic)
+   - "the immune system is an army defending your body" (metaphor without comedic intent)""",
+        """3. KEY QUESTION: Would a reasonable reader find this amusing or witty?
+   
+   Consider: Does the text contain intentional wit, irony, or comedic effect?
+   - Absurdist comparisons that make you think "that's ridiculous" = humor
+   - Parenthetical asides that seem snarky or dismissive = humor  
+   - Understatement after buildup that seems intentionally anticlimactic = humor
+   - Dark/violent imagery used for shock-humor effect = humor
+   
+   If yes → return 10.
+   If no (even if creative, vivid, or playful) → return 0.
+   Do not use intermediate scores."""
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
+)
+
+# v4: Simplified vocabulary version of v3
+# - Replaced sophisticated words (wry, parenthetical, juxtaposition, absurdist)
+# - Split into clearer numbered steps
+# - Uses examples NOT from the evaluation dataset to avoid data leakage
+humor_metric_explicit_v4 = GEval(
+    name="Humor Explicit (v4)",
+    evaluation_steps=[
+        """STEP 1: Look for JOKES.
+
+Does the text contain any of these?
+- A joke with a punchline
+- A pun or wordplay  
+- A reference to movies, TV, or pop culture used to be funny
+- A sarcastic or mocking comment
+
+EXAMPLES of jokes (Score 10):
+- "Schrodinger's cat walks into a bar... and doesn't" (joke about superposition in quantum physics)
+- "Pluto was demoted to dwarf planet - talk about a mid-life crisis" (personification joke)
+- "If you think nobody cares about you, try missing a few tax payments" (sarcastic observation)
+
+If you found a joke → Score 10. Otherwise continue to Step 2.""",
+
+        """STEP 2: Look for IRONY or SARCASM.
+
+Does the text contain any of these?
+- Saying the opposite of what you mean to be funny
+- Making something serious sound unimportant on purpose (understatement)
+- A side comment in brackets or parentheses that is dismissive or mocking
+- Colorful or silly imagery used in a serious context (the contrast is funny)
+- Dark humor: violent, morbid, or extreme language used casually for shock value
+
+EXAMPLES of irony (Score 10):
+- "The surgery went well, apart from the patient dying" (dark understatement)
+- "It's perfectly safe, unless you count the possibility of horrible death" (dark humor - casual mention of death)
+- "Nature is beautiful, if you ignore all the things trying to eat you" (dark humor - unexpected violent twist)
+- "String theory (which nobody actually understands)" (dismissive side comment)
+- "You'd basically become a very expensive puddle" about extreme pressure (silly image + serious topic)
+
+If you found irony or sarcasm → Score 10. Otherwise continue to Step 3.""",
+
+        """STEP 3: Look for RIDICULOUS comparisons.
+
+Does the text make a comparison that is SO silly or extreme that it's meant to be funny?
+The humor comes from the absurdity - the comparison is intentionally too extreme or too silly.
+
+EXAMPLES of ridiculous comparisons (Score 10):
+- "Saying magnets work by magic is like saying cars run on wishes" (exaggerated comparison)
+- "Expecting your immune system to fight off everything is like expecting one security guard to defend a shopping mall from an army" (absurd scale mismatch)
+- "The odds are about the same as finding a specific grain of sand on every beach on Earth" (comically extreme)
+
+If you found a ridiculous comparison meant to amuse → Score 10. Otherwise continue to Step 4.""",
+
+        """STEP 4: Check it's NOT just vivid language.
+
+The following are NOT humor - they are just good explanations:
+- Normal comparisons: "DNA is like a blueprint", "electricity flows like water"
+- Lively descriptions: "neurons firing like a symphony" 
+- Personification: "the virus hijacks the cell"
+- Enthusiastic tone without actual jokes
+
+FINAL DECISION:
+- If you found a joke, irony, sarcasm, or ridiculous comparison in Steps 1-3 → Score 10
+- If you only found vivid language or good explanations → Score 0
+
+Do not use scores between 0 and 10."""
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    **g_eval_default_params
+)
+
 
 
 analogy_metric_explicit = GEval(

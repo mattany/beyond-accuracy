@@ -27,6 +27,8 @@ from custom_metrics.metrics.explanation_quality_metrics import (
     content_units_metric_explicit_v2,
     humor_metric_explicit,
     humor_metric_explicit_v2,
+    humor_metric_explicit_v3,
+    humor_metric_explicit_v4,
     analogy_metric_explicit,
     analogy_metric_explicit_v2,
     correctness_metric_explicit,
