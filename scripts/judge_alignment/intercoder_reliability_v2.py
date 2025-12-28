@@ -19,11 +19,11 @@ METRIC_NAMES = ["Analogy", "Metaphor", "Humor", "Connection", "Scaffolding"]
 
 # Mapping from METRIC_NAMES to CSV column names for v2 scores (with fallbacks)
 V2_SCORE_COLUMNS = {
-    "Analogy": ["analogy_v2_score", "analogy_v6_score", "analogy_score"],
-    "Metaphor": ["metaphor_v2_score", "metaphor_v6_score", "metaphor_score"],
-    "Humor": ["humor_v2_score", "humor_v6_score", "humor_score"],
-    "Connection": ["connection_to_everyday_life_v2_score", "connection_v6_score", "connection_score"],
-    "Scaffolding": ["scaffolding_score", "scaffolding_v2_score", "scaffolding_v6_score"],
+    "Analogy": ["analogy_v2_score", "analogy_v6_score", "analogy_v8_score", "analogy_score"],
+    "Metaphor": ["metaphor_v2_score", "metaphor_v6_score", "metaphor_v8_score", "metaphor_v12_score", "metaphor_v11_score", "metaphor_v10_score", "metaphor_v9_score", "metaphor_v7_score", "metaphor_v5_score", "metaphor_v4_score", "metaphor_v3_score", "metaphor_score"],
+    "Humor": ["humor_v2_score", "humor_v6_score", "humor_v8_score", "humor_score"],
+    "Connection": ["connection_to_everyday_life_v2_score", "connection_v6_score", "connection_v8_score", "connection_score"],
+    "Scaffolding": ["scaffolding_score", "scaffolding_v2_score", "scaffolding_v6_score", "scaffolding_v8_score"],
 }
 
 
@@ -55,10 +55,10 @@ def extract_annotators(tasks: List[Dict[str, Any]]) -> List[str]:
     return annotators
 
 
-def extract_metrics_from_result(result: List[Dict[str, Any]], active_metrics: List[str] = None) -> Dict[str, int]:
+def extract_metrics_from_result(result: List[Dict[str, Any]], active_metrics: List[str] = None) -> Tuple[Dict[str, int], str]:
     """
-    Extract binary metrics from a single annotation's `result` field.
-    Returns a dict with keys in METRIC_NAMES and values in {0,1}.
+    Extract binary metrics and reasoning from a single annotation's `result` field.
+    Returns a tuple of (metrics dict, reasoning string).
     
     Handles two formats:
     1. Multi-choice: choices like ["Metaphor", "Analogy", ...]
@@ -72,6 +72,8 @@ def extract_metrics_from_result(result: List[Dict[str, Any]], active_metrics: Li
         active_metrics = METRIC_NAMES
     
     metrics = {m: 0 for m in METRIC_NAMES}
+    reasoning = ""
+    
     for r in result:
         if r.get("type") == "choices":
             choices = r.get("value", {}).get("choices", [])
@@ -95,7 +97,12 @@ def extract_metrics_from_result(result: List[Dict[str, Any]], active_metrics: Li
                     metrics["Connection"] = 1
                 elif c == "Scaffolding":
                     metrics["Scaffolding"] = 1
-    return metrics
+        elif r.get("type") == "textarea" and r.get("from_name") == "reasoning":
+            # Extract reasoning text (list of strings)
+            text_list = r.get("value", {}).get("text", [])
+            reasoning = ". ".join(text_list) if text_list else ""
+    
+    return metrics, reasoning
 
 
 def build_item_table(
@@ -140,9 +147,11 @@ def build_item_table(
             email = ann["completed_by"]["email"]
             ts = ann["updated_at"]
             if email not in latest or ts > latest[email]["ts"]:
+                metrics, reasoning = extract_metrics_from_result(ann.get("result", []), active_metrics)
                 latest[email] = {
                     "ts": ts,
-                    "metrics": extract_metrics_from_result(ann.get("result", []), active_metrics),
+                    "metrics": metrics,
+                    "reasoning": reasoning,
                 }
 
         # Only keep items where all annotators are present
@@ -156,6 +165,10 @@ def build_item_table(
             row[f"{metric}_per_annotator"] = [
                 latest[email]["metrics"][metric] for email in annotators
             ]
+
+        # Store per-annotator reasoning (joined with period)
+        reasoning_list = [latest[email]["reasoning"] for email in annotators if latest[email]["reasoning"]]
+        row["reasoning"] = ". ".join(reasoning_list) if reasoning_list else ""
 
         # Human mean metrics
         for metric in METRIC_NAMES:
@@ -258,7 +271,7 @@ def compute_intercoder_reliability(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def compute_human_llm_correlations(
-    df: pd.DataFrame, label_type: str = "mean"
+    df: pd.DataFrame, label_type: str = "mean", threshold: float = 0.5
 ) -> pd.DataFrame:
     """Compute correlations between human labels and LLM v2 scores."""
     rows = []
@@ -276,29 +289,45 @@ def compute_human_llm_correlations(
             pearson = np.nan
             spearman = np.nan
             kendall = np.nan
+            binary_agreement = np.nan
         else:
-            pearson = np.corrcoef(x_valid, y_valid)[0, 1]
-            spearman, _ = stats.spearmanr(x_valid, y_valid)
-            kendall, _ = stats.kendalltau(x_valid, y_valid)
+            # Binarize both human and LLM for correlation calculations
+            human_binary = (x_valid >= 0.5).astype(int)
+            llm_binary = (y_valid >= threshold).astype(int)
+            
+            # Check if binarized data has variance (needed for correlations)
+            if np.std(human_binary) == 0 or np.std(llm_binary) == 0:
+                pearson = np.nan
+                spearman = np.nan
+                kendall = np.nan
+            else:
+                pearson = np.corrcoef(human_binary, llm_binary)[0, 1]
+                spearman, _ = stats.spearmanr(human_binary, llm_binary)
+                kendall, _ = stats.kendalltau(human_binary, llm_binary)
+            
+            # Compute binary agreement (flat accuracy)
+            binary_agreement = (human_binary == llm_binary).mean()
 
         rows.append({
             "metric": metric,
             f"pearson_{label_type}": float(pearson),
             f"spearman_{label_type}": float(spearman),
             f"kendall_{label_type}": float(kendall),
+            f"binary_agreement_{label_type}": float(binary_agreement),
         })
     return pd.DataFrame(rows)
 
 
 def compute_majority_vote_labels(df: pd.DataFrame) -> pd.DataFrame:
-    """Add majority-vote binary label columns."""
+    """Add majority-vote binary label columns. Ties are broken to 0."""
     df = df.copy()
     for metric in METRIC_NAMES:
         per_annotator = df[f"{metric}_per_annotator"]
         majority_labels = []
         for row in per_annotator:
             arr = np.array(row, dtype=int)
-            majority = 1 if arr.sum() >= 2 else 0
+            # Majority requires strictly more than half; ties go to 0
+            majority = 1 if arr.sum() > len(arr) / 2 else 0
             majority_labels.append(majority)
         df[f"human_majority_{metric}"] = majority_labels
     return df
@@ -619,16 +648,18 @@ def _plot_human_llm_correlations_on_ax(
     """Plot human-LLM correlations bar chart on given axes."""
     metrics = corr_mean_df["metric"].tolist()
     x = np.arange(len(metrics))
-    width = 0.35
+    width = 0.25
 
     spearman_mean = corr_mean_df["spearman_mean"].values
     spearman_majority = corr_maj_df["spearman_majority"].values
+    binary_agreement_majority = corr_maj_df["binary_agreement_majority"].values
 
-    bars1 = ax.bar(x - width / 2, spearman_mean, width, label="Mean Human Label", color="#4C72B0")
-    bars2 = ax.bar(x + width / 2, spearman_majority, width, label="Unanimous Label", color="#55A868")
+    bars1 = ax.bar(x - width, spearman_mean, width, label="Spearman (Mean)", color="#4C72B0")
+    bars2 = ax.bar(x, spearman_majority, width, label="Spearman (Majority)", color="#55A868")
+    bars3 = ax.bar(x + width, binary_agreement_majority, width, label="Binary Agreement", color="#C44E52")
 
     ax.set_xlabel("Metric", fontsize=fontsize)
-    ax.set_ylabel("Spearman ρ", fontsize=fontsize)
+    ax.set_ylabel("Score", fontsize=fontsize)
     ax.set_title(title, fontsize=fontsize + 2, fontweight="bold")
     ax.set_xticks(x)
     ax.set_xticklabels(metrics, fontsize=fontsize - 1, rotation=rotation, ha="right" if rotation else "center")
@@ -638,7 +669,7 @@ def _plot_human_llm_correlations_on_ax(
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    for bars in [bars1, bars2]:
+    for bars in [bars1, bars2, bars3]:
         for bar in bars:
             height = bar.get_height()
             if np.isnan(height):
@@ -814,6 +845,11 @@ def add_annotations_to_csv(
     
     added_cols = []
     
+    # Add reasoning column
+    reasoning_col = f"reasoning_{metric_version}"
+    csv_df[reasoning_col] = ""
+    added_cols.append(reasoning_col)
+    
     # Add annotation columns for each active metric
     for metric in active_metrics:
         metric_lower = metric.lower()
@@ -830,6 +866,10 @@ def add_annotations_to_csv(
             mask = csv_df[match_col] == qid
             
             if mask.any():
+                # Add reasoning
+                csv_df.loc[mask, reasoning_col] = row.get("reasoning", "")
+                
+                # Add per-annotator scores
                 per_annotator = row[f"{metric}_per_annotator"]
                 for i, short_name in enumerate(short_names):
                     col_name = f"{short_name}_{metric_lower}_{metric_version}"
