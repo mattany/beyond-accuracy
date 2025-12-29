@@ -1,0 +1,6 @@
+metric,pearson_majority,spearman_majority,kendall_majority,binary_agreement_majority
+Analogy,,,,
+Metaphor,,,,
+Humor,,,,
+Connection,,,,
+Scaffolding,0.5241424183609592,0.5241424183609592,0.5241424183609592,0.75

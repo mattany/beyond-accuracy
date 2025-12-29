@@ -1,0 +1,6 @@
+metric,pearson_mean,spearman_mean,kendall_mean,binary_agreement_mean
+Analogy,,,,
+Metaphor,,,,
+Humor,,,,
+Connection,,,,
+Scaffolding,0.5241424183609592,0.5241424183609592,0.5241424183609592,0.75
