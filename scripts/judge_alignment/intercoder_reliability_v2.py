@@ -36,6 +36,22 @@ def find_score_column(df: pd.DataFrame, metric: str) -> str:
     return None
 
 
+def extract_version_from_column(col_name: str) -> str:
+    """
+    Extract version string from a score column name.
+    
+    Examples:
+        'humor_v5_score' -> 'v5'
+        'connection_to_everyday_life_v4_score' -> 'v4'
+        'metaphor_score' -> None (no version)
+    """
+    import re
+    match = re.search(r'_(v\d+)_', col_name)
+    if match:
+        return match.group(1)
+    return None
+
+
 def load_tasks(json_path: str) -> List[Dict[str, Any]]:
     """Load Label Studio JSON export."""
     with open(json_path, "r", encoding="utf-8") as f:
@@ -320,6 +336,24 @@ def compute_intercoder_reliability(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _compute_precision_recall_f1(human_binary: np.ndarray, llm_binary: np.ndarray) -> tuple:
+    """Compute precision, recall, and F1 score.
+    
+    Human labels are ground truth, LLM predictions are being evaluated.
+    Positive class = 1 (metric is present).
+    """
+    tp = ((human_binary == 1) & (llm_binary == 1)).sum()
+    fp = ((human_binary == 0) & (llm_binary == 1)).sum()
+    fn = ((human_binary == 1) & (llm_binary == 0)).sum()
+    tn = ((human_binary == 0) & (llm_binary == 0)).sum()
+    
+    precision = tp / (tp + fp) if (tp + fp) > 0 else np.nan
+    recall = tp / (tp + fn) if (tp + fn) > 0 else np.nan
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else np.nan
+    
+    return float(precision), float(recall), float(f1), int(tp), int(fp), int(fn), int(tn)
+
+
 def compute_human_llm_correlations(
     df: pd.DataFrame, label_type: str = "mean", threshold: float = 0.5
 ) -> pd.DataFrame:
@@ -338,8 +372,16 @@ def compute_human_llm_correlations(
         if len(x_valid) < 2 or np.std(x_valid) == 0 or np.std(y_valid) == 0:
             pearson = np.nan
             spearman = np.nan
+            spearman_excl_ties = np.nan
             kendall = np.nan
             binary_agreement = np.nan
+            binary_agreement_excl_ties = np.nan
+            precision, recall, f1 = np.nan, np.nan, np.nan
+            precision_excl, recall_excl, f1_excl = np.nan, np.nan, np.nan
+            tp, fp, fn, tn = 0, 0, 0, 0
+            tp_excl, fp_excl, fn_excl, tn_excl = 0, 0, 0, 0
+            n_ties = 0
+            n_consensus = 0
         else:
             # Binarize both human and LLM for correlation calculations
             human_binary = (x_valid >= 0.5).astype(int)
@@ -357,13 +399,68 @@ def compute_human_llm_correlations(
             
             # Compute binary agreement (flat accuracy)
             binary_agreement = (human_binary == llm_binary).mean()
+            
+            # Compute precision, recall, F1
+            precision, recall, f1, tp, fp, fn, tn = _compute_precision_recall_f1(human_binary, llm_binary)
+            
+            # Compute metrics excluding ties (where human mean == 0.5)
+            # Ties occur when annotators disagree (one says 0, one says 1)
+            consensus_mask = (x_valid != 0.5)
+            n_ties = (~consensus_mask).sum()
+            n_consensus = consensus_mask.sum()
+            
+            # Total positives and negatives in full dataset (for adjusted metrics)
+            total_positives = (human_binary == 1).sum()
+            total_negatives = (human_binary == 0).sum()
+            
+            if n_consensus > 0:
+                human_consensus = human_binary[consensus_mask]
+                llm_consensus = llm_binary[consensus_mask]
+                binary_agreement_excl_ties = (human_consensus == llm_consensus).mean()
+                # Compute Spearman excluding ties
+                if np.std(human_consensus) == 0 or np.std(llm_consensus) == 0:
+                    spearman_excl_ties = np.nan
+                else:
+                    spearman_excl_ties, _ = stats.spearmanr(human_consensus, llm_consensus)
+                # Compute precision, recall, F1 excluding ties (on subset)
+                precision_excl, recall_excl_subset, f1_excl_subset, tp_excl, fp_excl, fn_excl, tn_excl = \
+                    _compute_precision_recall_f1(human_consensus, llm_consensus)
+                
+                # Compute ADJUSTED recall: TP_consensus / Total_Positives_Full
+                # This accounts for positives in ties that we couldn't evaluate
+                recall_excl = tp_excl / total_positives if total_positives > 0 else np.nan
+                
+                # Recompute F1 with adjusted recall
+                if precision_excl > 0 and recall_excl > 0:
+                    f1_excl = 2 * precision_excl * recall_excl / (precision_excl + recall_excl)
+                else:
+                    f1_excl = np.nan
+            else:
+                binary_agreement_excl_ties = np.nan
+                spearman_excl_ties = np.nan
+                precision_excl, recall_excl, f1_excl = np.nan, np.nan, np.nan
+                tp_excl, fp_excl, fn_excl, tn_excl = 0, 0, 0, 0
 
         rows.append({
             "metric": metric,
             f"pearson_{label_type}": float(pearson),
             f"spearman_{label_type}": float(spearman),
+            f"spearman_excl_ties_{label_type}": float(spearman_excl_ties),
             f"kendall_{label_type}": float(kendall),
             f"binary_agreement_{label_type}": float(binary_agreement),
+            f"binary_agr_excl_ties_{label_type}": float(binary_agreement_excl_ties),
+            f"precision_{label_type}": float(precision),
+            f"recall_{label_type}": float(recall),
+            f"f1_{label_type}": float(f1),
+            f"precision_excl_ties_{label_type}": float(precision_excl),
+            f"recall_excl_ties_{label_type}": float(recall_excl),
+            f"f1_excl_ties_{label_type}": float(f1_excl),
+            f"tp_{label_type}": tp,
+            f"fp_{label_type}": fp,
+            f"fn_{label_type}": fn,
+            f"tn_{label_type}": tn,
+            f"n_ties_{label_type}": int(n_ties),
+            f"n_consensus_{label_type}": int(n_consensus),
         })
     return pd.DataFrame(rows)
 
@@ -691,22 +788,24 @@ def _plot_human_llm_correlations_on_ax(
     ax: plt.Axes,
     corr_mean_df: pd.DataFrame,
     corr_maj_df: pd.DataFrame,
-    title: str = "Human–LLM Agreement (Spearman ρ) - v2 Metrics",
+    title: str = "Human–LLM Agreement - v2 Metrics",
     fontsize: int = 12,
     rotation: int = 0
 ) -> None:
     """Plot human-LLM correlations bar chart on given axes."""
     metrics = corr_mean_df["metric"].tolist()
     x = np.arange(len(metrics))
-    width = 0.25
+    width = 0.18
 
-    spearman_mean = corr_mean_df["spearman_mean"].values
     spearman_majority = corr_maj_df["spearman_majority"].values
+    spearman_excl_ties = corr_mean_df["spearman_excl_ties_mean"].values
     binary_agreement_majority = corr_maj_df["binary_agreement_majority"].values
+    binary_agr_excl_ties = corr_mean_df["binary_agr_excl_ties_mean"].values
 
-    bars1 = ax.bar(x - width, spearman_mean, width, label="Spearman (Mean)", color="#4C72B0")
-    bars2 = ax.bar(x, spearman_majority, width, label="Spearman (Majority)", color="#55A868")
-    bars3 = ax.bar(x + width, binary_agreement_majority, width, label="Binary Agreement", color="#C44E52")
+    bars1 = ax.bar(x - 1.5*width, spearman_majority, width, label="Spearman (Majority)", color="#4C72B0")
+    bars2 = ax.bar(x - 0.5*width, spearman_excl_ties, width, label="Spearman (Excl. Ties)", color="#7EB0D5")
+    bars3 = ax.bar(x + 0.5*width, binary_agreement_majority, width, label="Accuracy (Majority)", color="#C44E52")
+    bars4 = ax.bar(x + 1.5*width, binary_agr_excl_ties, width, label="Accuracy (Excl. Ties)", color="#55A868")
 
     ax.set_xlabel("Metric", fontsize=fontsize)
     ax.set_ylabel("Score", fontsize=fontsize)
@@ -719,7 +818,7 @@ def _plot_human_llm_correlations_on_ax(
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    for bars in [bars1, bars2, bars3]:
+    for bars in [bars1, bars2, bars3, bars4]:
         for bar in bars:
             height = bar.get_height()
             if np.isnan(height):
@@ -728,6 +827,45 @@ def _plot_human_llm_correlations_on_ax(
             offset = 2 if height >= 0 else -2
             ax.annotate(f"{height:.2f}", xy=(bar.get_x() + bar.get_width() / 2, height),
                         xytext=(0, offset), textcoords="offset points", ha="center", va=va, fontsize=fontsize - 3)
+
+
+def _plot_precision_recall_on_ax(
+    ax: plt.Axes,
+    corr_mean_df: pd.DataFrame,
+    title: str = "Precision & Recall (Excl. Ties)",
+    fontsize: int = 12,
+    rotation: int = 0
+) -> None:
+    """Plot precision, recall, and F1 bar chart on given axes."""
+    metrics = corr_mean_df["metric"].tolist()
+    x = np.arange(len(metrics))
+    width = 0.2
+
+    precision_excl = corr_mean_df["precision_excl_ties_mean"].values
+    recall_excl = corr_mean_df["recall_excl_ties_mean"].values
+    f1_excl = corr_mean_df["f1_excl_ties_mean"].values
+
+    bars1 = ax.bar(x - width, precision_excl, width, label="Precision", color="#C44E52")
+    bars2 = ax.bar(x, recall_excl, width, label="Recall", color="#55A868")
+    bars3 = ax.bar(x + width, f1_excl, width, label="F1", color="#8B5CF6")
+
+    ax.set_xlabel("Metric", fontsize=fontsize)
+    ax.set_ylabel("Score", fontsize=fontsize)
+    ax.set_title(title, fontsize=fontsize + 2, fontweight="bold")
+    ax.set_xticks(x)
+    ax.set_xticklabels(metrics, fontsize=fontsize - 1, rotation=rotation, ha="right" if rotation else "center")
+    ax.set_ylim(0, 1.15)
+    ax.legend(loc="upper right", fontsize=fontsize - 2)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    for bars in [bars1, bars2, bars3]:
+        for bar in bars:
+            height = bar.get_height()
+            if np.isnan(height):
+                continue
+            ax.annotate(f"{height:.2f}", xy=(bar.get_x() + bar.get_width() / 2, height),
+                        xytext=(0, 2), textcoords="offset points", ha="center", va="bottom", fontsize=fontsize - 3)
 
 
 def plot_human_llm_correlations(
@@ -771,21 +909,25 @@ def plot_combined_analysis(
         else:
             short_names.append(a[:15])
     
-    fig = plt.figure(figsize=(18, 4 + 3.2 * n_rows))
+    fig = plt.figure(figsize=(20, 5 + 3.2 * n_rows))
     
     # Use GridSpec for flexible layout with space for titles
-    height_ratios = [1.2, 1, 1] + [1] * n_annotators
-    gs = fig.add_gridspec(n_rows, 5, height_ratios=height_ratios, hspace=0.5, wspace=0.3)
+    height_ratios = [1.4, 1, 1] + [1] * n_annotators
+    gs = fig.add_gridspec(n_rows, 6, height_ratios=height_ratios, hspace=0.5, wspace=0.35)
     
     # === Row 0: Bar charts (spanning columns) ===
     ax_icr = fig.add_subplot(gs[0, :2])
-    ax_corr = fig.add_subplot(gs[0, 3:])
+    ax_corr = fig.add_subplot(gs[0, 2:4])
+    ax_prec = fig.add_subplot(gs[0, 4:])
     
     _plot_intercoder_reliability_on_ax(
         ax_icr, icr_df, title="A) Inter-coder Reliability", fontsize=10, rotation=15
     )
     _plot_human_llm_correlations_on_ax(
-        ax_corr, corr_mean_df, corr_maj_df, title="B) Human–LLM Correlation", fontsize=10, rotation=15
+        ax_corr, corr_mean_df, corr_maj_df, title="B) Human–LLM Agreement", fontsize=10, rotation=15
+    )
+    _plot_precision_recall_on_ax(
+        ax_prec, corr_mean_df, title="C) Precision & Recall", fontsize=10, rotation=15
     )
     
     # === Row 1: Inter-coder confusion matrices ===
@@ -796,7 +938,7 @@ def plot_combined_analysis(
     )
     # Add title above the middle axis
     intercoder_axes[2].annotate(
-        "C) Inter-coder Agreement Matrices", xy=(0.5, 1.25), xycoords="axes fraction",
+        "D) Inter-coder Agreement Matrices", xy=(0.5, 1.25), xycoords="axes fraction",
         ha="center", fontsize=12, fontweight="bold"
     )
     
@@ -807,7 +949,7 @@ def plot_combined_analysis(
         fontsize=9, tick_labels=("0", "1"), pct_decimals=0, show_first_ylabel_only=True
     )
     llm_axes[2].annotate(
-        f"D) LLM vs Mean Human (threshold={threshold})", xy=(0.5, 1.25), xycoords="axes fraction",
+        f"E) LLM vs Mean Human (threshold={threshold})", xy=(0.5, 1.25), xycoords="axes fraction",
         ha="center", fontsize=12, fontweight="bold"
     )
     
@@ -851,7 +993,7 @@ def plot_combined_analysis(
     # Add section title above first per-annotator row
     if first_per_annotator_axes:
         first_per_annotator_axes[2].annotate(
-            f"E) Per-Annotator LLM Agreement (threshold={threshold})", 
+            f"F) Per-Annotator LLM Agreement (threshold={threshold})", 
             xy=(0.5, 1.25), xycoords="axes fraction",
             ha="center", fontsize=12, fontweight="bold"
         )
@@ -867,7 +1009,7 @@ def add_annotations_to_csv(
     annotations_df: pd.DataFrame,
     active_metrics: List[str],
     annotators: List[str],
-    metric_version: str = "v6"
+    metric_versions: Dict[str, str] = None
 ) -> None:
     """
     Add human annotation columns to the original CSV file.
@@ -877,8 +1019,11 @@ def add_annotations_to_csv(
         annotations_df: DataFrame with annotation data (from build_item_table)
         active_metrics: List of metrics that were annotated
         annotators: List of annotator emails
-        metric_version: Version string for column naming (e.g., "v6")
+        metric_versions: Dict mapping metric name to version string (e.g., {"Humor": "v5", "Connection": "v4"})
     """
+    if metric_versions is None:
+        metric_versions = {}
+    
     csv_df = pd.read_csv(csv_path)
     
     # Determine if we're matching by Index or question
@@ -895,24 +1040,20 @@ def add_annotations_to_csv(
     
     added_cols = []
     
-    # Add reasoning column (legacy combined)
-    reasoning_col = f"reasoning_{metric_version}"
-    csv_df[reasoning_col] = ""
-    added_cols.append(reasoning_col)
-    
     # Add annotation columns for each active metric
     for metric in active_metrics:
         metric_lower = metric.lower()
+        version = metric_versions.get(metric, "v1")  # Default to v1 if no version found
         
         # Add per-annotator score columns
         for short_name in short_names:
-            col_name = f"{short_name}_{metric_lower}_{metric_version}"
+            col_name = f"{short_name}_{metric_lower}_{version}"
             csv_df[col_name] = np.nan
             added_cols.append(col_name)
         
         # Add per-annotator reasoning columns for this metric
         for short_name in short_names:
-            reason_col_name = f"{short_name}_{metric_lower}_{metric_version}_reason"
+            reason_col_name = f"{short_name}_{metric_lower}_{version}_reason"
             csv_df[reason_col_name] = ""
             added_cols.append(reason_col_name)
     
@@ -922,22 +1063,20 @@ def add_annotations_to_csv(
         mask = csv_df[match_col] == qid
         
         if mask.any():
-            # Add combined reasoning (legacy)
-            csv_df.loc[mask, reasoning_col] = row.get("reasoning", "")
-            
             # Add per-annotator scores and reasoning for each metric
             for metric in active_metrics:
                 metric_lower = metric.lower()
+                version = metric_versions.get(metric, "v1")
                 per_annotator = row[f"{metric}_per_annotator"]
                 per_annotator_reasoning = row.get(f"{metric}_reasoning_per_annotator", [""] * len(short_names))
                 
                 for i, short_name in enumerate(short_names):
                     # Score column
-                    col_name = f"{short_name}_{metric_lower}_{metric_version}"
+                    col_name = f"{short_name}_{metric_lower}_{version}"
                     csv_df.loc[mask, col_name] = per_annotator[i]
                     
                     # Reasoning column
-                    reason_col_name = f"{short_name}_{metric_lower}_{metric_version}_reason"
+                    reason_col_name = f"{short_name}_{metric_lower}_{version}_reason"
                     if i < len(per_annotator_reasoning):
                         csv_df.loc[mask, reason_col_name] = per_annotator_reasoning[i]
     
@@ -948,7 +1087,7 @@ def add_annotations_to_csv(
     print(f"  Updated: {csv_path}")
 
 
-def main(v2_csv_path: str, json_path: str, active_metrics: List[str] = None, metric_version: str = "v6") -> None:
+def main(v2_csv_path: str, json_path: str, active_metrics: List[str] = None) -> None:
     """
     Main analysis function.
     
@@ -957,13 +1096,25 @@ def main(v2_csv_path: str, json_path: str, active_metrics: List[str] = None, met
         json_path: Path to labelstudio_output.json with human annotations
         active_metrics: For Yes/No format labeling, which metrics to analyze.
                        Defaults to all METRIC_NAMES.
-        metric_version: Version string for column naming (e.g., "v6")
     """
     if active_metrics is None:
         active_metrics = METRIC_NAMES
         
     print(f"Loading v2 scores from: {v2_csv_path}")
     v2_df = pd.read_csv(v2_csv_path)
+    
+    # Build metric_versions dict from found score columns
+    metric_versions: Dict[str, str] = {}
+    for metric in active_metrics:
+        score_col = find_score_column(v2_df, metric)
+        if score_col:
+            version = extract_version_from_column(score_col)
+            if version:
+                metric_versions[metric] = version
+                print(f"  Found {metric}: {score_col} -> {version}")
+            else:
+                metric_versions[metric] = "v1"
+                print(f"  Found {metric}: {score_col} -> v1 (no version in name)")
     
     print(f"Loading human annotations from: {json_path}")
     tasks = load_tasks(json_path)
@@ -1010,7 +1161,7 @@ def main(v2_csv_path: str, json_path: str, active_metrics: List[str] = None, met
     
     # Add annotation columns to the original CSV
     print("\nAdding annotation columns to CSV...")
-    add_annotations_to_csv(v2_csv_path, df, active_metrics, annotators, metric_version)
+    add_annotations_to_csv(v2_csv_path, df, active_metrics, annotators, metric_versions)
 
     # Generate combined plot with all analyses
     if len(annotators) >= 2:
@@ -1052,13 +1203,8 @@ if __name__ == "__main__":
         default=None,
         help="Active metrics for Yes/No format labeling (default: all)"
     )
-    parser.add_argument(
-        "--version",
-        default="v6",
-        help="Metric version for column naming, e.g., 'v6' creates 'john.smith_metaphor_v6' (default: v6)"
-    )
     
     args = parser.parse_args()
     
-    main(args.v2_csv, args.json_file, args.metrics, args.version)
+    main(args.v2_csv, args.json_file, args.metrics)
 
