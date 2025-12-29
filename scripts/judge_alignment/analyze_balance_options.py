@@ -40,6 +40,7 @@ LARGE_SURVEY_SIZE = 30
 SMALL_SURVEY_SIZE = 10
 DEFAULT_BATCH_SIZE = 100
 GEVAL_RETRIES = 3
+GEVAL_TIMEOUT = 5 # Timeout for each API call in seconds
 MAX_ANSWER_LENGTH = 2560  # Exclude answers longer than this for labeling tasks
 
 # Mapping from metric name to previous versions (for smart sampling)
@@ -582,6 +583,7 @@ def setup_deepeval(metrics_to_run=None):
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("openai").setLevel(logging.WARNING)
     logging.getLogger("main_logger").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
     
     from deepeval.test_case import LLMTestCase
     from custom_metrics.metrics import (
@@ -665,9 +667,15 @@ async def evaluate_row(index, row, metric_name, metric_function, scores, reasons
         success = False
         for i in range(GEVAL_RETRIES):
             try:
-                await metric_function.a_measure(test_case)
+                await asyncio.wait_for(
+                    metric_function.a_measure(test_case),
+                    timeout=GEVAL_TIMEOUT
+                )
                 success = True
                 break
+            except asyncio.TimeoutError:
+                print(f"Row {index}, {metric_name}: Retry {i+1}/{GEVAL_RETRIES} - Timeout after {GEVAL_TIMEOUT}s")
+                continue
             except ValueError:
                 print(f"Row {index}, {metric_name}: Retry {i+1}/{GEVAL_RETRIES} - Invalid JSON")
                 continue
