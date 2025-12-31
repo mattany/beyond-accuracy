@@ -14,6 +14,9 @@ Hierarchical structure (Baram-Tsabari & Lewenstein, 2012):
 
 Each metric has an individual weight defined in CLUSTERS.
 Total score = weighted sum of metric scores.
+
+Bootstrap confidence intervals are automatically generated if not found.
+The script will create bootstrap/bootstrap_v2_results.csv on first run.
 """
 
 import os
@@ -23,11 +26,50 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 import seaborn as sns
 from config import PROJECT_DIR
 
 # Default run number
 RUN_NUMBER = 9
+
+
+def generate_color_gradient(base_color: str, n_colors: int) -> list:
+    """
+    Generate a gradient of colors from light to dark based on a base color.
+    
+    Args:
+        base_color: Base color in hex format (e.g., '#4C72B0')
+        n_colors: Number of colors to generate
+    
+    Returns:
+        List of hex color strings forming a gradient
+    """
+    if n_colors == 1:
+        return [base_color]
+    
+    # Convert hex to RGB
+    rgb = mcolors.hex2color(base_color)
+    
+    # Create lighter and darker versions
+    colors = []
+    for i in range(n_colors):
+        # Scale from 0.6 (lighter) to 1.2 (can be darker via saturation)
+        # Use i/max to go from light to dark
+        factor = 0.7 + (i / max(n_colors - 1, 1)) * 0.5  # 0.7 to 1.2
+        
+        # Adjust brightness
+        if factor <= 1.0:
+            # Lighten
+            new_rgb = tuple(min(1.0, c + (1 - c) * (1 - factor)) for c in rgb)
+        else:
+            # Darken
+            new_rgb = tuple(max(0.0, c * (2 - factor)) for c in rgb)
+        
+        colors.append(mcolors.rgb2hex(new_rgb))
+    
+    return colors
+
 
 # Level definitions with cluster groupings
 LEVELS = {
@@ -36,18 +78,21 @@ LEVELS = {
         # "content" is currently disabled in CLUSTERS, so we omit it here.
         "categories": ["clarity", "knowledge_organization"],
         "description": "Foundational communication quality",
-        "color_palette": ["#4C72B0", "#6A9BD1", "#8BB4E0", "#DD8452"],  # Blues + orange
+        "base_color": "#2E5C8A",  # Deep blue
+        "color_palette": None,  # Will be generated dynamically
     },
     "intermediate": {
         "categories": ["rhetorical_devices", "style"],
         "description": "Enhanced engagement techniques",
-        "color_palette": ["#55A868", "#7BC48A", "#C44E52"],  # Greens + red
+        "base_color": "#C44E52",  # Red
+        "color_palette": None,  # Will be generated dynamically
     },
     "advanced": {
         # "dialogue" is currently disabled in CLUSTERS, so we omit it here.
         "categories": [],
         "description": "Sophisticated argumentation and dialogue",
-        "color_palette": ["#8B5CF6", "#A78BFA"],  # Purple tones
+        "base_color": "#8B5CF6",  # Purple
+        "color_palette": None,  # Will be generated dynamically
     },
 }
 
@@ -143,17 +188,39 @@ def validate_weights(weights: dict, tolerance: float = 1e-6):
 METRIC_WEIGHTS = compute_metric_weights()
 validate_weights(METRIC_WEIGHTS)
 
-# Assign colors to metrics
+# Assign colors to metrics with gradients
 def assign_metric_colors():
-    """Assign colors to each metric based on cluster palette."""
+    """
+    Assign colors to each metric based on level's base color.
+    Generates a gradient for each level's metrics.
+    """
     colors = {}
+    
     for level_name, level_info in LEVELS.items():
-        palette = level_info["color_palette"]
+        # Count metrics in this level
+        n_metrics_in_level = 0
+        for cat_name in level_info["categories"]:
+            if cat_name in CLUSTERS:
+                n_metrics_in_level += len(CLUSTERS[cat_name]["metrics"])
+        
+        if n_metrics_in_level == 0:
+            continue
+        
+        # Generate gradient for this level
+        base_color = level_info["base_color"]
+        gradient = generate_color_gradient(base_color, n_metrics_in_level)
+        
+        # Store gradient in level_info for future use
+        level_info["color_palette"] = gradient
+        
+        # Assign colors to metrics
         idx = 0
         for cat_name in level_info["categories"]:
-            for metric_name in CLUSTERS[cat_name]["metrics"]:
-                colors[metric_name] = palette[idx % len(palette)]
-                idx += 1
+            if cat_name in CLUSTERS:
+                for metric_name in CLUSTERS[cat_name]["metrics"]:
+                    colors[metric_name] = gradient[idx]
+                    idx += 1
+    
     return colors
 
 METRIC_COLORS = assign_metric_colors()
@@ -197,22 +264,72 @@ METRIC_FALLBACKS = {
 }
 
 
-def load_bootstrap_confidence_intervals(directory: str) -> pd.DataFrame | None:
+def load_bootstrap_confidence_intervals(directory: str, expected_models: set = None) -> pd.DataFrame | None:
     """
     Load pre-computed bootstrap confidence intervals for v2 weighted scores.
+    If not found or missing expected models, automatically generate them.
     
-    Returns DataFrame with columns: Model, Total_Score, Bootstrap_SE, CI_Lower, CI_Upper
-    or None if file not found.
+    Args:
+        directory: Run directory path
+        expected_models: Set of model names expected to have confidence intervals
+    
+    Returns:
+        DataFrame with columns: Model, Total_Score, Bootstrap_SE, CI_Lower, CI_Upper
+        or None if generation fails.
     """
     bootstrap_path = os.path.join(directory, "bootstrap", "bootstrap_v2_results.csv")
-    if not os.path.exists(bootstrap_path):
-        print(f"  Warning: V2 bootstrap results not found at {bootstrap_path}.")
-        print(f"  Run: python bootstrap.py {directory}")
-        return None
+    should_regenerate = False
     
-    df = pd.read_csv(bootstrap_path)
-    print(f"  Loaded v2 bootstrap confidence intervals for {len(df)} models")
-    return df[['Model', 'Total_Score', 'Bootstrap_SE', 'CI_Lower', 'CI_Upper']]
+    # Check if bootstrap results exist
+    if os.path.exists(bootstrap_path):
+        df = pd.read_csv(bootstrap_path)
+        existing_models = set(df['Model'].values)
+        
+        # Check if we have all expected models
+        if expected_models:
+            missing_models = expected_models - existing_models
+            if missing_models:
+                print(f"  Bootstrap file exists but missing {len(missing_models)} model(s): {missing_models}")
+                print(f"  Regenerating bootstrap confidence intervals...")
+                should_regenerate = True
+            else:
+                print(f"  Loaded v2 bootstrap confidence intervals for {len(df)} models")
+                return df[['Model', 'Total_Score', 'Bootstrap_SE', 'CI_Lower', 'CI_Upper']]
+        else:
+            print(f"  Loaded v2 bootstrap confidence intervals for {len(df)} models")
+            return df[['Model', 'Total_Score', 'Bootstrap_SE', 'CI_Lower', 'CI_Upper']]
+    else:
+        print(f"  V2 bootstrap results not found at {bootstrap_path}.")
+        print(f"  Generating bootstrap confidence intervals...")
+        should_regenerate = True
+    
+    # Generate bootstrap results if needed
+    if should_regenerate:
+        try:
+            # Import bootstrap function with proper module path
+            current_dir = os.path.dirname(__file__)
+            if current_dir not in sys.path:
+                sys.path.insert(0, current_dir)
+            from bootstrap import bootstrap_analysis_v2
+            
+            # Generate bootstrap results
+            bootstrap_df = bootstrap_analysis_v2(directory, n_bootstrap=10000)
+            
+            if bootstrap_df is not None and not bootstrap_df.empty:
+                print(f"  ✓ Successfully generated bootstrap confidence intervals for {len(bootstrap_df)} models")
+                return bootstrap_df[['Model', 'Total_Score', 'Bootstrap_SE', 'CI_Lower', 'CI_Upper']]
+            else:
+                print(f"  Warning: Bootstrap generation returned no results")
+                return None
+                
+        except Exception as e:
+            import traceback
+            print(f"  Warning: Failed to generate bootstrap confidence intervals: {e}")
+            print(f"  Traceback: {traceback.format_exc()}")
+            print(f"  Continuing without confidence intervals...")
+            return None
+    
+    return None
 
 
 def load_metric_data(directory: str, metric_name: str) -> tuple[pd.DataFrame, str]:
@@ -493,12 +610,24 @@ def plot_stacked_bar_chart(total_df: pd.DataFrame, metric_df: pd.DataFrame, outp
     
     # Add error bars from v2 bootstrap confidence intervals if available
     error_bar_ends = {}  # Track CI upper bounds for label positioning
+    
+    print(f"\n  DEBUG: bootstrap_df is {'None' if bootstrap_df is None else f'DataFrame with {len(bootstrap_df)} rows'}")
+    if bootstrap_df is not None:
+        print(f"  DEBUG: Bootstrap models: {list(bootstrap_df['Model'].values)}")
+        print(f"  DEBUG: Plot models: {models}")
+    
     if bootstrap_df is not None:
         bootstrap_mismatch_warned = False
+        models_with_ci = set(bootstrap_df['Model'].values)
+        models_without_ci = []
+        
         for i, model in enumerate(models):
             # Match model name (handle potential __score suffix)
             model_clean = model.replace('__score', '')
             match = bootstrap_df[bootstrap_df['Model'] == model_clean]
+            
+            print(f"  DEBUG: Looking for '{model_clean}' in bootstrap... {'FOUND' if not match.empty else 'NOT FOUND'}")
+            
             if not match.empty:
                 total = total_scores[model]  # Use the actual bar end position
                 bootstrap_total = match.iloc[0]['Total_Score']
@@ -509,7 +638,7 @@ def plot_stacked_bar_chart(total_df: pd.DataFrame, metric_df: pd.DataFrame, outp
                 if score_diff > 0.05 and not bootstrap_mismatch_warned:
                     print(f"  Warning: Bootstrap data may be stale - score differences detected")
                     print(f"    (e.g., {model_clean}: current={total:.3f}, bootstrap={bootstrap_total:.3f})")
-                    print(f"    Re-run bootstrap.py to update confidence intervals")
+                    print(f"    Re-run aggregate_v2.py to regenerate confidence intervals")
                     bootstrap_mismatch_warned = True
                 
                 # Scale SE proportionally if scores differ (rough approximation)
@@ -520,10 +649,22 @@ def plot_stacked_bar_chart(total_df: pd.DataFrame, metric_df: pd.DataFrame, outp
                 
                 ci_half_width = 1.96 * scaled_se  # 95% CI
                 
+                print(f"  DEBUG: Drawing CI for {model_clean}: total={total:.3f}, SE={scaled_se:.4f}, CI_width={ci_half_width:.4f}")
+                
                 # Draw error bar at the actual bar end (total_score)
                 ax.errorbar(total, i, xerr=ci_half_width, 
                            fmt='none', color='black', capsize=4, capthick=1.5, elinewidth=1.5)
                 error_bar_ends[model] = total + ci_half_width
+            else:
+                models_without_ci.append(model_clean)
+        
+        # Report models without confidence intervals
+        if models_without_ci:
+            print(f"  Note: {len(models_without_ci)} model(s) missing confidence intervals:")
+            for m in models_without_ci:
+                print(f"    - {m}")
+            print(f"  This can happen if the model has insufficient data across metrics.")
+            print(f"  Bootstrap will auto-regenerate on next run of aggregate_v2.py")
     
     # Add total score labels at the end of each bar
     for i, model in enumerate(models):
@@ -615,7 +756,13 @@ def plot_metric_heatmap(df: pd.DataFrame, output_dir: str):
     model_order = pivot_df.mean().sort_values(ascending=False).index
     pivot_df = pivot_df[model_order]
     
-    fig, ax = plt.subplots(figsize=(14, 8))
+    # Calculate figure width based on number of models (wider for more models)
+    n_models = len(pivot_df.columns)
+    n_metrics = len(pivot_df.index)
+    fig_width = max(14, n_models * 1.2)  # At least 14, scale with models
+    fig_height = max(8, n_metrics * 0.8)  # At least 8, scale with metrics
+    
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
     
     sns.heatmap(pivot_df, annot=True, fmt=".2f", cmap="RdYlGn", 
                 vmin=0, vmax=1, ax=ax, cbar_kws={"label": "Normalized Score"})
@@ -624,6 +771,11 @@ def plot_metric_heatmap(df: pd.DataFrame, output_dir: str):
                 fontsize=13, fontweight="bold")
     ax.set_xlabel("Model", fontsize=12)
     ax.set_ylabel("Metric", fontsize=12)
+    
+    # Rotate x-axis labels at an angle to prevent overlap
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right', fontsize=10)
+    # Keep y-axis labels horizontal
+    ax.set_yticklabels(ax.get_yticklabels(), rotation=0, ha='right', fontsize=10)
     
     plt.tight_layout()
     plt.savefig(os.path.join(output_dir, "metric_heatmap.png"), dpi=150, bbox_inches="tight")
@@ -683,7 +835,8 @@ def main(run_number: int = RUN_NUMBER):
     # Load bootstrap confidence intervals if available
     print("\n" + "-"*60)
     print("Loading bootstrap confidence intervals...")
-    bootstrap_df = load_bootstrap_confidence_intervals(directory)
+    expected_models = set(total_df["model"].unique())
+    bootstrap_df = load_bootstrap_confidence_intervals(directory, expected_models=expected_models)
     
     # Generate plots
     print("\n" + "="*60)
