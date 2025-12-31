@@ -32,7 +32,9 @@ RUN_NUMBER = 9
 # Level definitions with cluster groupings
 LEVELS = {
     "basic": {
-        "categories": ["clarity", "content", "knowledge_organization"],
+        # NOTE: Keep this in sync with enabled keys in CLUSTERS below.
+        # "content" is currently disabled in CLUSTERS, so we omit it here.
+        "categories": ["clarity", "knowledge_organization"],
         "description": "Foundational communication quality",
         "color_palette": ["#4C72B0", "#6A9BD1", "#8BB4E0", "#DD8452"],  # Blues + orange
     },
@@ -42,7 +44,8 @@ LEVELS = {
         "color_palette": ["#55A868", "#7BC48A", "#C44E52"],  # Greens + red
     },
     "advanced": {
-        "categories": ["dialogue"],
+        # "dialogue" is currently disabled in CLUSTERS, so we omit it here.
+        "categories": [],
         "description": "Sophisticated argumentation and dialogue",
         "color_palette": ["#8B5CF6", "#A78BFA"],  # Purple tones
     },
@@ -52,27 +55,27 @@ LEVELS = {
 CLUSTERS = {
     "clarity": {
         "metrics": {
-            "jargon": {"weight": 0.10},
-            "explanation_type_v2": {"weight": 0.15},
+            "jargon": {"weight": 0.15},
+            # "explanation_type_v2": {"weight": 0.15},
             # Readability metrics (equal weight each)
-            "flesch_reading_ease": {"weight": 0.025},
-            "flesch_kincaid": {"weight": 0.025},
-            "dale_chall": {"weight": 0.025},
-            "ari": {"weight": 0.025},
+            "flesch_reading_ease": {"weight": 0.05},
+            "flesch_kincaid": {"weight": 0.05},
+            "dale_chall": {"weight": 0.05},
+            "ari": {"weight": 0.05},
         },
         "description": "Clear, understandable explanations",
         "level": "basic",
     },
-    "content": {
-        "metrics": {
-            "connection_to_everyday_life_v2": {"weight": 0.10},
-        },
-        "description": "Connection to real-world context",
-        "level": "basic",
-    },
+    # "content": {
+    #     "metrics": {
+    #         "connection_to_everyday_life_v2": {"weight": 0.10},
+    #     },
+    #     "description": "Connection to real-world context",
+    #     "level": "basic",
+    # },
     "knowledge_organization": {
         "metrics": {
-            "scaffolding": {"weight": 0.15},
+            "scaffolding_v2": {"weight": 0.2},
         },
         "description": "Knowledge organization and structure",
         "level": "basic",
@@ -80,25 +83,25 @@ CLUSTERS = {
     "rhetorical_devices": {
         "metrics": {
             "analogy_v2": {"weight": 0.15},
-            "metaphor_v2": {"weight": 0.15},
+            "metaphor_v8": {"weight": 0.15},
         },
         "description": "Use of analogies and metaphors",
         "level": "intermediate",
     },
     "style": {
         "metrics": {
-            "humor_v2": {"weight": 0.10},
+            "humor_v5": {"weight": 0.15},
         },
         "description": "Engaging style (humor)",
         "level": "intermediate",
     },
-    "dialogue": {
-        "metrics": {
-            "argumentation": {"weight": 0.0},
-        },
-        "description": "Argumentation quality and multiple perspectives",
-        "level": "advanced",
-    },
+    # "dialogue": {
+    #     "metrics": {
+    #         "argumentation": {"weight": 0.0},
+    #     },
+    #     "description": "Argumentation quality and multiple perspectives",
+    #     "level": "advanced",
+    # },
 }
 
 # Compute metric weights from CLUSTERS definition
@@ -164,6 +167,7 @@ READABILITY_COMBINED_WEIGHT = sum(CLUSTERS["clarity"]["metrics"][m]["weight"] fo
 
 # Custom normalization ranges: {metric_name: (min_val, max_val)}
 # Values outside this range are clipped to 0 or 1
+# DEFAULT: (0, 1) for all metrics not listed here
 NORMALIZATION_RANGES = {
     "jargon": (0.65, 1.0),  # 0.65 → 0, 1.0 → 1 (min observed: ~0.659 in run 3)
     # Readability metrics (grade-level based, lower is better - will be inverted)
@@ -173,14 +177,7 @@ NORMALIZATION_RANGES = {
     "dale_chall": (7, 12),  # 7th grade → 1, college level → 0
     # Flesch Reading Ease: already 0-1 scaled, clip to reasonable range
     "flesch_reading_ease": (0.3, 0.7),  # 0.3 (difficult) → 0, 0.7+ (easy) → 1
-    # Binary metrics already on 0-1 scale - use fixed range to avoid
-    # min==max returning 0.5 when all values are 0 (or all 1)
-    "humor_v2": (0, 1),  # 0 → 0, 1 → 1
-    "analogy_v2": (0, 1),  # 0 → 0, 1 → 1
-    "metaphor_v2": (0, 1),  # 0 → 0, 1 → 1
-    "connection_to_everyday_life_v2": (0, 1),  # 0 → 0, 1 → 1
-    "scaffolding": (0, 1),  # 0 → 0, 1 → 1
-    "explanation_type_v2": (0, 1),  # 0 → 0, 1 → 1
+    # All other metrics default to (0, 1) range - no need to add them here
 }
 
 # Backwards compatibility: map v2 metric names to v1 fallbacks for old runs
@@ -216,35 +213,6 @@ def load_bootstrap_confidence_intervals(directory: str) -> pd.DataFrame | None:
     df = pd.read_csv(bootstrap_path)
     print(f"  Loaded v2 bootstrap confidence intervals for {len(df)} models")
     return df[['Model', 'Total_Score', 'Bootstrap_SE', 'CI_Lower', 'CI_Upper']]
-
-
-def normalize_metric(series: pd.Series, metric_name: str) -> pd.Series:
-    """
-    Normalize a metric series to [0, 1] range.
-    
-    Uses custom range from NORMALIZATION_RANGES if defined,
-    otherwise normalizes between observed min/max.
-    Inverts if metric is in LOWER_IS_BETTER list.
-    """
-    # Use custom range if defined, otherwise use observed min/max
-    if metric_name in NORMALIZATION_RANGES:
-        min_val, max_val = NORMALIZATION_RANGES[metric_name]
-    else:
-        min_val = series.min()
-        max_val = series.max()
-    
-    if min_val == max_val:
-        return pd.Series([0.5] * len(series), index=series.index)
-    
-    normalized = (series - min_val) / (max_val - min_val)
-    
-    # Clip to [0, 1] range (important for custom ranges)
-    normalized = normalized.clip(0, 1)
-    
-    if metric_name in LOWER_IS_BETTER:
-        normalized = 1 - normalized
-    
-    return normalized
 
 
 def load_metric_data(directory: str, metric_name: str) -> tuple[pd.DataFrame, str]:
@@ -289,10 +257,31 @@ def compute_metric_scores(directory: str) -> pd.DataFrame:
         if df is None:
             continue
         
+        # Normalize across ALL models for this metric (not per-model)
+        # Stack all model columns into one series for normalization
+        all_values = pd.concat([df[col].dropna() for col in df.columns], ignore_index=True)
+        
+        # Use custom range if defined, otherwise default to (0, 1)
+        if metric_name in NORMALIZATION_RANGES:
+            min_val, max_val = NORMALIZATION_RANGES[metric_name]
+        else:
+            # Default to (0, 1) range for all binary metrics
+            min_val, max_val = 0, 1
+        
+        # Now normalize each model using the same min/max
         for col in df.columns:
             model_name = col.replace("__score", "")
-            # Use the canonical metric name (not the fallback) for normalization lookup
-            normalized = normalize_metric(df[col].dropna(), metric_name)
+            model_values = df[col].dropna()
+            
+            # Apply normalization with consistent min/max
+            if min_val == max_val:
+                normalized = pd.Series([0.5] * len(model_values), index=model_values.index)
+            else:
+                normalized = (model_values - min_val) / (max_val - min_val)
+                normalized = normalized.clip(0, 1)
+                
+                if metric_name in LOWER_IS_BETTER:
+                    normalized = 1 - normalized
             
             results.append({
                 "model": model_name,
@@ -549,8 +538,29 @@ def plot_stacked_bar_chart(total_df: pd.DataFrame, metric_df: pd.DataFrame, outp
     ax.set_yticks(y_pos)
     ax.set_yticklabels(models, fontsize=10)
     ax.set_xlabel("Weighted Score", fontsize=11)
-    ax.set_title("Science Communication Quality Score\nBasic (60%)  |  Intermediate (40%)", 
-                fontsize=13, fontweight="bold")
+    
+    # Calculate actual level weights dynamically
+    level_weights = {}
+    for level_name, level_info in LEVELS.items():
+        level_weight = sum(
+            METRIC_WEIGHTS[m]["weight"] 
+            for cat in level_info["categories"] 
+            for m in CLUSTERS[cat]["metrics"].keys()
+            if m in METRIC_WEIGHTS
+        )
+        level_weights[level_name] = level_weight
+    
+    # Build title with actual weights (only show levels that have weight > 0)
+    title_parts = ["Science Communication Quality Score"]
+    level_labels = []
+    for level_name in ["basic", "intermediate", "advanced"]:
+        if level_weights.get(level_name, 0) > 0:
+            level_labels.append(f"{level_name.title()} ({level_weights[level_name]*100:.0f}%)")
+    
+    if level_labels:
+        title_parts.append("  |  ".join(level_labels))
+    
+    ax.set_title("\n".join(title_parts), fontsize=13, fontweight="bold")
     ax.set_xlim(0, 1.15)
     
     # Legend

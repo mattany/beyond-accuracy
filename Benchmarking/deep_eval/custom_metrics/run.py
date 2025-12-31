@@ -5,28 +5,25 @@ from tqdm import tqdm
 from config import PROJECT_DIR, OPENAI_API_KEY
 import logging
 
+from custom_metrics.aggregate_v2 import RUN_NUMBER
+
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 GEVAL_RETRIES = 3
 import pandas as pd
 from deepeval.test_case import LLMTestCase
 from custom_metrics.metrics import (
     # baram tsabari metrics
-    # explanation_type_metric_explicit,
-    explanation_type_metric_explicit_v2,
-    # connection_to_everyday_life_metric_explicit,
-    connection_to_everyday_life_metric_explicit_v2,
-    # metaphor_metric_explicit,
-    metaphor_metric_explicit_v2,
+    # explanation_type_metric_explicit_v2,
+    # connection_to_everyday_life_metric_explicit_v2,
+    scaffolding_metric_v2,
+    metaphor_metric_explicit_v8,
     # content_units_metric_explicit,
     # content_units_metric_explicit_v2,
-    # humor_metric_explicit,
-    humor_metric_explicit_v2,
+    humor_metric_explicit_v5,
     # analogy_metric_explicit,
     analogy_metric_explicit_v2,
     # correctness_metric_explicit,
     jargon_metric,
-    # NEW baram tsabari metrics (2012 paper)
-    scaffolding_metric,
     # zemla metrics
     # internal_coherence_metric_explicit,
     # completeness_metric_explicit,
@@ -261,14 +258,14 @@ if __name__ == "__main__":
             metrics={
                 # ## BARAM TSABARI METRICS
                 # "jargon": jargon_metric,
-                # "metaphor_v2": metaphor_metric_explicit_v2,
-                "humor_v2": humor_metric_explicit_v2,
+                "metaphor_v8": metaphor_metric_explicit_v8,
+                "humor_v5": humor_metric_explicit_v5,
                 # "analogy_v2": analogy_metric_explicit_v2,
                 # "explanation_type_v2": explanation_type_metric_explicit_v2,
                 # "connection_to_everyday_life_v2": connection_to_everyday_life_metric_explicit_v2,
                 #
                 # # ## READING EASE
-                # "scaffolding": scaffolding_metric,
+                "scaffolding_v2": scaffolding_metric_v2,
                 # "flesch_kincaid": flesch_kincaid,
                 # "flesch_reading_ease": flesch_reading_ease,
                 # "dale_chall": dale_chall,
@@ -286,7 +283,7 @@ if __name__ == "__main__":
             },
             evaluation_dataset=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv",
             models_to_evaluate=models,
-            run_number=9,
+            run_number=RUN_NUMBER,
         )
     )
 
