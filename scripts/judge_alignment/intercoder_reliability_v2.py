@@ -19,10 +19,10 @@ METRIC_NAMES = ["Analogy", "Metaphor", "Humor", "Connection", "Scaffolding"]
 
 # Mapping from METRIC_NAMES to CSV column names for v2 scores (with fallbacks)
 V2_SCORE_COLUMNS = {
-    "Analogy": ["analogy_v2_score", "analogy_v6_score", "analogy_v8_score", "analogy_score"],
-    "Metaphor": ["metaphor_v2_score", "metaphor_v6_score", "metaphor_v8_score", "metaphor_v12_score", "metaphor_v11_score", "metaphor_v10_score", "metaphor_v9_score", "metaphor_v7_score", "metaphor_v5_score", "metaphor_v4_score", "metaphor_v3_score", "metaphor_score"],
-    "Humor": ["humor_v5_score", "humor_v4_score", "humor_v2_score", "humor_v6_score", "humor_v8_score", "humor_score"],
-    "Connection": ["connection_to_everyday_life_v4_score", "connection_to_everyday_life_v3_score", "connection_to_everyday_life_v2_score", "connection_v6_score", "connection_v8_score", "connection_score"],
+    "Analogy": ["analogy_v2_score", "analogy_v6_score", "analogy_v8_score", "analogy_score", "analogy_explicit_score"],
+    "Metaphor": ["metaphor_v2_score", "metaphor_v6_score", "metaphor_v8_score", "metaphor_v12_score", "metaphor_v11_score", "metaphor_v10_score", "metaphor_v9_score", "metaphor_v7_score", "metaphor_v5_score", "metaphor_v4_score", "metaphor_v3_score", "metaphor_score", "metaphor_explicit_score"],
+    "Humor": ["humor_v5_score", "humor_v4_score", "humor_v2_score", "humor_v6_score", "humor_v8_score", "humor_score", "humor_explicit_score"],
+    "Connection": ["connection_to_everyday_life_v4_score", "connection_to_everyday_life_v3_score", "connection_to_everyday_life_v2_score", "connection_v6_score", "connection_v8_score", "connection_score", "connection_to_everyday_life_score"],
     "Scaffolding": ["scaffolding_v2_score", "scaffolding_score", "scaffolding_v6_score", "scaffolding_v8_score"],
 }
 
@@ -44,8 +44,12 @@ def extract_version_from_column(col_name: str) -> str:
         'humor_v5_score' -> 'v5'
         'connection_to_everyday_life_v4_score' -> 'v4'
         'metaphor_score' -> None (no version)
+        'analogy_explicit_score' -> 'v1' (v1 explicit format)
     """
     import re
+    # Check for v1 "explicit" format first
+    if '_explicit_score' in col_name or col_name.endswith('_explicit_score'):
+        return 'v1'
     match = re.search(r'_(v\d+)_', col_name)
     if match:
         return match.group(1)
@@ -465,6 +469,150 @@ def compute_human_llm_correlations(
     return pd.DataFrame(rows)
 
 
+def compute_population_adjusted_metrics(
+    sample_df: pd.DataFrame,
+    full_dataset_path: str,
+    active_metrics: List[str],
+    threshold: float = 0.5
+) -> pd.DataFrame:
+    """
+    Compute population-adjusted metrics under a stratified sampling design.
+
+    This estimator assumes the *labeled sample* was constructed by stratified
+    sampling on the LLM-as-judge prediction (at the same `threshold`):
+
+      - Stratum 1: LLM predicts positive (LLM score >= threshold)
+      - Stratum 0: LLM predicts negative (LLM score < threshold)
+
+    A common "balanced" design is 50/50 sampling from these two strata, but
+    the estimator below does not require the sample to be exactly balanced;
+    it uses the actual sample stratum sizes (n_h) and population stratum sizes
+    (N_h) and applies sampling-weight correction (a.k.a. post-stratification):
+
+      weight_h = N_h / n_h
+
+    Weighted confusion counts are then:
+      TP_pop = weight_1 * TP_sample
+      FP_pop = weight_1 * FP_sample
+      FN_pop = weight_0 * FN_sample
+      TN_pop = weight_0 * TN_sample
+
+    From those, compute population-level precision/recall/F1.
+
+    Caveat / assumption:
+      This is valid when the labeled sample is representative *within each
+      prediction stratum* (i.e., the conditional label distributions
+      P(Y | Ŷ=1) and P(Y | Ŷ=0) in the sample match the population).
+    
+    Args:
+        sample_df: DataFrame with human annotations (balanced sample)
+        full_dataset_path: Path to full dataset CSV with LLM scores
+        active_metrics: List of metrics to compute
+        threshold: Threshold for binarizing LLM scores
+        
+    Returns:
+        DataFrame with population-adjusted metrics per metric
+    """
+    full_df = pd.read_csv(full_dataset_path)
+    
+    rows = []
+    for metric in active_metrics:
+        # Find score column in full dataset
+        score_col = None
+        for col_name in V2_SCORE_COLUMNS.get(metric, []):
+            if col_name in full_df.columns:
+                score_col = col_name
+                break
+        
+        if score_col is None:
+            print(f"  Warning: No score column found for {metric} in full dataset")
+            continue
+        
+        # Get full dataset distribution
+        full_scores = full_df[score_col].dropna()
+        n_full_total = len(full_scores)
+        n_full_llm_pos = (full_scores >= threshold).sum()
+        n_full_llm_neg = (full_scores < threshold).sum()
+        
+        # Get sample confusion matrix values
+        # Need to compute from sample_df
+        human_col = f"human_majority_{metric}"
+        llm_col = f"LLM_{metric}"
+        
+        if human_col not in sample_df.columns or llm_col not in sample_df.columns:
+            print(f"  Warning: Missing columns for {metric} in sample")
+            continue
+            
+        mask = ~(sample_df[human_col].isna() | sample_df[llm_col].isna())
+        human_vals = sample_df.loc[mask, human_col].values.astype(int)
+        llm_vals = (sample_df.loc[mask, llm_col].values >= threshold).astype(int)
+        
+        # Compute sample confusion matrix
+        tp_sample = ((human_vals == 1) & (llm_vals == 1)).sum()
+        fp_sample = ((human_vals == 0) & (llm_vals == 1)).sum()
+        fn_sample = ((human_vals == 1) & (llm_vals == 0)).sum()
+        tn_sample = ((human_vals == 0) & (llm_vals == 0)).sum()
+        
+        n_sample_llm_pos = tp_sample + fp_sample
+        n_sample_llm_neg = fn_sample + tn_sample
+
+        # --- Sampling-weight correction (stratified by LLM prediction) ---
+        # weights map sample stratum counts -> population stratum counts
+        weight_llm_pos = (n_full_llm_pos / n_sample_llm_pos) if n_sample_llm_pos > 0 else np.nan
+        weight_llm_neg = (n_full_llm_neg / n_sample_llm_neg) if n_sample_llm_neg > 0 else np.nan
+
+        # Weighted (estimated population) confusion matrix counts
+        est_tp_pop = float(tp_sample) * weight_llm_pos if not np.isnan(weight_llm_pos) else np.nan
+        est_fp_pop = float(fp_sample) * weight_llm_pos if not np.isnan(weight_llm_pos) else np.nan
+        est_fn_pop = float(fn_sample) * weight_llm_neg if not np.isnan(weight_llm_neg) else np.nan
+        est_tn_pop = float(tn_sample) * weight_llm_neg if not np.isnan(weight_llm_neg) else np.nan
+
+        # Population metrics derived from weighted counts
+        adj_precision = (
+            est_tp_pop / (est_tp_pop + est_fp_pop)
+            if (not np.isnan(est_tp_pop) and not np.isnan(est_fp_pop) and (est_tp_pop + est_fp_pop) > 0)
+            else np.nan
+        )
+        adj_recall = (
+            est_tp_pop / (est_tp_pop + est_fn_pop)
+            if (not np.isnan(est_tp_pop) and not np.isnan(est_fn_pop) and (est_tp_pop + est_fn_pop) > 0)
+            else np.nan
+        )
+        adj_f1 = (
+            2 * adj_precision * adj_recall / (adj_precision + adj_recall)
+            if (not np.isnan(adj_precision) and not np.isnan(adj_recall) and (adj_precision + adj_recall) > 0)
+            else np.nan
+        )
+        est_total_positives = (est_tp_pop + est_fn_pop) if (not np.isnan(est_tp_pop) and not np.isnan(est_fn_pop)) else np.nan
+
+        # Sample metrics (unweighted, within the labeled sample)
+        precision_sample = tp_sample / n_sample_llm_pos if n_sample_llm_pos > 0 else np.nan
+        sample_recall = tp_sample / (tp_sample + fn_sample) if (tp_sample + fn_sample) > 0 else np.nan
+        
+        rows.append({
+            "metric": metric,
+            "n_full_dataset": n_full_total,
+            "n_full_llm_pos": int(n_full_llm_pos),
+            "n_full_llm_neg": int(n_full_llm_neg),
+            "n_sample_llm_pos": int(n_sample_llm_pos),
+            "n_sample_llm_neg": int(n_sample_llm_neg),
+            "weight_llm_pos": float(weight_llm_pos) if not np.isnan(weight_llm_pos) else np.nan,
+            "weight_llm_neg": float(weight_llm_neg) if not np.isnan(weight_llm_neg) else np.nan,
+            "sample_precision": float(precision_sample) if not np.isnan(precision_sample) else np.nan,
+            "est_total_positives": est_total_positives,
+            "est_tp_population": est_tp_pop,
+            "est_fp_population": est_fp_pop,
+            "est_fn_population": est_fn_pop,
+            "est_tn_population": est_tn_pop,
+            "adj_precision": adj_precision,
+            "adj_recall": adj_recall,
+            "adj_f1": adj_f1,
+            "sample_recall": float(sample_recall) if not np.isnan(sample_recall) else np.nan,
+        })
+    
+    return pd.DataFrame(rows)
+
+
 def compute_majority_vote_labels(df: pd.DataFrame) -> pd.DataFrame:
     """Add majority-vote binary label columns. Ties are broken to 0."""
     df = df.copy()
@@ -485,9 +633,14 @@ def _plot_intercoder_reliability_on_ax(
     icr_df: pd.DataFrame,
     title: str = "Inter-coder Reliability: Human Annotator Agreement (v2)",
     fontsize: int = 12,
-    rotation: int = 0
+    rotation: int = 0,
+    active_metrics: List[str] = None
 ) -> None:
     """Plot intercoder reliability bar chart on given axes."""
+    # Filter to active metrics if specified
+    if active_metrics:
+        icr_df = icr_df[icr_df["metric"].isin(active_metrics)]
+    
     metrics = icr_df["metric"].tolist()
     x = np.arange(len(metrics))
     width = 0.35
@@ -598,7 +751,9 @@ def _plot_confusion_matrices_on_axes(
     fontsize: int = 11,
     tick_labels: Tuple[str, str] = ("Absent", "Present"),
     pct_decimals: int = 1,
-    show_first_ylabel_only: bool = False
+    show_first_ylabel_only: bool = False,
+    human_label_type: str = "mean",
+    active_metrics: List[str] = None
 ) -> None:
     """
     Plot confusion matrices on provided axes.
@@ -613,7 +768,11 @@ def _plot_confusion_matrices_on_axes(
         tick_labels: Labels for tick marks
         pct_decimals: Decimal places for percentage display
         show_first_ylabel_only: If True, only show ylabel on first subplot
+        human_label_type: "mean" or "majority" for llm_vs_human mode
+        active_metrics: List of metrics to plot (defaults to METRIC_NAMES)
     """
+    metrics_to_plot = active_metrics if active_metrics else METRIC_NAMES
+    
     # Configure based on mode
     if mode == "intercoder":
         cmap = "Greens"
@@ -630,7 +789,7 @@ def _plot_confusion_matrices_on_axes(
         row_label = "Human Label"
         col_label = "LLM Prediction"
     
-    for idx, metric in enumerate(METRIC_NAMES):
+    for idx, metric in enumerate(metrics_to_plot):
         ax = axes[idx]
         
         if mode == "intercoder":
@@ -638,12 +797,16 @@ def _plot_confusion_matrices_on_axes(
             row_labels = np.array([row[0] for row in per_annotator], dtype=int)
             col_labels = np.array([row[1] for row in per_annotator], dtype=int)
         else:  # llm_vs_human
-            human_col = f"human_mean_{metric}"
+            human_col = f"human_{human_label_type}_{metric}"
             llm_col = f"LLM_{metric}"
             mask = ~(df[human_col].isna() | df[llm_col].isna())
             human_vals = df.loc[mask, human_col].values
             llm_vals = df.loc[mask, llm_col].values
-            row_labels = (human_vals >= 0.5).astype(int)
+            # For majority, values are already 0/1; for mean, threshold at 0.5
+            if human_label_type == "majority":
+                row_labels = human_vals.astype(int)
+            else:
+                row_labels = (human_vals >= 0.5).astype(int)
             col_labels = (llm_vals >= threshold).astype(int)
         
         ylabel = row_label if (not show_first_ylabel_only or idx == 0) else ""
@@ -790,9 +953,15 @@ def _plot_human_llm_correlations_on_ax(
     corr_maj_df: pd.DataFrame,
     title: str = "Human–LLM Agreement - v2 Metrics",
     fontsize: int = 12,
-    rotation: int = 0
+    rotation: int = 0,
+    active_metrics: List[str] = None
 ) -> None:
     """Plot human-LLM correlations bar chart on given axes."""
+    # Filter to active metrics if specified
+    if active_metrics:
+        corr_mean_df = corr_mean_df[corr_mean_df["metric"].isin(active_metrics)]
+        corr_maj_df = corr_maj_df[corr_maj_df["metric"].isin(active_metrics)]
+    
     metrics = corr_mean_df["metric"].tolist()
     x = np.arange(len(metrics))
     width = 0.18
@@ -812,9 +981,9 @@ def _plot_human_llm_correlations_on_ax(
     ax.set_title(title, fontsize=fontsize + 2, fontweight="bold")
     ax.set_xticks(x)
     ax.set_xticklabels(metrics, fontsize=fontsize - 1, rotation=rotation, ha="right" if rotation else "center")
-    ax.set_ylim(-0.3, 1.15)
+    ax.set_ylim(-0.3, 1.35)
     ax.axhline(y=0, color="gray", linestyle="-", linewidth=0.5)
-    ax.legend(loc="upper right", fontsize=fontsize - 2)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.0), ncol=2, fontsize=fontsize - 3)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
@@ -834,32 +1003,71 @@ def _plot_precision_recall_on_ax(
     corr_mean_df: pd.DataFrame,
     title: str = "Precision & Recall (Excl. Ties)",
     fontsize: int = 12,
-    rotation: int = 0
+    rotation: int = 0,
+    active_metrics: List[str] = None,
+    pop_adj_df: pd.DataFrame = None
 ) -> None:
-    """Plot precision, recall, and F1 bar chart on given axes."""
+    """Plot precision, recall, and F1 bar chart on given axes.
+    
+    If pop_adj_df is provided, shows both sample and estimated (population-adjusted) metrics.
+    """
+    # Filter to active metrics if specified
+    if active_metrics:
+        corr_mean_df = corr_mean_df[corr_mean_df["metric"].isin(active_metrics)]
+        if pop_adj_df is not None:
+            pop_adj_df = pop_adj_df[pop_adj_df["metric"].isin(active_metrics)]
+    
     metrics = corr_mean_df["metric"].tolist()
     x = np.arange(len(metrics))
-    width = 0.2
+    
+    # If we have population-adjusted data, show sample metrics and estimated recall/F1
+    if pop_adj_df is not None and len(pop_adj_df) > 0:
+        width = 0.12
+        
+        # Use sample_precision and sample_recall from pop_adj_df for consistency
+        # (both are based on majority vote labels)
+        # Note: Est. Precision = Sample Precision always, so we only show one
+        pop_adj_merged = pop_adj_df.set_index("metric").reindex(metrics)
+        precision_sample = pop_adj_merged["sample_precision"].values
+        recall_sample = pop_adj_merged["sample_recall"].values
+        recall_est = pop_adj_merged["adj_recall"].values
+        
+        # Calculate sample F1 from sample precision and recall
+        f1_sample = 2 * precision_sample * recall_sample / (precision_sample + recall_sample)
+        f1_sample = np.where(np.isnan(f1_sample), 0, f1_sample)
+        f1_est = pop_adj_merged["adj_f1"].values
+        
+        bars1 = ax.bar(x - 2*width, precision_sample, width, label="Precision", color="#C44E52")
+        bars2 = ax.bar(x - width, recall_sample, width, label="Sample Recall", color="#55A868")
+        bars3 = ax.bar(x, recall_est, width, label="Est. Recall", color="#A8D5A8", edgecolor="#55A868", linewidth=1.5)
+        bars4 = ax.bar(x + width, f1_sample, width, label="Sample F1", color="#8B5CF6")
+        bars5 = ax.bar(x + 2*width, f1_est, width, label="Est. F1", color="#C4B5FD", edgecolor="#8B5CF6", linewidth=1.5)
+        
+        all_bars = [bars1, bars2, bars3, bars4, bars5]
+    else:
+        width = 0.2
+        precision_excl = corr_mean_df["precision_excl_ties_mean"].values
+        recall_excl = corr_mean_df["recall_excl_ties_mean"].values
+        f1_excl = corr_mean_df["f1_excl_ties_mean"].values
 
-    precision_excl = corr_mean_df["precision_excl_ties_mean"].values
-    recall_excl = corr_mean_df["recall_excl_ties_mean"].values
-    f1_excl = corr_mean_df["f1_excl_ties_mean"].values
-
-    bars1 = ax.bar(x - width, precision_excl, width, label="Precision", color="#C44E52")
-    bars2 = ax.bar(x, recall_excl, width, label="Recall", color="#55A868")
-    bars3 = ax.bar(x + width, f1_excl, width, label="F1", color="#8B5CF6")
+        bars1 = ax.bar(x - width, precision_excl, width, label="Precision", color="#C44E52")
+        bars2 = ax.bar(x, recall_excl, width, label="Recall", color="#55A868")
+        bars3 = ax.bar(x + width, f1_excl, width, label="F1", color="#8B5CF6")
+        
+        all_bars = [bars1, bars2, bars3]
 
     ax.set_xlabel("Metric", fontsize=fontsize)
     ax.set_ylabel("Score", fontsize=fontsize)
     ax.set_title(title, fontsize=fontsize + 2, fontweight="bold")
     ax.set_xticks(x)
     ax.set_xticklabels(metrics, fontsize=fontsize - 1, rotation=rotation, ha="right" if rotation else "center")
-    ax.set_ylim(0, 1.15)
-    ax.legend(loc="upper right", fontsize=fontsize - 2)
+    ax.set_ylim(0, 1.25)
+    n_legend_cols = 3 if len(all_bars) > 3 else 2
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.0), ncol=n_legend_cols, fontsize=fontsize - 3)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    for bars in [bars1, bars2, bars3]:
+    for bars in all_bars:
         for bar in bars:
             height = bar.get_height()
             if np.isnan(height):
@@ -887,19 +1095,30 @@ def plot_combined_analysis(
     corr_mean_df: pd.DataFrame,
     corr_maj_df: pd.DataFrame,
     output_path: Path,
-    threshold: float = 0.5
+    threshold: float = 0.5,
+    active_metrics: List[str] = None,
+    pop_adj_df: pd.DataFrame = None
 ) -> None:
     """
     Create a combined figure with all analysis plots.
     
     Layout:
     - Row 0: Intercoder reliability bar chart | Human-LLM correlations bar chart
-    - Row 1: Inter-coder confusion matrices (5 metrics)
-    - Row 2: LLM vs Human (mean) confusion matrices (5 metrics)
+    - Row 1: Inter-coder confusion matrices (active metrics only)
+    - Row 2: LLM vs Human (majority) confusion matrices (active metrics only)
     - Rows 3+: Per-annotator LLM confusion matrices (one row per annotator)
+    
+    Args:
+        active_metrics: List of metrics to show. Defaults to METRIC_NAMES.
+        pop_adj_df: Population-adjusted metrics DataFrame (optional).
     """
+    metrics_to_plot = active_metrics if active_metrics else METRIC_NAMES
+    n_metrics = len(metrics_to_plot)
     n_annotators = len(annotators)
-    n_rows = 3 + n_annotators  # bar charts + intercoder + mean LLM + per-annotator rows
+    n_rows = 3 + n_annotators  # bar charts + intercoder + majority LLM + per-annotator rows
+    
+    # Add majority vote columns if not already present
+    df = compute_majority_vote_labels(df)
     
     # Get short names for annotators
     short_names = []
@@ -909,47 +1128,59 @@ def plot_combined_analysis(
         else:
             short_names.append(a[:15])
     
-    fig = plt.figure(figsize=(20, 5 + 3.2 * n_rows))
+    # Adjust figure size based on number of metrics
+    fig_width = max(12, 4 * n_metrics)
+    fig = plt.figure(figsize=(fig_width, 5 + 2.5 * n_rows))
     
     # Use GridSpec for flexible layout with space for titles
-    height_ratios = [1.4, 1, 1] + [1] * n_annotators
-    gs = fig.add_gridspec(n_rows, 6, height_ratios=height_ratios, hspace=0.5, wspace=0.35)
+    # Bar charts get 1.8, confusion matrix rows get 0.8 each
+    height_ratios = [1.8, 0.8, 0.8] + [0.8] * n_annotators
+    gs = fig.add_gridspec(n_rows, max(n_metrics, 3), height_ratios=height_ratios, hspace=0.6, wspace=0.35)
     
     # === Row 0: Bar charts (spanning columns) ===
-    ax_icr = fig.add_subplot(gs[0, :2])
-    ax_corr = fig.add_subplot(gs[0, 2:4])
-    ax_prec = fig.add_subplot(gs[0, 4:])
+    n_cols = max(n_metrics, 3)
+    col_span = n_cols // 3
+    ax_icr = fig.add_subplot(gs[0, :col_span])
+    ax_corr = fig.add_subplot(gs[0, col_span:2*col_span])
+    ax_prec = fig.add_subplot(gs[0, 2*col_span:])
     
     _plot_intercoder_reliability_on_ax(
-        ax_icr, icr_df, title="A) Inter-coder Reliability", fontsize=10, rotation=15
+        ax_icr, icr_df, title="A) Inter-coder Reliability", fontsize=10, rotation=15,
+        active_metrics=metrics_to_plot
     )
     _plot_human_llm_correlations_on_ax(
-        ax_corr, corr_mean_df, corr_maj_df, title="B) Human–LLM Agreement", fontsize=10, rotation=15
+        ax_corr, corr_mean_df, corr_maj_df, title="B) Human–LLM Agreement", fontsize=10, rotation=15,
+        active_metrics=metrics_to_plot
     )
+    title_c = "C) Precision, Recall & F1" if pop_adj_df is not None else "C) Precision & Recall"
     _plot_precision_recall_on_ax(
-        ax_prec, corr_mean_df, title="C) Precision & Recall", fontsize=10, rotation=15
+        ax_prec, corr_mean_df, title=title_c, fontsize=10, rotation=15,
+        active_metrics=metrics_to_plot, pop_adj_df=pop_adj_df
     )
     
     # === Row 1: Inter-coder confusion matrices ===
-    intercoder_axes = [fig.add_subplot(gs[1, idx]) for idx in range(len(METRIC_NAMES))]
+    intercoder_axes = [fig.add_subplot(gs[1, idx]) for idx in range(n_metrics)]
     _plot_confusion_matrices_on_axes(
         intercoder_axes, df, mode="intercoder", annotators=annotators,
-        fontsize=9, tick_labels=("0", "1"), pct_decimals=0, show_first_ylabel_only=True
+        fontsize=9, tick_labels=("0", "1"), pct_decimals=0, show_first_ylabel_only=True,
+        active_metrics=metrics_to_plot
     )
     # Add title above the middle axis
-    intercoder_axes[2].annotate(
+    title_idx = n_metrics // 2
+    intercoder_axes[title_idx].annotate(
         "D) Inter-coder Agreement Matrices", xy=(0.5, 1.25), xycoords="axes fraction",
         ha="center", fontsize=12, fontweight="bold"
     )
     
-    # === Row 2: LLM vs Human (mean) confusion matrices ===
-    llm_axes = [fig.add_subplot(gs[2, idx]) for idx in range(len(METRIC_NAMES))]
+    # === Row 2: LLM vs Human (majority) confusion matrices ===
+    llm_axes = [fig.add_subplot(gs[2, idx]) for idx in range(n_metrics)]
     _plot_confusion_matrices_on_axes(
         llm_axes, df, mode="llm_vs_human", threshold=threshold,
-        fontsize=9, tick_labels=("0", "1"), pct_decimals=0, show_first_ylabel_only=True
+        fontsize=9, tick_labels=("0", "1"), pct_decimals=0, show_first_ylabel_only=True,
+        human_label_type="majority", active_metrics=metrics_to_plot
     )
-    llm_axes[2].annotate(
-        f"E) LLM vs Mean Human (threshold={threshold})", xy=(0.5, 1.25), xycoords="axes fraction",
+    llm_axes[title_idx].annotate(
+        f"E) LLM vs Majority Human (threshold={threshold})", xy=(0.5, 1.25), xycoords="axes fraction",
         ha="center", fontsize=12, fontweight="bold"
     )
     
@@ -957,12 +1188,12 @@ def plot_combined_analysis(
     first_per_annotator_axes = None
     for ann_idx, short_name in enumerate(short_names):
         row_idx = 3 + ann_idx
-        axes = [fig.add_subplot(gs[row_idx, metric_idx]) for metric_idx in range(len(METRIC_NAMES))]
+        axes = [fig.add_subplot(gs[row_idx, metric_idx]) for metric_idx in range(n_metrics)]
         
         if ann_idx == 0:
             first_per_annotator_axes = axes
         
-        for metric_idx, metric in enumerate(METRIC_NAMES):
+        for metric_idx, metric in enumerate(metrics_to_plot):
             ax = axes[metric_idx]
             
             # Get annotator's labels
@@ -992,7 +1223,7 @@ def plot_combined_analysis(
     
     # Add section title above first per-annotator row
     if first_per_annotator_axes:
-        first_per_annotator_axes[2].annotate(
+        first_per_annotator_axes[title_idx].annotate(
             f"F) Per-Annotator LLM Agreement (threshold={threshold})", 
             xy=(0.5, 1.25), xycoords="axes fraction",
             ha="center", fontsize=12, fontweight="bold"
@@ -1087,7 +1318,8 @@ def add_annotations_to_csv(
     print(f"  Updated: {csv_path}")
 
 
-def main(v2_csv_path: str, json_path: str, active_metrics: List[str] = None) -> None:
+def main(v2_csv_path: str, json_path: str, active_metrics: List[str] = None, 
+         full_dataset_path: str = None) -> None:
     """
     Main analysis function.
     
@@ -1096,6 +1328,7 @@ def main(v2_csv_path: str, json_path: str, active_metrics: List[str] = None) -> 
         json_path: Path to labelstudio_output.json with human annotations
         active_metrics: For Yes/No format labeling, which metrics to analyze.
                        Defaults to all METRIC_NAMES.
+        full_dataset_path: Path to full dataset CSV for population-adjusted metrics.
     """
     if active_metrics is None:
         active_metrics = METRIC_NAMES
@@ -1145,6 +1378,24 @@ def main(v2_csv_path: str, json_path: str, active_metrics: List[str] = None) -> 
     corr_maj_df = compute_human_llm_correlations(df_majority, label_type="majority")
     print(corr_maj_df.to_string(index=False, float_format=lambda x: f"{x:.3f}"))
 
+    # Population-adjusted metrics (if full dataset provided)
+    pop_adj_df = None
+    if full_dataset_path:
+        print(f"\n=== Population-Adjusted Metrics (based on {full_dataset_path}) ===")
+        pop_adj_df = compute_population_adjusted_metrics(
+            df_majority, full_dataset_path, active_metrics
+        )
+        if len(pop_adj_df) > 0:
+            # Print key columns
+            display_cols = ["metric", "n_full_dataset", "n_full_llm_pos", "n_full_llm_neg",
+                           "n_sample_llm_pos", "n_sample_llm_neg",
+                           "weight_llm_pos", "weight_llm_neg",
+                           "sample_precision", "est_total_positives",
+                           "sample_recall", "adj_recall", "adj_f1"]
+            print(pop_adj_df[display_cols].to_string(index=False, float_format=lambda x: f"{x:.3f}"))
+            print("\n  Note: adj_* metrics use sampling-weight correction stratified by LLM prediction.")
+            print("        sample_* metrics are within the labeled (often balanced) sample only.")
+
     # Save tables to CSV
     icr_path = output_dir / "intercoder_reliability.csv"
     corr_mean_path = output_dir / "human_llm_corr_mean.csv"
@@ -1153,6 +1404,11 @@ def main(v2_csv_path: str, json_path: str, active_metrics: List[str] = None) -> 
     icr_df.to_csv(icr_path, index=False)
     corr_mean_df.to_csv(corr_mean_path, index=False)
     corr_maj_df.to_csv(corr_maj_path, index=False)
+    
+    if pop_adj_df is not None and len(pop_adj_df) > 0:
+        pop_adj_path = output_dir / "population_adjusted_metrics.csv"
+        pop_adj_df.to_csv(pop_adj_path, index=False)
+        print(f"  {pop_adj_path.name}")
 
     print(f"\nResults saved to {output_dir}:")
     print(f"  {icr_path.name}")
@@ -1167,7 +1423,8 @@ def main(v2_csv_path: str, json_path: str, active_metrics: List[str] = None) -> 
     if len(annotators) >= 2:
         print("\nGenerating plot...")
         combined_plot_path = output_dir / "combined_analysis.png"
-        plot_combined_analysis(df, annotators, icr_df, corr_mean_df, corr_maj_df, combined_plot_path)
+        plot_combined_analysis(df, annotators, icr_df, corr_mean_df, corr_maj_df, combined_plot_path,
+                               active_metrics=active_metrics, pop_adj_df=pop_adj_df)
     else:
         print(f"\nSkipping combined plot (requires at least 2 annotators, found {len(annotators)})")
         # Generate simpler LLM correlation plot only
@@ -1203,8 +1460,14 @@ if __name__ == "__main__":
         default=None,
         help="Active metrics for Yes/No format labeling (default: all)"
     )
+    parser.add_argument(
+        "--full-dataset",
+        type=str,
+        default=None,
+        help="Path to full dataset CSV for population-adjusted metrics"
+    )
     
     args = parser.parse_args()
     
-    main(args.v2_csv, args.json_file, args.metrics)
+    main(args.v2_csv, args.json_file, args.metrics, args.full_dataset)
 
