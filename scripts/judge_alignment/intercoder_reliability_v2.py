@@ -4,11 +4,16 @@ Inter-coder reliability analysis for v2 metrics.
 
 This script analyzes agreement between human annotators and compares 
 human labels with LLM-generated v2 scores from the balanced_dataset_v2.csv.
+
+Supports two modes:
+1. JSON mode: Load annotations from Label Studio JSON export
+2. CSV mode: Load annotations directly from formatted CSV files (--csv-mode)
 """
 import json
+import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any, Tuple, Optional
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -16,6 +21,15 @@ from scipy import stats
 
 
 METRIC_NAMES = ["Analogy", "Metaphor", "Humor", "Connection", "Scaffolding"]
+
+# Mapping from metric display names to possible column prefixes
+METRIC_TO_COL_PREFIX = {
+    "Analogy": ["analogy"],
+    "Metaphor": ["metaphor"],
+    "Humor": ["humor"],
+    "Connection": ["connection", "connection_to_everyday_life", "conn"],
+    "Scaffolding": ["scaffolding"],
+}
 
 # Mapping from METRIC_NAMES to CSV column names for v2 scores (with fallbacks)
 V2_SCORE_COLUMNS = {
@@ -46,7 +60,6 @@ def extract_version_from_column(col_name: str) -> str:
         'metaphor_score' -> None (no version)
         'analogy_explicit_score' -> 'v1' (v1 explicit format)
     """
-    import re
     # Check for v1 "explicit" format first
     if '_explicit_score' in col_name or col_name.endswith('_explicit_score'):
         return 'v1'
@@ -54,6 +67,195 @@ def extract_version_from_column(col_name: str) -> str:
     if match:
         return match.group(1)
     return None
+
+
+def find_annotator_columns(df: pd.DataFrame, metric: str) -> Tuple[List[str], List[str], str]:
+    """
+    Find annotator score and reason columns for a metric in the DataFrame.
+    
+    Returns:
+        Tuple of (score_column_names, reason_column_names, version_string)
+        
+    Looks for patterns like:
+        - mattany_metaphor_v8, nirgrn_metaphor_v8
+        - mattany_humor_v5_reason, nirgrn_humor_v5_reason
+    """
+    prefixes = METRIC_TO_COL_PREFIX.get(metric, [metric.lower()])
+    
+    score_cols = []
+    reason_cols = []
+    version = None
+    
+    for col in df.columns:
+        col_lower = col.lower()
+        for prefix in prefixes:
+            # Match pattern: {annotator}_{prefix}_{version} or {annotator}_{prefix}
+            pattern = rf'^([a-z_]+)_({prefix})(?:_(v\d+))?$'
+            match = re.match(pattern, col_lower)
+            if match:
+                annotator = match.group(1)
+                found_version = match.group(3)
+                score_cols.append(col)
+                if found_version:
+                    version = found_version
+                break
+            
+            # Match reason pattern: {annotator}_{prefix}_{version}_reason
+            reason_pattern = rf'^([a-z_]+)_({prefix})(?:_(v\d+))?_reason$'
+            reason_match = re.match(reason_pattern, col_lower)
+            if reason_match:
+                reason_cols.append(col)
+                if reason_match.group(3):
+                    version = reason_match.group(3)
+                break
+    
+    return sorted(score_cols), sorted(reason_cols), version
+
+
+def build_item_table_from_csv(
+    csv_paths: List[str],
+    active_metrics: List[str] = None
+) -> Tuple[pd.DataFrame, List[str], Dict[str, str]]:
+    """
+    Build a DataFrame with one row per item, loading annotations directly from CSV files.
+    
+    Supports multiple CSV files, each potentially containing different metrics.
+    
+    Args:
+        csv_paths: List of paths to formatted CSV files with embedded annotations
+        active_metrics: Which metrics to extract. Defaults to all found in the CSVs.
+        
+    Returns:
+        Tuple of (DataFrame, annotator_list, metric_versions_dict)
+    """
+    if active_metrics is None:
+        active_metrics = METRIC_NAMES
+    
+    # Load all CSVs
+    dfs = []
+    for path in csv_paths:
+        df = pd.read_csv(path)
+        dfs.append((path, df))
+        print(f"  Loaded {len(df)} rows from {Path(path).name}")
+    
+    # Determine which metrics are available in which CSV
+    metric_to_csv: Dict[str, Tuple[str, pd.DataFrame]] = {}
+    metric_versions: Dict[str, str] = {}
+    all_annotators = set()
+    
+    for path, df in dfs:
+        for metric in active_metrics:
+            score_cols, reason_cols, version = find_annotator_columns(df, metric)
+            if score_cols:
+                metric_to_csv[metric] = (path, df)
+                if version:
+                    metric_versions[metric] = version
+                # Extract annotator names from columns
+                for col in score_cols:
+                    # Extract annotator name (everything before the metric prefix)
+                    for prefix in METRIC_TO_COL_PREFIX.get(metric, [metric.lower()]):
+                        if f"_{prefix}" in col.lower():
+                            annotator = col.lower().split(f"_{prefix}")[0]
+                            all_annotators.add(annotator)
+                            break
+    
+    annotators = sorted(all_annotators)
+    print(f"  Found annotators: {annotators}")
+    print(f"  Found metrics: {list(metric_to_csv.keys())}")
+    
+    # Use the first CSV as the base (for Index/question matching)
+    base_path, base_df = dfs[0]
+    
+    # Determine match column
+    if "Index" in base_df.columns:
+        match_col = "Index"
+    else:
+        match_col = "question"
+    
+    rows = []
+    for idx, base_row in base_df.iterrows():
+        qid = base_row[match_col]
+        row: Dict[str, Any] = {"qid": qid, "model": "human"}
+        
+        # Process each metric
+        for metric in active_metrics:
+            if metric not in metric_to_csv:
+                # Metric not found in any CSV - set defaults
+                row[f"{metric}_per_annotator"] = [0] * len(annotators)
+                row[f"{metric}_reasoning_per_annotator"] = [""] * len(annotators)
+                row[f"human_mean_{metric}"] = 0.0
+                row[f"LLM_{metric}"] = np.nan
+                continue
+            
+            csv_path, csv_df = metric_to_csv[metric]
+            
+            # Find the matching row in this CSV
+            if match_col in csv_df.columns:
+                matching_rows = csv_df[csv_df[match_col] == qid]
+            else:
+                matching_rows = pd.DataFrame()
+            
+            if len(matching_rows) == 0:
+                # Try matching from base_df index
+                if idx < len(csv_df):
+                    metric_row = csv_df.iloc[idx]
+                else:
+                    row[f"{metric}_per_annotator"] = [0] * len(annotators)
+                    row[f"{metric}_reasoning_per_annotator"] = [""] * len(annotators)
+                    row[f"human_mean_{metric}"] = 0.0
+                    row[f"LLM_{metric}"] = np.nan
+                    continue
+            else:
+                metric_row = matching_rows.iloc[0]
+            
+            # Get annotator columns for this metric
+            score_cols, reason_cols, version = find_annotator_columns(csv_df, metric)
+            
+            # Extract per-annotator values
+            per_annotator_scores = []
+            per_annotator_reasons = []
+            
+            for annotator in annotators:
+                # Find the score column for this annotator
+                score_val = 0
+                reason_val = ""
+                
+                for col in score_cols:
+                    if col.lower().startswith(annotator):
+                        val = metric_row.get(col, np.nan)
+                        if pd.notna(val):
+                            score_val = int(float(val))
+                        break
+                
+                for col in reason_cols:
+                    if col.lower().startswith(annotator):
+                        val = metric_row.get(col, "")
+                        if pd.notna(val):
+                            reason_val = str(val)
+                        break
+                
+                per_annotator_scores.append(score_val)
+                per_annotator_reasons.append(reason_val)
+            
+            row[f"{metric}_per_annotator"] = per_annotator_scores
+            row[f"{metric}_reasoning_per_annotator"] = per_annotator_reasons
+            row[f"human_mean_{metric}"] = float(np.mean(per_annotator_scores))
+            
+            # Get LLM score
+            llm_score_col = find_score_column(csv_df, metric)
+            if llm_score_col and llm_score_col in csv_df.columns:
+                row[f"LLM_{metric}"] = metric_row.get(llm_score_col, np.nan)
+            else:
+                row[f"LLM_{metric}"] = np.nan
+        
+        rows.append(row)
+    
+    result_df = pd.DataFrame(rows)
+    
+    # Filter to only metrics that were found
+    found_metrics = [m for m in active_metrics if m in metric_to_csv]
+    
+    return result_df, annotators, metric_versions, found_metrics
 
 
 def load_tasks(json_path: str) -> List[Dict[str, Any]]:
@@ -321,11 +523,17 @@ def gwet_ac1(matrix: List[List[int]]) -> Tuple[float, float, float]:
     return float(ac1), float(P_a), float(P_e)
 
 
-def compute_intercoder_reliability(df: pd.DataFrame) -> pd.DataFrame:
+def compute_intercoder_reliability(df: pd.DataFrame, active_metrics: List[str] = None) -> pd.DataFrame:
     """Compute percent agreement, Fleiss' kappa, and Gwet's AC1 for each metric."""
+    if active_metrics is None:
+        active_metrics = METRIC_NAMES
+    
     rows = []
-    for metric in METRIC_NAMES:
-        mat = df[f"{metric}_per_annotator"].tolist()
+    for metric in active_metrics:
+        col_name = f"{metric}_per_annotator"
+        if col_name not in df.columns:
+            continue
+        mat = df[col_name].tolist()
         pa = percent_agreement(mat)
         kappa, P_bar, P_e_kappa = fleiss_kappa(mat)
         ac1, _, P_e_ac1 = gwet_ac1(mat)
@@ -359,11 +567,15 @@ def _compute_precision_recall_f1(human_binary: np.ndarray, llm_binary: np.ndarra
 
 
 def compute_human_llm_correlations(
-    df: pd.DataFrame, label_type: str = "mean", threshold: float = 0.5
+    df: pd.DataFrame, label_type: str = "mean", threshold: float = 0.5,
+    active_metrics: List[str] = None
 ) -> pd.DataFrame:
     """Compute correlations between human labels and LLM v2 scores."""
+    if active_metrics is None:
+        active_metrics = METRIC_NAMES
+    
     rows = []
-    for metric in METRIC_NAMES:
+    for metric in active_metrics:
         human_col = f"human_{label_type}_{metric}"
         llm_col = f"LLM_{metric}"
         x = df[human_col].values.astype(float)
@@ -613,11 +825,17 @@ def compute_population_adjusted_metrics(
     return pd.DataFrame(rows)
 
 
-def compute_majority_vote_labels(df: pd.DataFrame) -> pd.DataFrame:
+def compute_majority_vote_labels(df: pd.DataFrame, active_metrics: List[str] = None) -> pd.DataFrame:
     """Add majority-vote binary label columns. Ties are broken to 0."""
+    if active_metrics is None:
+        active_metrics = METRIC_NAMES
+    
     df = df.copy()
-    for metric in METRIC_NAMES:
-        per_annotator = df[f"{metric}_per_annotator"]
+    for metric in active_metrics:
+        col_name = f"{metric}_per_annotator"
+        if col_name not in df.columns:
+            continue
+        per_annotator = df[col_name]
         majority_labels = []
         for row in per_annotator:
             arr = np.array(row, dtype=int)
@@ -1318,10 +1536,110 @@ def add_annotations_to_csv(
     print(f"  Updated: {csv_path}")
 
 
+def main_csv_mode(
+    csv_paths: List[str],
+    output_dir: str,
+    active_metrics: List[str] = None,
+    full_dataset_path: str = None
+) -> None:
+    """
+    Main analysis function for CSV mode (annotations embedded in CSV files).
+    
+    Args:
+        csv_paths: List of paths to formatted CSV files with embedded annotations
+        output_dir: Directory to save output files
+        active_metrics: Which metrics to analyze. Defaults to all found in CSVs.
+        full_dataset_path: Path to full dataset CSV for population-adjusted metrics.
+    """
+    print(f"\n=== Loading annotations from {len(csv_paths)} CSV file(s) ===")
+    
+    df, annotators, metric_versions, found_metrics = build_item_table_from_csv(
+        csv_paths, active_metrics
+    )
+    
+    # Use found metrics if no active_metrics specified
+    if active_metrics is None:
+        active_metrics = found_metrics
+    else:
+        # Filter to only metrics that were found
+        active_metrics = [m for m in active_metrics if m in found_metrics]
+    
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    
+    print("\nAnnotators:")
+    for a in annotators:
+        print("  ", a)
+    
+    print(f"\nMetric versions: {metric_versions}")
+    print(f"Active metrics: {active_metrics}")
+    print(f"\nNumber of items: {len(df)}")
+    
+    # Inter-coder reliability (human-only)
+    print("\n=== Inter-coder Reliability (Humans Only) ===")
+    icr_df = compute_intercoder_reliability(df, active_metrics=active_metrics)
+    print(icr_df.to_string(index=False, float_format=lambda x: f"{x:.3f}"))
+    
+    # Human–LLM correlations (mean)
+    print("\n=== Human–LLM Correlations (Mean Human Label) ===")
+    corr_mean_df = compute_human_llm_correlations(df, label_type="mean", active_metrics=active_metrics)
+    print(corr_mean_df.to_string(index=False, float_format=lambda x: f"{x:.3f}"))
+    
+    # Majority vote and Human–LLM correlations (majority)
+    df_majority = compute_majority_vote_labels(df, active_metrics=active_metrics)
+    print("\n=== Human–LLM Correlations (Majority-vote Human Label) ===")
+    corr_maj_df = compute_human_llm_correlations(df_majority, label_type="majority", active_metrics=active_metrics)
+    print(corr_maj_df.to_string(index=False, float_format=lambda x: f"{x:.3f}"))
+    
+    # Population-adjusted metrics (if full dataset provided)
+    pop_adj_df = None
+    if full_dataset_path:
+        print(f"\n=== Population-Adjusted Metrics (based on {full_dataset_path}) ===")
+        pop_adj_df = compute_population_adjusted_metrics(
+            df_majority, full_dataset_path, active_metrics
+        )
+        if len(pop_adj_df) > 0:
+            display_cols = ["metric", "n_full_dataset", "n_full_llm_pos", "n_full_llm_neg",
+                           "n_sample_llm_pos", "n_sample_llm_neg",
+                           "sample_precision", "adj_recall", "adj_f1"]
+            available_cols = [c for c in display_cols if c in pop_adj_df.columns]
+            print(pop_adj_df[available_cols].to_string(index=False, float_format=lambda x: f"{x:.3f}"))
+    
+    # Save tables to CSV
+    icr_path = output_path / "intercoder_reliability.csv"
+    corr_mean_path = output_path / "human_llm_corr_mean.csv"
+    corr_maj_path = output_path / "human_llm_corr_majority.csv"
+    
+    icr_df.to_csv(icr_path, index=False)
+    corr_mean_df.to_csv(corr_mean_path, index=False)
+    corr_maj_df.to_csv(corr_maj_path, index=False)
+    
+    if pop_adj_df is not None and len(pop_adj_df) > 0:
+        pop_adj_path = output_path / "population_adjusted_metrics.csv"
+        pop_adj_df.to_csv(pop_adj_path, index=False)
+        print(f"  {pop_adj_path.name}")
+    
+    print(f"\nResults saved to {output_path}:")
+    print(f"  {icr_path.name}")
+    print(f"  {corr_mean_path.name}")
+    print(f"  {corr_maj_path.name}")
+    
+    # Generate combined plot with all analyses
+    if len(annotators) >= 2:
+        print("\nGenerating plot...")
+        combined_plot_path = output_path / "combined_analysis.png"
+        plot_combined_analysis(
+            df, annotators, icr_df, corr_mean_df, corr_maj_df, combined_plot_path,
+            active_metrics=active_metrics, pop_adj_df=pop_adj_df
+        )
+    else:
+        print(f"\nSkipping combined plot (requires at least 2 annotators, found {len(annotators)})")
+
+
 def main(v2_csv_path: str, json_path: str, active_metrics: List[str] = None, 
          full_dataset_path: str = None) -> None:
     """
-    Main analysis function.
+    Main analysis function (JSON mode - annotations from Label Studio).
     
     Args:
         v2_csv_path: Path to balanced_dataset_v2.csv with v2 metric scores
@@ -1439,27 +1757,48 @@ if __name__ == "__main__":
     script_dir = Path(__file__).parent
     
     parser = argparse.ArgumentParser(
-        description="Inter-coder reliability analysis for v2 metrics."
+        description="Inter-coder reliability analysis for v2 metrics.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # JSON mode (annotations from Label Studio):
+  python intercoder_reliability_v2.py scores.csv annotations.json
+  
+  # CSV mode (annotations embedded in CSV files):
+  python intercoder_reliability_v2.py --csv-mode file1.csv file2.csv --output-dir ./results
+        """
     )
+    
+    # Mode selection
     parser.add_argument(
-        "v2_csv", 
-        nargs="?",
-        default=str(script_dir / "balanced_dataset_v2" / "balanced_dataset_v2.csv"),
-        help="Path to CSV with v2 metric scores"
+        "--csv-mode",
+        action="store_true",
+        help="Use CSV mode: load annotations directly from formatted CSV files"
     )
+    
+    # Positional arguments (interpretation depends on mode)
     parser.add_argument(
-        "json_file",
-        nargs="?", 
-        default=str(script_dir / "balanced_dataset" / "labelstudio_output.json"),
-        help="Path to Label Studio JSON export"
+        "input_files", 
+        nargs="*",
+        help="In JSON mode: v2_csv json_file. In CSV mode: one or more CSV files with embedded annotations"
     )
+    
+    parser.add_argument(
+        "--output-dir",
+        "-o",
+        type=str,
+        default=None,
+        help="Output directory for results (CSV mode). Defaults to parent of first input file."
+    )
+    
     parser.add_argument(
         "--metrics",
         nargs="+",
         choices=METRIC_NAMES,
         default=None,
-        help="Active metrics for Yes/No format labeling (default: all)"
+        help="Active metrics to analyze (default: all found in input)"
     )
+    
     parser.add_argument(
         "--full-dataset",
         type=str,
@@ -1469,5 +1808,32 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    main(args.v2_csv, args.json_file, args.metrics, args.full_dataset)
+    if args.csv_mode:
+        # CSV mode: annotations embedded in CSV files
+        if not args.input_files:
+            parser.error("CSV mode requires at least one input CSV file")
+        
+        csv_paths = args.input_files
+        
+        # Default output directory
+        if args.output_dir:
+            output_dir = args.output_dir
+        else:
+            # Default to parent of first input file
+            output_dir = str(Path(csv_paths[0]).parent.parent)
+        
+        main_csv_mode(csv_paths, output_dir, args.metrics, args.full_dataset)
+    else:
+        # JSON mode (legacy): annotations from Label Studio
+        if len(args.input_files) == 0:
+            v2_csv = str(script_dir / "balanced_dataset_v2" / "balanced_dataset_v2.csv")
+            json_file = str(script_dir / "balanced_dataset" / "labelstudio_output.json")
+        elif len(args.input_files) == 1:
+            v2_csv = args.input_files[0]
+            json_file = str(script_dir / "balanced_dataset" / "labelstudio_output.json")
+        elif len(args.input_files) >= 2:
+            v2_csv = args.input_files[0]
+            json_file = args.input_files[1]
+        
+        main(v2_csv, json_file, args.metrics, args.full_dataset)
 
