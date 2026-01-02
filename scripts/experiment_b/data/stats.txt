@@ -1,0 +1,16 @@
+Merged total: 2794 rows
+Removed 402 rows with missing source
+Removed 49 rows with same model for A and B
+Final row count: 2343
+Created 8 unique clusters
+
+Cluster details:
+------------------------------------------------------------
+Cluster 0: SciComma-3.1-8B_y vs gpt-3.5-turbo-0125_cot (359 rows)
+Cluster 1: SciComma-3.1-8B_prompt vs scicomma-3.1-dpo_prompt (406 rows)
+Cluster 2: gpt-3.5-turbo-0125 vs scicomma-3.1-dpo (429 rows)
+Cluster 3: gpt-3.5-turbo-0125_cot vs scicomma-3.1-dpo_prompt (339 rows)
+Cluster 4: SciComma-3.1-8B_prompt vs gpt-3.5-turbo-0125_cot (228 rows)
+Cluster 5: SciComma-3.1-8B_prompt vs organic_SFT_prompted (180 rows)
+Cluster 6: SciComma-3.1-8B_y vs vanilla_prompted (173 rows)
+Cluster 7: gpt-3.5-turbo-0125_cot vs human_answers (229 rows)
