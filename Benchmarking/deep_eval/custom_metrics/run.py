@@ -386,26 +386,28 @@ if __name__ == "__main__":
 
     # TEST SET
     models = [
-        # "llama-2-7b",
-        # "SciComma-2-7b",
-        "gpt-3.5-turbo-0125",
+        # "human"
+        # "Meta-Llama-3.1-8B-Instruct-bnb-4bit",
+        # "Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt",
+        # "gpt-3.5-turbo-0125",
+        # "gpt-3.5-turbo-0125_cot",
+        # "SciComma-3.1-8B_y",
+        # "SciComma-3.1-8B_prompt",
+        # "scicomma-3.1-dpo",
+        # "scicomma-3.1-dpo_prompt",
+        "naive_dpo",
+        "naive_dpo_prompt",
+        "organic_sft",
+        "organic_sft_prompt",
         # "gpt-4o",
         # "llama3.1-instruct",
-        "gpt-3.5-turbo-0125_cot",
         # "gpt-4",
         # "llama-3.3-70b",
         # "SciComma-3.3-70B",
         # "o1",
         # "claude-3-7-sonnet-20250219",
-
-        # "Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        # "Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt",
-        # "SciComma-3.1-8B_y",
-        # "SciComma-3.1-8B_prompt",
-        # "human"
-
-        "scicomma-3.1-dpo",
-        "scicomma-3.1-dpo_prompt"
+        # "llama-2-7b",
+        # "SciComma-2-7b",
         # "scicomma-3.1-dpo_real_256",
         # "scicomma-3.1-dpo_real_512",
         # "scicomma-3.1-dpo_real_512_short",

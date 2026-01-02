@@ -97,45 +97,47 @@ LEVELS = {
 }
 
 # Cluster definitions with metrics and their individual weights
+# Equal weighting: 6 effective metrics (readability counts as 1), each gets 1/6
+# Readability's 1/6 is split among 4 metrics → 1/24 each
 CLUSTERS = {
     "clarity": {
         "metrics": {
-            "jargon": {"weight": 0.15},
-            # "explanation_type_v2": {"weight": 0.15},
-            # Readability metrics (equal weight each)
-            "flesch_reading_ease": {"weight": 0.05},
-            "flesch_kincaid": {"weight": 0.05},
-            "dale_chall": {"weight": 0.05},
-            "ari": {"weight": 0.05},
+            "jargon": {"weight": 1/6},  # ≈ 0.1667
+            # "explanation_type_v2": {"weight": 1/6},
+            # Readability metrics (combined weight = 1/6, split 4 ways)
+            "flesch_reading_ease": {"weight": 1/24},  # ≈ 0.0417
+            "flesch_kincaid": {"weight": 1/24},
+            "dale_chall": {"weight": 1/24},
+            "ari": {"weight": 1/24},
         },
         "description": "Clear, understandable explanations",
         "level": "basic",
     },
     # "content": {
     #     "metrics": {
-    #         "connection_to_everyday_life_v2": {"weight": 0.10},
+    #         "connection_to_everyday_life_v2": {"weight": 1/6},
     #     },
     #     "description": "Connection to real-world context",
     #     "level": "basic",
     # },
     "knowledge_organization": {
         "metrics": {
-            "scaffolding_v2": {"weight": 0.2},
+            "scaffolding_v2": {"weight": 1/6},  # ≈ 0.1667
         },
         "description": "Knowledge organization and structure",
         "level": "basic",
     },
     "rhetorical_devices": {
         "metrics": {
-            "analogy_v2": {"weight": 0.15},
-            "metaphor_v8": {"weight": 0.15},
+            "analogy_v2": {"weight": 1/6},  # ≈ 0.1667
+            "metaphor_v8": {"weight": 1/6},  # ≈ 0.1667
         },
         "description": "Use of analogies and metaphors",
         "level": "intermediate",
     },
     "style": {
         "metrics": {
-            "humor_v5": {"weight": 0.15},
+            "humor_v5": {"weight": 1/6},  # ≈ 0.1667
         },
         "description": "Engaging style (humor)",
         "level": "intermediate",
@@ -480,8 +482,24 @@ def plot_stacked_bar_chart(total_df: pd.DataFrame, metric_df: pd.DataFrame, outp
         output_dir: Directory to save output
         bootstrap_df: Optional DataFrame with bootstrap confidence intervals
     """
-    # Sort models by total score
-    df_sorted = total_df.dropna(subset=["total_score"]).sort_values("total_score", ascending=True)
+    # Sort models: unprompted variants at bottom, prompted at top
+    # Within each group, sort by total score ascending
+    df_valid = total_df.dropna(subset=["total_score"])
+    
+    # Separate prompted vs unprompted models
+    # Prompted = has "prompt" OR "cot" in name
+    has_prompt = df_valid["model"].str.contains("prompt", case=False)
+    has_cot = df_valid["model"].str.contains("cot", case=False)
+    is_prompted = has_prompt | has_cot
+    
+    unprompted_df = df_valid[~is_prompted].sort_values("total_score", ascending=True)
+    prompted_df = df_valid[is_prompted].sort_values("total_score", ascending=True)
+    
+    # Track the separator position (number of unprompted models)
+    separator_position = len(unprompted_df)
+    
+    # Combine: unprompted at bottom (first in list), prompted at top (last in list)
+    df_sorted = pd.concat([unprompted_df, prompted_df], ignore_index=True)
     
     if df_sorted.empty:
         print("  No data for stacked bar chart")
@@ -675,6 +693,10 @@ def plot_stacked_bar_chart(total_df: pd.DataFrame, metric_df: pd.DataFrame, outp
         else:
             label_x = total + 0.01
         ax.text(label_x, i, f'{total:.2f}', ha='left', va='center', fontsize=9, fontweight='bold')
+    
+    # Add horizontal separator between unprompted (bottom) and prompted (top) groups
+    if separator_position > 0 and separator_position < len(models):
+        ax.axhline(y=separator_position - 0.5, color='black', linewidth=1.5, linestyle='--', alpha=0.7)
     
     ax.set_yticks(y_pos)
     ax.set_yticklabels(models, fontsize=10)
