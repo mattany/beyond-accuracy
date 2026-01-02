@@ -147,10 +147,12 @@ async def evaluate_row(
             expected_output=row[reference_column] if reference_column else None,
         )
         success = False
+        score_result = None
         for i in range(GEVAL_RETRIES):
             try:
                 # Add timeout to the metric evaluation
-                await asyncio.wait_for(
+                # Capture the return value to avoid race conditions with shared metric instance
+                score_result = await asyncio.wait_for(
                     metric_function.a_measure(test_case),
                     timeout=GEVAL_TIMEOUT
                 )
@@ -178,7 +180,8 @@ async def evaluate_row(
                 continue
         
         if success:
-            scores[index] = metric_function.score
+            # Use the captured return value to avoid race conditions
+            scores[index] = score_result if score_result is not None else metric_function.score
             if getattr(metric_function, "reason", None):
                 print("reason:", metric_function.reason)
                 reasons[index] = metric_function.reason
@@ -259,20 +262,25 @@ async def generate_metric_report(
         
         if os.path.exists(output_path) and not force_overwrite:
             existing_df = pd.read_csv(output_path)
-            for model in models_to_evaluate:
-                score_col = f"{model}__score"
-                if score_col in existing_df.columns:
-                    # Check if the column is complete (no NaN values)
-                    non_null_count = existing_df[score_col].notna().sum()
-                    if non_null_count == expected_rows:
-                        print(f"✓ Skipping {model} - already complete ({non_null_count}/{expected_rows} rows)")
-                        continue
+            # Check if dataset size changed - existing rows keep their indices, new rows are appended
+            if len(existing_df) != expected_rows:
+                print(f"ℹ️  Dataset size changed ({len(existing_df)} -> {expected_rows}). Will process new rows.")
+                models_to_process = models_to_evaluate.copy()
+            else:
+                for model in models_to_evaluate:
+                    score_col = f"{model}__score"
+                    if score_col in existing_df.columns:
+                        # Check if the column is complete (no NaN values)
+                        non_null_count = existing_df[score_col].notna().sum()
+                        if non_null_count == expected_rows:
+                            print(f"✓ Skipping {model} - already complete ({non_null_count}/{expected_rows} rows)")
+                            continue
+                        else:
+                            print(f"○ Re-running {model} - incomplete ({non_null_count}/{expected_rows} rows)")
+                            models_to_process.append(model)
                     else:
-                        print(f"○ Re-running {model} - incomplete ({non_null_count}/{expected_rows} rows)")
+                        print(f"○ Running {model} - not found in existing results")
                         models_to_process.append(model)
-                else:
-                    print(f"○ Running {model} - not found in existing results")
-                    models_to_process.append(model)
         else:
             if force_overwrite and os.path.exists(output_path):
                 print(f"○ Force overwrite: re-running all models despite existing results")
@@ -310,6 +318,10 @@ async def generate_metric_report(
         # Load or create output dataframe
         if os.path.exists(output_path):
             output_df = pd.read_csv(output_path)
+            # Check if the existing output matches the current eval dataset size
+            if len(output_df) != len(eval_df):
+                print(f"⚠️  Dataset size changed ({len(output_df)} -> {len(eval_df)}). Starting fresh for {metric}.")
+                output_df = pd.DataFrame()
         else:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
             output_df = pd.DataFrame()

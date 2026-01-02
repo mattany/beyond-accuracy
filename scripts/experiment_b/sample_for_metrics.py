@@ -11,7 +11,7 @@ from pathlib import Path
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
-SAMPLES_PER_CLUSTER = 30  # Change this to increase sample size
+SAMPLES_PER_CLUSTER = 100  # Change this to increase sample size
 RANDOM_SEED = 42  # For reproducibility
 
 # =============================================================================
@@ -31,6 +31,10 @@ def sample_from_clusters(
     """
     Sample from each cluster, respecting existing samples.
     
+    IMPORTANT: Existing samples are added FIRST (across all clusters),
+    then new samples are added. This ensures stable row indices when
+    the dataset grows, so checkpoints remain valid.
+    
     Args:
         df: Full merged dataframe
         samples_per_cluster: Target samples per cluster
@@ -43,7 +47,8 @@ def sample_from_clusters(
     existing_indices = existing_indices or set()
     np.random.seed(seed)
     
-    sampled_rows = []
+    existing_rows = []
+    new_rows = []
     
     for cluster_id in sorted(df['cluster'].unique()):
         cluster_df = df[df['cluster'] == cluster_id]
@@ -53,9 +58,9 @@ def sample_from_clusters(
         existing_in_cluster = cluster_df[cluster_df.index.isin(existing_indices)]
         existing_count = len(existing_in_cluster)
         
-        # Add existing samples first
+        # Collect existing samples (will be added first)
         if existing_count > 0:
-            sampled_rows.append(existing_in_cluster)
+            existing_rows.append(existing_in_cluster)
         
         # Calculate how many more we need
         needed = samples_per_cluster - existing_count
@@ -68,12 +73,16 @@ def sample_from_clusters(
             n_to_sample = min(needed, len(available))
             if n_to_sample > 0:
                 new_samples = available.sample(n=n_to_sample, random_state=seed + cluster_id)
-                sampled_rows.append(new_samples)
+                new_rows.append(new_samples)
                 
         print(f"Cluster {cluster_id}: {existing_count} existing + {max(0, min(needed, len(cluster_df) - existing_count))} new = {min(samples_per_cluster, cluster_size)} total")
     
-    if sampled_rows:
-        return pd.concat(sampled_rows).sort_index()
+    # Combine: ALL existing first, then ALL new (preserves index stability)
+    all_rows = existing_rows + new_rows
+    if all_rows:
+        result = pd.concat(all_rows)
+        # Reset index to get sequential 0, 1, 2, ... but keep order
+        return result.reset_index(drop=True)
     return pd.DataFrame()
 
 
