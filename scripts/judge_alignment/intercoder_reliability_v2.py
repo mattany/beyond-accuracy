@@ -181,9 +181,10 @@ def build_item_table_from_csv(
         for metric in active_metrics:
             if metric not in metric_to_csv:
                 # Metric not found in any CSV - set defaults
-                row[f"{metric}_per_annotator"] = [0] * len(annotators)
+                # Use NaN so missing annotators don't get treated as 0 (absent)
+                row[f"{metric}_per_annotator"] = [np.nan] * len(annotators)
                 row[f"{metric}_reasoning_per_annotator"] = [""] * len(annotators)
-                row[f"human_mean_{metric}"] = 0.0
+                row[f"human_mean_{metric}"] = np.nan
                 row[f"LLM_{metric}"] = np.nan
                 continue
             
@@ -200,9 +201,9 @@ def build_item_table_from_csv(
                 if idx < len(csv_df):
                     metric_row = csv_df.iloc[idx]
                 else:
-                    row[f"{metric}_per_annotator"] = [0] * len(annotators)
+                    row[f"{metric}_per_annotator"] = [np.nan] * len(annotators)
                     row[f"{metric}_reasoning_per_annotator"] = [""] * len(annotators)
-                    row[f"human_mean_{metric}"] = 0.0
+                    row[f"human_mean_{metric}"] = np.nan
                     row[f"LLM_{metric}"] = np.nan
                     continue
             else:
@@ -217,7 +218,7 @@ def build_item_table_from_csv(
             
             for annotator in annotators:
                 # Find the score column for this annotator
-                score_val = 0
+                score_val = np.nan
                 reason_val = ""
                 
                 for col in score_cols:
@@ -239,7 +240,8 @@ def build_item_table_from_csv(
             
             row[f"{metric}_per_annotator"] = per_annotator_scores
             row[f"{metric}_reasoning_per_annotator"] = per_annotator_reasons
-            row[f"human_mean_{metric}"] = float(np.mean(per_annotator_scores))
+            # Mean over available annotators only
+            row[f"human_mean_{metric}"] = float(np.nanmean(per_annotator_scores)) if np.any(pd.notna(per_annotator_scores)) else np.nan
             
             # Get LLM score
             llm_score_col = find_score_column(csv_df, metric)
@@ -523,8 +525,17 @@ def gwet_ac1(matrix: List[List[int]]) -> Tuple[float, float, float]:
     return float(ac1), float(P_a), float(P_e)
 
 
-def compute_intercoder_reliability(df: pd.DataFrame, active_metrics: List[str] = None) -> pd.DataFrame:
-    """Compute percent agreement, Fleiss' kappa, and Gwet's AC1 for each metric."""
+def compute_intercoder_reliability(
+    df: pd.DataFrame,
+    active_metrics: List[str] = None,
+    annotator_indices: List[int] = None
+) -> pd.DataFrame:
+    """Compute percent agreement, Fleiss' kappa, and Gwet's AC1 for each metric.
+    
+    If `annotator_indices` is provided, restricts each row's per-annotator vector to
+    only those indices (e.g., [0, 1] to compute intercoder reliability between the
+    first two primary annotators, ignoring a tie-breaker).
+    """
     if active_metrics is None:
         active_metrics = METRIC_NAMES
     
@@ -534,6 +545,12 @@ def compute_intercoder_reliability(df: pd.DataFrame, active_metrics: List[str] =
         if col_name not in df.columns:
             continue
         mat = df[col_name].tolist()
+        if annotator_indices is not None:
+            mat = [[row[i] for i in annotator_indices if i < len(row)] for row in mat]
+        # Keep only rows with complete annotations (no NaNs) for reliability stats
+        mat = [row for row in mat if len(row) >= 2 and all(pd.notna(v) for v in row)]
+        if len(mat) == 0:
+            continue
         pa = percent_agreement(mat)
         kappa, P_bar, P_e_kappa = fleiss_kappa(mat)
         ac1, _, P_e_ac1 = gwet_ac1(mat)
@@ -826,7 +843,11 @@ def compute_population_adjusted_metrics(
 
 
 def compute_majority_vote_labels(df: pd.DataFrame, active_metrics: List[str] = None) -> pd.DataFrame:
-    """Add majority-vote binary label columns. Ties are broken to 0."""
+    """Add majority-vote binary label columns. Ties are broken to 0.
+    
+    Handles missing annotator values (NaNs) by computing majority over the
+    available (non-NaN) votes only.
+    """
     if active_metrics is None:
         active_metrics = METRIC_NAMES
     
@@ -838,10 +859,14 @@ def compute_majority_vote_labels(df: pd.DataFrame, active_metrics: List[str] = N
         per_annotator = df[col_name]
         majority_labels = []
         for row in per_annotator:
-            arr = np.array(row, dtype=int)
+            arr = np.array(row, dtype=float)
+            arr = arr[~np.isnan(arr)]
+            if len(arr) == 0:
+                majority_labels.append(np.nan)
+                continue
             # Majority requires strictly more than half; ties go to 0
             majority = 1 if arr.sum() > len(arr) / 2 else 0
-            majority_labels.append(majority)
+            majority_labels.append(int(majority))
         df[f"human_majority_{metric}"] = majority_labels
     return df
 
@@ -1130,14 +1155,14 @@ def plot_per_annotator_llm_confusion_matrices(
             
             # Get annotator's labels
             per_annotator = df[f"{metric}_per_annotator"].tolist()
-            annotator_labels = np.array([row[ann_idx] for row in per_annotator], dtype=int)
+            annotator_labels = np.array([row[ann_idx] for row in per_annotator], dtype=float)
             
             # Get LLM predictions
             llm_col = f"LLM_{metric}"
-            mask = ~df[llm_col].isna()
+            mask = (~df[llm_col].isna()) & (~np.isnan(annotator_labels))
             llm_vals = df.loc[mask, llm_col].values
             llm_binary = (llm_vals >= threshold).astype(int)
-            annotator_labels_valid = annotator_labels[mask]
+            annotator_labels_valid = annotator_labels[mask].astype(int)
             
             # Plot confusion matrix
             _plot_confusion_matrix_on_ax(
@@ -1182,17 +1207,32 @@ def _plot_human_llm_correlations_on_ax(
     
     metrics = corr_mean_df["metric"].tolist()
     x = np.arange(len(metrics))
-    width = 0.18
+    # If there are no human ties, excl-ties metrics are identical/redundant. Hide them.
+    show_excl_ties = True
+    if "n_ties_mean" in corr_mean_df.columns:
+        try:
+            show_excl_ties = int(corr_mean_df["n_ties_mean"].fillna(0).sum()) > 0
+        except Exception:
+            show_excl_ties = True
+
+    width = 0.18 if show_excl_ties else 0.22
 
     spearman_majority = corr_maj_df["spearman_majority"].values
-    spearman_excl_ties = corr_mean_df["spearman_excl_ties_mean"].values
     binary_agreement_majority = corr_maj_df["binary_agreement_majority"].values
-    binary_agr_excl_ties = corr_mean_df["binary_agr_excl_ties_mean"].values
+    bars = []
 
-    bars1 = ax.bar(x - 1.5*width, spearman_majority, width, label="Spearman (Majority)", color="#4C72B0")
-    bars2 = ax.bar(x - 0.5*width, spearman_excl_ties, width, label="Spearman (Excl. Ties)", color="#7EB0D5")
-    bars3 = ax.bar(x + 0.5*width, binary_agreement_majority, width, label="Accuracy (Majority)", color="#C44E52")
-    bars4 = ax.bar(x + 1.5*width, binary_agr_excl_ties, width, label="Accuracy (Excl. Ties)", color="#55A868")
+    if show_excl_ties:
+        spearman_excl_ties = corr_mean_df["spearman_excl_ties_mean"].values
+        binary_agr_excl_ties = corr_mean_df["binary_agr_excl_ties_mean"].values
+        bars1 = ax.bar(x - 1.5*width, spearman_majority, width, label="Spearman (Majority)", color="#4C72B0")
+        bars2 = ax.bar(x - 0.5*width, spearman_excl_ties, width, label="Spearman (Excl. Ties)", color="#7EB0D5")
+        bars3 = ax.bar(x + 0.5*width, binary_agreement_majority, width, label="Accuracy (Majority)", color="#C44E52")
+        bars4 = ax.bar(x + 1.5*width, binary_agr_excl_ties, width, label="Accuracy (Excl. Ties)", color="#55A868")
+        bars = [bars1, bars2, bars3, bars4]
+    else:
+        bars1 = ax.bar(x - 0.5*width, spearman_majority, width, label="Spearman (Majority)", color="#4C72B0")
+        bars2 = ax.bar(x + 0.5*width, binary_agreement_majority, width, label="Accuracy (Majority)", color="#C44E52")
+        bars = [bars1, bars2]
 
     ax.set_xlabel("Metric", fontsize=fontsize)
     ax.set_ylabel("Score", fontsize=fontsize)
@@ -1205,8 +1245,8 @@ def _plot_human_llm_correlations_on_ax(
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    for bars in [bars1, bars2, bars3, bars4]:
-        for bar in bars:
+    for bar_group in bars:
+        for bar in bar_group:
             height = bar.get_height()
             if np.isnan(height):
                 continue
@@ -1416,14 +1456,14 @@ def plot_combined_analysis(
             
             # Get annotator's labels
             per_annotator = df[f"{metric}_per_annotator"].tolist()
-            annotator_labels = np.array([row[ann_idx] for row in per_annotator], dtype=int)
+            annotator_labels = np.array([row[ann_idx] for row in per_annotator], dtype=float)
             
             # Get LLM predictions
             llm_col = f"LLM_{metric}"
-            mask = ~df[llm_col].isna()
+            mask = (~df[llm_col].isna()) & (~np.isnan(annotator_labels))
             llm_vals = df.loc[mask, llm_col].values
             llm_binary = (llm_vals >= threshold).astype(int)
-            annotator_labels_valid = annotator_labels[mask]
+            annotator_labels_valid = annotator_labels[mask].astype(int)
             
             _plot_confusion_matrix_on_ax(
                 ax, annotator_labels_valid, llm_binary, metric,
@@ -1577,7 +1617,8 @@ def main_csv_mode(
     
     # Inter-coder reliability (human-only)
     print("\n=== Inter-coder Reliability (Humans Only) ===")
-    icr_df = compute_intercoder_reliability(df, active_metrics=active_metrics)
+    # Compute intercoder reliability between the first two primary annotators only
+    icr_df = compute_intercoder_reliability(df, active_metrics=active_metrics, annotator_indices=[0, 1])
     print(icr_df.to_string(index=False, float_format=lambda x: f"{x:.3f}"))
     
     # Human–LLM correlations (mean)
@@ -1682,7 +1723,7 @@ def main(v2_csv_path: str, json_path: str, active_metrics: List[str] = None,
 
     # Inter-coder reliability (human-only, same as v1)
     print("\n=== Inter-coder Reliability (Humans Only) ===")
-    icr_df = compute_intercoder_reliability(df)
+    icr_df = compute_intercoder_reliability(df, annotator_indices=[0, 1])
     print(icr_df.to_string(index=False, float_format=lambda x: f"{x:.3f}"))
 
     # Human–LLM correlations (mean)
