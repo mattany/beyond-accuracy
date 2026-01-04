@@ -1,0 +1,43 @@
+question,answer,disputed_metric_display,reason_for,reason_against,Index,disagreement_metric,analogy_v2_score,match_score,mattany_analogy_v2,nirgrn_analogy_v2,mattany_analogy_v2_reason,nirgrn_analogy_v2_reason
+"I saw a video of someone breathing in a rag of chloroform and getting instantly knocked out. I don’t think that’s real, but it made me curious. How does chloroform work? And what exactly does it do?","Using chloroform to knock someone out in a matter of seconds is entirely fiction.
+
+Chloroform is basically an anesthetic--but one that is no longer used due to the fact that it can seriously damage your liver and heart. Even with perfect dosing, it would take at least 5 minutes of breathing it to knock someone unconscious. 
+
+There are two parts to explaining how it works:
+1) Chloroform is a volatile liquid that is very lipid soluble. This means that it wants to evaporate into a gas very quickly (and thus you inhale it). It's also lipid-soluble, which means it likes to dissolve in fats. Ever try and add water and oil together? They don't mix. But if you try and mix different oils together, they mix quite well. Your brain's structure has a very high concentration of fats and thus chloroform likes to dissolve there better than most other places in your body.
+
+2) When in the brain, it activates something called a GABA receptor. These receptors are basically off-switches for neurons. When chloroform attaches to a GABA receptor, you can think of it as turning off a light switch. When enough light switches get turned off in the right areas of the brain--boom-- lights out. ",Analogy (v2),(No reason provided),(No reason provided),1151,analogy_v2,0.817574478416099,1.0,1,0,(No reason provided),(No reason provided)
+How are imaginary numbers useful in real life when they don’t even “exist”?,"Real numbers don't even ""exist"", we just made them up. In fact, one of the most influential mathematicians of all time, Diophantus of Alexandria, would consider an equation like ""x+3=2"" to be ""absurd"", because there is no way to increase a value by 3 to get 2. The idea of negative numbers would be just as ""imaginary"" to him. It's good to get it out of your head that ""imaginary"" numbers are less real than numbers on the number line just because of the name. They're all made-up and imaginary. 3 is just as far-fetched as sqrt(-1).
+
+As for their use, ordinary number describe things in a line, complex numbers describe things on a plane. There are lots of planes, so it can be very useful to use them. In particular, for real number multiplication corresponds to scaling things up/down and negative real numbers flip things like in a mirror, but in the complex numbers multiplication corresponds to scaling and rotation. This is very convenient because a lot of things rotate. The prime example of this is is alternating current, which are typically modeled using complex numbers. ",Analogy (v2),(No reason provided),(No reason provided),1281,analogy_v2,0.2227001439842335,1.0,1,0,(No reason provided),(No reason provided)
+Why do cats like to knock things off of count tops and tables?,"Cats, like many mammals, are incredibly intelligent, social creatures who engage in play behavior and are good at detecting patterns. What may have started as an innocuous play behavior (batting around an object) escalates into an attention-seeking behavior if and when the cat notices you react strongly to it.
+
+There is no evolutionary reason in the sense that ""cats who knock things off tables are more likely to breed"" or anything. Rather, cats evolved to be smart, and smart enough to figure out how to play dirty mind tricks on humans.",Analogy (v2),(No reason provided),(No reason provided),402,analogy_v2,0.0,1.0,0,1,(No reason provided),(No reason provided)
+What is the highest a mountain can be? Is there a limit to it?,"**Short answer:** In general, the maximum size of a mountain on a planet will be limited by surface gravity. The greater the surface gravity, the smaller the biggest mountain can be. On earth, it works out that Everest is probably pretty close to this limit.
+
+**Long answer:** As a mountain gets taller, it gets more massive. As it gets more massive, the pressure on the rock at its base increases. Eventually, this pressure would exceed the breaking strength of the rock. 
+
+That pressure could be written
+
+    P = rho g h
+
+where *P* is the pressure on the base, *rho* is the density of the rock, *g* is the surface gravity of the planet, and *h* is the height of the mountain. If *P* is the breaking strength of the rock, you'll find a cool relation:
+
+    h g = P/rho
+
+Since *P/rho* is just a constant, this relation tells us that **as the surface gravity of the planet in question increases, the maximum size of a mountain it can support decreases.**
+
+This also tells us *h g* must also be a equal to a constant, which lets us relate the maximum height of mountains on planets of similar compositions but with different masses:
+
+    h_1 g_1 = h_2 g_2
+
+You can do something *really cool* with this. If you take Mt Everest to be the tallest mountain that can be supported on earth, and if you know that Mars surface gravity is 2/5th of earth surface gravity, you can actually calculate the height of Olympus Mons, which is the tallest mountain on Mars, if you write 
+
+    h_everest g_earth / g_mars = h_olympusmons
+
+    5/2 h_everest = h_olympusmons
+
+Which is actually really close to the true value! This is even cooler because it argues that *both* Earth and Mars have mountains near the maximum possible height for the planet. Of course, a geologist may not like any of what I just said above. Mountains and tectonic plates and mantles are complicated beasts - this was just a first order approximation.
+
+But, as one last fun fact, you can do something else with this approximation. [We can predict the 'potato radius' - the maximum size a 'potato shaped' asteroid can be before its gravity becomes strong enough to pull it into a sphere.](http://quarksandcoffee.com/index.php/2015/10/29/why-are-some-moons-spherical-but-others-are-shaped-like-potatoes/) This is done by modeling the potato asteroid as a sphere with a *huge* mountain on it that must shrink as the asteroid grows in mass, until the mountain is smaller than the radius of the asteroid. ",Analogy (v2),(No reason provided),(No reason provided),1415,analogy_v2,0.0,0.9476744186046512,0,1,(No reason provided),(No reason provided)
+why is e the natural growth rate?,"let's say you have $1, and you put it into an account that gives you 100% interest per year. if we compute interest once (at the end of the year), then your account will be credited with $1 more. this may be getting boring but i promise it is going somewhere. if we *compound* the interest computation, we compute it more often. for instance, if interest is compounded monthly, then each month you receive 100%/12 = 8.33% return. so each month, we multiply the balance by 1.0833. if you work out the math, then your effective annual interest rate is (1+1/12)^12 = 261%. so by computing interest more frequently, the rate changes. now lets say that we *continuously* compound the interest calculation. that is, at every instant in time, we add an infinitesimally small amount of interest to the account. from the math, our interest rate would become a limit. limit as x approaches infinity of (1+1/x)^x you can try this on your calculator - just put in really large values for x. you will see that this value approaches the number *e*, which is the rate of continuous growth. that is what is special about it. if we have a population of bacteria that are continuously reproducing, then their growth rate (or ""interest"" in a way) is being continuously compounded. edit: if you want to see how (1+1/inf)^inf equals the more familiar expression for *e* (1+1/2!+1/3!+...) you need to apply some [binomial expansion](_url_0_) (derivation given in that link).",Analogy (v2),(No reason provided),(No reason provided),889,analogy_v2,0.7310585903489891,0.0,0,1,(No reason provided),(No reason provided)

@@ -1,0 +1,40 @@
+{
+  "description": "Normalization ranges for continuous metrics. Values are clipped to [0, 1] after normalization.",
+  "formula": "normalized = (value - min) / (max - min), then clipped to [0, 1]",
+  "ranges": {
+    "jargon": {
+      "min": 0.65,
+      "max": 1.0,
+      "interpretation": "0.65 → 0, 1.0 → 1"
+    },
+    "flesch_kincaid": {
+      "min": 6,
+      "max": 16,
+      "interpretation": "Grade 6 → 1, Grade 16+ → 0",
+      "inverted": true
+    },
+    "ari": {
+      "min": 6,
+      "max": 16,
+      "interpretation": "Grade 6 → 1, Grade 16+ → 0",
+      "inverted": true
+    },
+    "dale_chall": {
+      "min": 7,
+      "max": 12,
+      "interpretation": "7th grade → 1, college level → 0",
+      "inverted": true
+    },
+    "flesch_reading_ease": {
+      "min": 0.3,
+      "max": 0.7,
+      "interpretation": "0.3 (difficult) → 0, 0.7+ (easy) → 1",
+      "inverted": false
+    }
+  },
+  "notes": {
+    "inverted_metrics": "For flesch_kincaid, ari, and dale_chall, lower raw values are better (easier to read), so we invert after normalization: normalized = 1 - normalized",
+    "binary_threshold": 0.5,
+    "readability_aggregation": "Readability metrics are averaged into a single 'readability' predictor"
+  }
+}

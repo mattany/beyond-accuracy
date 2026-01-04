@@ -996,7 +996,8 @@ def _plot_confusion_matrices_on_axes(
     pct_decimals: int = 1,
     show_first_ylabel_only: bool = False,
     human_label_type: str = "mean",
-    active_metrics: List[str] = None
+    active_metrics: List[str] = None,
+    annotator_indices: List[int] = None
 ) -> None:
     """
     Plot confusion matrices on provided axes.
@@ -1013,8 +1014,11 @@ def _plot_confusion_matrices_on_axes(
         show_first_ylabel_only: If True, only show ylabel on first subplot
         human_label_type: "mean" or "majority" for llm_vs_human mode
         active_metrics: List of metrics to plot (defaults to METRIC_NAMES)
+        annotator_indices: Indices of annotators to use for intercoder mode. Defaults to [0, 1].
     """
     metrics_to_plot = active_metrics if active_metrics else METRIC_NAMES
+    if annotator_indices is None:
+        annotator_indices = [0, 1]
     
     # Configure based on mode
     if mode == "intercoder":
@@ -1037,8 +1041,9 @@ def _plot_confusion_matrices_on_axes(
         
         if mode == "intercoder":
             per_annotator = df[f"{metric}_per_annotator"].tolist()
-            row_labels = np.array([row[0] for row in per_annotator], dtype=int)
-            col_labels = np.array([row[1] for row in per_annotator], dtype=int)
+            # Use annotator_indices to select which annotators to compare
+            row_labels = np.array([row[annotator_indices[0]] for row in per_annotator], dtype=int)
+            col_labels = np.array([row[annotator_indices[1]] for row in per_annotator], dtype=int)
         else:  # llm_vs_human
             human_col = f"human_{human_label_type}_{metric}"
             llm_col = f"LLM_{metric}"
@@ -1355,7 +1360,8 @@ def plot_combined_analysis(
     output_path: Path,
     threshold: float = 0.5,
     active_metrics: List[str] = None,
-    pop_adj_df: pd.DataFrame = None
+    pop_adj_df: pd.DataFrame = None,
+    primary_annotator_indices: List[int] = None
 ) -> None:
     """
     Create a combined figure with all analysis plots.
@@ -1369,7 +1375,11 @@ def plot_combined_analysis(
     Args:
         active_metrics: List of metrics to show. Defaults to METRIC_NAMES.
         pop_adj_df: Population-adjusted metrics DataFrame (optional).
+        primary_annotator_indices: Indices of primary annotators for inter-coder reliability.
+                                   Defaults to [0, 1].
     """
+    if primary_annotator_indices is None:
+        primary_annotator_indices = [0, 1]
     metrics_to_plot = active_metrics if active_metrics else METRIC_NAMES
     n_metrics = len(metrics_to_plot)
     n_annotators = len(annotators)
@@ -1418,10 +1428,12 @@ def plot_combined_analysis(
     
     # === Row 1: Inter-coder confusion matrices ===
     intercoder_axes = [fig.add_subplot(gs[1, idx]) for idx in range(n_metrics)]
+    # Only show primary annotators in intercoder confusion matrices
+    primary_annotators_list = [annotators[i] for i in primary_annotator_indices if i < len(annotators)]
     _plot_confusion_matrices_on_axes(
-        intercoder_axes, df, mode="intercoder", annotators=annotators,
+        intercoder_axes, df, mode="intercoder", annotators=primary_annotators_list,
         fontsize=9, tick_labels=("0", "1"), pct_decimals=0, show_first_ylabel_only=True,
-        active_metrics=metrics_to_plot
+        active_metrics=metrics_to_plot, annotator_indices=primary_annotator_indices
     )
     # Add title above the middle axis
     title_idx = n_metrics // 2
@@ -1580,7 +1592,8 @@ def main_csv_mode(
     csv_paths: List[str],
     output_dir: str,
     active_metrics: List[str] = None,
-    full_dataset_path: str = None
+    full_dataset_path: str = None,
+    primary_annotators: List[str] = None
 ) -> None:
     """
     Main analysis function for CSV mode (annotations embedded in CSV files).
@@ -1611,14 +1624,30 @@ def main_csv_mode(
     for a in annotators:
         print("  ", a)
     
+    # Determine primary annotator indices for inter-coder reliability
+    if primary_annotators:
+        primary_indices = []
+        for name in primary_annotators:
+            if name in annotators:
+                primary_indices.append(annotators.index(name))
+            else:
+                print(f"Warning: Primary annotator '{name}' not found in annotators list")
+        if len(primary_indices) != 2:
+            print(f"Warning: Expected 2 primary annotators, found {len(primary_indices)}. Falling back to [0, 1].")
+            primary_indices = [0, 1]
+        print(f"\nPrimary annotators for ICR: {[annotators[i] for i in primary_indices]}")
+    else:
+        primary_indices = [0, 1]
+        print(f"\nPrimary annotators for ICR (default): {[annotators[i] for i in primary_indices if i < len(annotators)]}")
+    
     print(f"\nMetric versions: {metric_versions}")
     print(f"Active metrics: {active_metrics}")
     print(f"\nNumber of items: {len(df)}")
     
     # Inter-coder reliability (human-only)
     print("\n=== Inter-coder Reliability (Humans Only) ===")
-    # Compute intercoder reliability between the first two primary annotators only
-    icr_df = compute_intercoder_reliability(df, active_metrics=active_metrics, annotator_indices=[0, 1])
+    # Compute intercoder reliability between the primary annotators only
+    icr_df = compute_intercoder_reliability(df, active_metrics=active_metrics, annotator_indices=primary_indices)
     print(icr_df.to_string(index=False, float_format=lambda x: f"{x:.3f}"))
     
     # Human–LLM correlations (mean)
@@ -1671,7 +1700,8 @@ def main_csv_mode(
         combined_plot_path = output_path / "combined_analysis.png"
         plot_combined_analysis(
             df, annotators, icr_df, corr_mean_df, corr_maj_df, combined_plot_path,
-            active_metrics=active_metrics, pop_adj_df=pop_adj_df
+            active_metrics=active_metrics, pop_adj_df=pop_adj_df,
+            primary_annotator_indices=primary_indices
         )
     else:
         print(f"\nSkipping combined plot (requires at least 2 annotators, found {len(annotators)})")
@@ -1847,12 +1877,22 @@ Examples:
         help="Path to full dataset CSV for population-adjusted metrics"
     )
     
+    parser.add_argument(
+        "--primary-annotators",
+        nargs=2,
+        metavar=("A1", "A2"),
+        default=None,
+        help="Names of the two primary annotators for inter-coder reliability (e.g., --primary-annotators mattany nirgrn). Required for CSV mode."
+    )
+    
     args = parser.parse_args()
     
     if args.csv_mode:
         # CSV mode: annotations embedded in CSV files
         if not args.input_files:
             parser.error("CSV mode requires at least one input CSV file")
+        if not args.primary_annotators:
+            parser.error("CSV mode requires --primary-annotators to specify the two primary coders")
         
         csv_paths = args.input_files
         
@@ -1863,7 +1903,7 @@ Examples:
             # Default to parent of first input file
             output_dir = str(Path(csv_paths[0]).parent.parent)
         
-        main_csv_mode(csv_paths, output_dir, args.metrics, args.full_dataset)
+        main_csv_mode(csv_paths, output_dir, args.metrics, args.full_dataset, args.primary_annotators)
     else:
         # JSON mode (legacy): annotations from Label Studio
         if len(args.input_files) == 0:
