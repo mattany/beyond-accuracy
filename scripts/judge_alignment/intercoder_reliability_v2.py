@@ -616,19 +616,20 @@ def compute_human_llm_correlations(
             n_ties = 0
             n_consensus = 0
         else:
-            # Binarize both human and LLM for correlation calculations
+            # Binarize both human and LLM for accuracy/precision/recall/F1
             human_binary = (x_valid >= 0.5).astype(int)
             llm_binary = (y_valid >= threshold).astype(int)
             
-            # Check if binarized data has variance (needed for correlations)
-            if np.std(human_binary) == 0 or np.std(llm_binary) == 0:
+            # Compute correlations using CONTINUOUS scores (not binarized)
+            # This preserves ranking information in the LLM scores
+            if np.std(x_valid) == 0 or np.std(y_valid) == 0:
                 pearson = np.nan
                 spearman = np.nan
                 kendall = np.nan
             else:
-                pearson = np.corrcoef(human_binary, llm_binary)[0, 1]
-                spearman, _ = stats.spearmanr(human_binary, llm_binary)
-                kendall, _ = stats.kendalltau(human_binary, llm_binary)
+                pearson, _ = stats.pearsonr(x_valid, y_valid)
+                spearman, _ = stats.spearmanr(x_valid, y_valid)
+                kendall, _ = stats.kendalltau(x_valid, y_valid)
             
             # Compute binary agreement (flat accuracy)
             binary_agreement = (human_binary == llm_binary).mean()
@@ -649,12 +650,15 @@ def compute_human_llm_correlations(
             if n_consensus > 0:
                 human_consensus = human_binary[consensus_mask]
                 llm_consensus = llm_binary[consensus_mask]
+                # Use continuous scores for Spearman excluding ties
+                human_consensus_cont = x_valid[consensus_mask]
+                llm_consensus_cont = y_valid[consensus_mask]
                 binary_agreement_excl_ties = (human_consensus == llm_consensus).mean()
-                # Compute Spearman excluding ties
-                if np.std(human_consensus) == 0 or np.std(llm_consensus) == 0:
+                # Compute Spearman excluding ties (using continuous scores)
+                if np.std(human_consensus_cont) == 0 or np.std(llm_consensus_cont) == 0:
                     spearman_excl_ties = np.nan
                 else:
-                    spearman_excl_ties, _ = stats.spearmanr(human_consensus, llm_consensus)
+                    spearman_excl_ties, _ = stats.spearmanr(human_consensus_cont, llm_consensus_cont)
                 # Compute precision, recall, F1 excluding ties (on subset)
                 precision_excl, recall_excl_subset, f1_excl_subset, tp_excl, fp_excl, fn_excl, tn_excl = \
                     _compute_precision_recall_f1(human_consensus, llm_consensus)

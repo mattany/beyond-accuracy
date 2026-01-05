@@ -67,6 +67,18 @@ LOWER_IS_BETTER = ["ari", "dale_chall", "flesch_kincaid"]
 MODEL_TYPE_DIFFERENCE = 'difference'  # A_is_preferred = c1*(a-b) + c2*(a-b) + ...
 MODEL_TYPE_INTERACTION = 'interaction'  # A_is_preferred = c1*a + c2*a*(a-b) + c3*a + c4*a*(a-b) + ...
 
+# Cluster information for per-cluster analysis
+CLUSTER_INFO = {
+    0: {"name": "GPT_cot vs SFT", "model_a": "gpt-3.5-turbo-0125_cot", "model_b": "SciComma-3.1-8B_y"},
+    1: {"name": "SFT_p vs DPO_p", "model_a": "SciComma-3.1-8B_prompt", "model_b": "scicomma-3.1-dpo_prompt"},
+    2: {"name": "DPO vs GPT", "model_a": "scicomma-3.1-dpo", "model_b": "gpt-3.5-turbo-0125"},
+    3: {"name": "GPT_cot vs DPO_p", "model_a": "gpt-3.5-turbo-0125_cot", "model_b": "scicomma-3.1-dpo_prompt"},
+    4: {"name": "SFT_p vs GPT_cot", "model_a": "SciComma-3.1-8B_prompt", "model_b": "gpt-3.5-turbo-0125_cot"},
+    5: {"name": "SFT_p vs OrgSFT_p", "model_a": "SciComma-3.1-8B_prompt", "model_b": "organic_SFT_prompted"},
+    6: {"name": "SFT vs Vanilla_p", "model_a": "SciComma-3.1-8B_y", "model_b": "vanilla_prompted"},
+    7: {"name": "Human vs GPT_cot", "model_a": "human_answers", "model_b": "gpt-3.5-turbo-0125_cot"},
+}
+
 
 def normalize_score(value: float, metric: str) -> float:
     """
@@ -645,6 +657,201 @@ def create_combined_table_figure(binarized_df: pd.DataFrame, continuous_df: pd.D
     print(f"  Saved combined table figure: {output_path}")
 
 
+def create_per_cluster_combined_figure(cluster_results: dict, output_path: Path):
+    """
+    Create a single figure with all 8 cluster regression tables in a 2x4 grid.
+    
+    Args:
+        cluster_results: Dict mapping cluster_id -> (results_df, n_samples, human_a_pct)
+        output_path: Path to save the figure
+    """
+    fig, axes = plt.subplots(2, 4, figsize=(20, 10))
+    axes = axes.flatten()
+    
+    for cluster_id in range(8):
+        ax = axes[cluster_id]
+        ax.axis('off')
+        ax.axis('tight')
+        
+        if cluster_id not in cluster_results:
+            ax.text(0.5, 0.5, f"Cluster {cluster_id}\nNo data", ha='center', va='center', fontsize=12)
+            continue
+        
+        results_df, n_samples, human_a_pct = cluster_results[cluster_id]
+        cluster_name = CLUSTER_INFO[cluster_id]["name"]
+        
+        # Filter out intercept
+        df = results_df[results_df['metric'] != 'intercept'].copy()
+        
+        if len(df) == 0:
+            ax.text(0.5, 0.5, f"Cluster {cluster_id}: {cluster_name}\nNo valid results", 
+                   ha='center', va='center', fontsize=10)
+            continue
+        
+        # Prepare table data (simplified: metric, β, p, OR)
+        table_data = []
+        cell_colors = []
+        for _, row in df.iterrows():
+            metric = row['metric'].replace('_v8', '').replace('_v2', '').replace('_', ' ').title()
+            coef = row['coefficient']
+            p_val = row['p_value']
+            odds = row['odds_ratio']
+            
+            # Format coefficient
+            coef_str = f"{coef:.2f}"
+            
+            # Format p-value
+            if np.isnan(p_val):
+                p_str = "N/A"
+                sig = False
+            elif p_val < 0.001:
+                p_str = "<.001***"
+                sig = True
+            elif p_val < 0.01:
+                p_str = f".{int(p_val*1000):03d}**"
+                sig = True
+            elif p_val < 0.05:
+                p_str = f".{int(p_val*1000):03d}*"
+                sig = True
+            else:
+                p_str = f".{int(p_val*1000):03d}"
+                sig = False
+            
+            # Format OR
+            odds_str = f"{odds:.2f}"
+            
+            table_data.append([metric, coef_str, p_str, odds_str])
+            
+            # Color based on coefficient direction and significance
+            if sig:
+                if coef > 0:
+                    row_color = ['#D5F5E3', '#D5F5E3', '#D5F5E3', '#D5F5E3']  # Light green (positive)
+                else:
+                    row_color = ['#FADBD8', '#FADBD8', '#FADBD8', '#FADBD8']  # Light red (negative)
+            else:
+                row_color = ['white', 'white', 'white', 'white']
+            cell_colors.append(row_color)
+        
+        # Column headers
+        columns = ['Metric', 'β', 'p', 'OR']
+        header_colors = ['#2C3E50'] * len(columns)
+        
+        # Create table
+        table = ax.table(
+            cellText=table_data,
+            colLabels=columns,
+            cellLoc='center',
+            loc='center',
+            cellColours=cell_colors,
+            colColours=header_colors
+        )
+        
+        # Style the table
+        table.auto_set_font_size(False)
+        table.set_fontsize(8)
+        table.scale(1.0, 1.4)
+        
+        # Style header cells
+        for col_idx in range(len(columns)):
+            table[(0, col_idx)].set_text_props(color='white', fontweight='bold')
+        
+        # Title with cluster info
+        title = f"Cluster {cluster_id}: {cluster_name}\n(N={n_samples}, A chosen: {human_a_pct:.0f}%)"
+        ax.set_title(title, fontsize=9, fontweight='bold', pad=5)
+    
+    # Main title
+    fig.suptitle("Per-Cluster Logistic Regression (Continuous, Difference Model)\n"
+                 "Predicting Human Preference for Explanation A from Metric Differences",
+                 fontsize=14, fontweight='bold', y=1.02)
+    
+    # Add legend
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor='#D5F5E3', edgecolor='black', label='Significant positive (p<0.05)'),
+        Patch(facecolor='#FADBD8', edgecolor='black', label='Significant negative (p<0.05)'),
+        Patch(facecolor='white', edgecolor='black', label='Not significant'),
+    ]
+    fig.legend(handles=legend_elements, loc='lower center', ncol=3, fontsize=10, 
+               bbox_to_anchor=(0.5, -0.02))
+    
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150, bbox_inches='tight', facecolor='white')
+    plt.close()
+    print(f"  Saved per-cluster combined figure: {output_path}")
+
+
+def run_per_cluster_analysis(scores: dict, mode: str = 'continuous', 
+                              model_type: str = MODEL_TYPE_DIFFERENCE,
+                              no_readability: bool = False) -> dict:
+    """
+    Run logistic regression for each cluster separately.
+    
+    Args:
+        scores: Dict of metric scores
+        mode: 'binarized' or 'continuous'
+        model_type: 'difference' or 'interaction'
+        no_readability: If True, exclude readability metrics
+    
+    Returns:
+        Dict mapping cluster_id -> (results_df, n_samples, human_a_pct)
+    """
+    # Load full evaluation data
+    eval_path = DATA_DIR / "experiment_b_eval_dataset.csv"
+    full_eval_df = pd.read_csv(eval_path)
+    
+    cluster_results = {}
+    
+    for cluster_id in range(8):
+        print(f"\n{'='*60}")
+        print(f"CLUSTER {cluster_id}: {CLUSTER_INFO[cluster_id]['name']}")
+        print(f"{'='*60}")
+        
+        # Filter to this cluster (keep original index for score lookup)
+        cluster_eval_df = full_eval_df[full_eval_df['cluster'] == cluster_id].copy()
+        
+        if len(cluster_eval_df) == 0:
+            print(f"  No data for cluster {cluster_id}")
+            continue
+        
+        # Calculate human preference for A in this cluster
+        human_a_count = (cluster_eval_df['human_choice'] == 'Explanation A').sum()
+        human_a_pct = human_a_count / len(cluster_eval_df) * 100
+        print(f"  Human chose A: {human_a_count}/{len(cluster_eval_df)} ({human_a_pct:.1f}%)")
+        
+        # Get the original row indices for this cluster to filter metric scores
+        # The metric scores are indexed by row position in the original 800-row dataset
+        # cluster_eval_df still has its original index from full_eval_df
+        cluster_indices = cluster_eval_df.index.values
+        
+        # Filter metric scores to this cluster
+        cluster_scores = {}
+        for metric, metric_data in scores.items():
+            cluster_scores[metric] = {
+                'a': metric_data['a'][cluster_indices],
+                'b': metric_data['b'][cluster_indices]
+            }
+        
+        # Reset index for prepare_data (which iterates over idx, row)
+        cluster_eval_df_reset = cluster_eval_df.reset_index(drop=True)
+        
+        # Prepare data
+        data_df = prepare_data(cluster_eval_df_reset, cluster_scores, mode, 
+                               no_readability=no_readability, model_type=model_type)
+        
+        # Run regression
+        try:
+            results_df, n_samples = run_logistic_regression(data_df, mode, model_type=model_type)
+            if len(results_df) > 0:
+                cluster_results[cluster_id] = (results_df, n_samples, human_a_pct)
+                print_results_table(results_df, mode)
+            else:
+                print(f"  Regression failed for cluster {cluster_id}")
+        except Exception as e:
+            print(f"  Error running regression for cluster {cluster_id}: {e}")
+    
+    return cluster_results
+
+
 def create_all_vs_nodpo_figure(all_df: pd.DataFrame, nodpo_df: pd.DataFrame, output_path: Path, 
                                 n_all: int, n_nodpo: int, model_type: str = 'difference'):
     """
@@ -775,6 +982,11 @@ def main():
         action='store_true',
         help="Run continuous mode for both All data and No-DPO, output combined figure"
     )
+    parser.add_argument(
+        '--per-cluster',
+        action='store_true',
+        help="Run regression for each cluster separately and create combined visualization"
+    )
     
     args = parser.parse_args()
     
@@ -785,6 +997,79 @@ def main():
     if not METRICS_DIR.exists():
         print(f"\nError: {METRICS_DIR} not found.")
         print("Run run_metrics_exp_b.py first to generate metric scores.")
+        return
+    
+    if args.per_cluster:
+        # Run per-cluster analysis
+        print("=" * 90)
+        print(f"PER-CLUSTER LOGISTIC REGRESSION ANALYSIS ({args.model_type.upper()} MODEL)")
+        if args.no_readability:
+            print("(Excluding readability metrics)")
+        print("=" * 90)
+        
+        print(f"\nLoading metrics from run {RUN_NUMBER}...")
+        scores = load_metric_scores()
+        
+        if not scores:
+            print("\nNo metric scores found.")
+            return
+        
+        # Create output directory
+        per_cluster_dir = DATA_DIR / "per_cluster"
+        per_cluster_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Run per-cluster analysis
+        mode = 'continuous'  # Default to continuous for per-cluster
+        cluster_results = run_per_cluster_analysis(
+            scores, mode=mode, model_type=model_type, no_readability=args.no_readability
+        )
+        
+        # Save individual CSVs
+        for cluster_id, (results_df, n_samples, human_a_pct) in cluster_results.items():
+            csv_path = per_cluster_dir / f"cluster_{cluster_id}.csv"
+            results_df.to_csv(csv_path, index=False)
+            print(f"  Saved: {csv_path}")
+        
+        # Create combined figure
+        combined_path = per_cluster_dir / "per_cluster_combined.png"
+        create_per_cluster_combined_figure(cluster_results, combined_path)
+        
+        # Print summary analysis
+        print("\n" + "=" * 90)
+        print("SUMMARY: COEFFICIENTS BY CLUSTER")
+        print("=" * 90)
+        print(f"{'Cluster':<25} {'Metaphor β':>12} {'Readability β':>15} {'N':>6} {'A%':>6}")
+        print("-" * 70)
+        
+        for cluster_id in range(8):
+            if cluster_id in cluster_results:
+                results_df, n_samples, human_a_pct = cluster_results[cluster_id]
+                cluster_name = CLUSTER_INFO[cluster_id]["name"]
+                
+                # Get metaphor coefficient
+                metaphor_row = results_df[results_df['metric'] == 'metaphor_v8']
+                if len(metaphor_row) > 0:
+                    metaphor_coef = metaphor_row.iloc[0]['coefficient']
+                    metaphor_p = metaphor_row.iloc[0]['p_value']
+                    metaphor_sig = '*' if metaphor_p < 0.05 else ''
+                    metaphor_str = f"{metaphor_coef:+.2f}{metaphor_sig}"
+                else:
+                    metaphor_str = "N/A"
+                
+                # Get readability coefficient
+                read_row = results_df[results_df['metric'] == 'readability']
+                if len(read_row) > 0:
+                    read_coef = read_row.iloc[0]['coefficient']
+                    read_p = read_row.iloc[0]['p_value']
+                    read_sig = '*' if read_p < 0.05 else ''
+                    read_str = f"{read_coef:+.2f}{read_sig}"
+                else:
+                    read_str = "N/A"
+                
+                print(f"{cluster_id}: {cluster_name:<20} {metaphor_str:>12} {read_str:>15} {n_samples:>6} {human_a_pct:>5.0f}%")
+        
+        print("=" * 90)
+        print("* = p < 0.05")
         return
     
     if args.compare_dpo:

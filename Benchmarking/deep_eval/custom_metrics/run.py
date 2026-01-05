@@ -6,10 +6,40 @@ import logging
 import json
 from pathlib import Path
 import argparse
+from functools import partial
 
 from custom_metrics.aggregate_v2 import RUN_NUMBER
+from deepeval.metrics import GEval
 
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+
+
+def create_geval_factory(metric_instance):
+    """
+    Create a factory function that produces fresh GEval instances
+    with the same configuration as the given instance.
+    
+    This is needed to avoid race conditions when running metrics in parallel.
+    """
+    if not isinstance(metric_instance, GEval):
+        # Non-GEval metrics (e.g., ReadabilityMetric) don't have the race condition
+        return lambda: metric_instance
+    
+    # Extract configuration from existing instance
+    return partial(
+        GEval,
+        name=metric_instance.name,
+        evaluation_params=metric_instance.evaluation_params,
+        criteria=getattr(metric_instance, 'criteria', None),
+        evaluation_steps=getattr(metric_instance, 'evaluation_steps', None),
+        model=getattr(metric_instance, 'model_name', 'gpt-4o'),  # fallback to default
+        threshold=metric_instance.threshold,
+        async_mode=getattr(metric_instance, 'async_mode', True),
+        strict_mode=getattr(metric_instance, 'strict_mode', False),
+        verbose_mode=getattr(metric_instance, 'verbose_mode', False),
+    )
+
+
 GEVAL_RETRIES = 3
 GEVAL_TIMEOUT = 10  # seconds
 import pandas as pd
@@ -50,7 +80,7 @@ logging.getLogger("main_logger").setLevel(logging.INFO)
 async def get_metric_scores_for_model(
     eval_df,
     model_name,
-    metric_function,
+    metric_factory,
     semaphore,
     reference_column=None,
     pbar=None,
@@ -93,10 +123,12 @@ async def get_metric_scores_for_model(
         print(f"All rows already completed for {model_name}")
         return {"model_name": model_name, "scores": scores, "reasons": reasons}
     
+    # Each row gets its own fresh metric instance via the factory
+    # This allows full parallelism with no race conditions on metric.reason
     tasks = [
         evaluate_row(
             index,
-            metric_function,
+            metric_factory,  # Pass factory, each row creates its own instance
             model_name,
             reasons,
             reference_column,
@@ -129,7 +161,7 @@ def save_checkpoint(checkpoint_path, scores, reasons):
 
 async def evaluate_row(
     index,
-    metric_function,
+    metric_factory,
     model_name,
     reasons,
     reference_column,
@@ -145,16 +177,22 @@ async def evaluate_row(
             actual_output=row[model_name],
             expected_output=row[reference_column] if reference_column else None,
         )
+        
+        # Create a fresh metric instance for this row - avoids race conditions
+        metric_instance = metric_factory() if callable(metric_factory) else metric_factory
+        
         success = False
         score_result = None
+        reason_result = None
+        
         for i in range(GEVAL_RETRIES):
             try:
-                # Add timeout to the metric evaluation
-                # Capture the return value to avoid race conditions with shared metric instance
                 score_result = await asyncio.wait_for(
-                    metric_function.a_measure(test_case),
+                    metric_instance.a_measure(test_case),
                     timeout=GEVAL_TIMEOUT
                 )
+                # Capture reason from our private instance - no race condition possible
+                reason_result = getattr(metric_instance, "reason", None)
                 success = True
                 break
             except asyncio.TimeoutError:
@@ -174,11 +212,10 @@ async def evaluate_row(
                 continue
         
         if success:
-            # Use the captured return value to avoid race conditions
-            scores[index] = score_result if score_result is not None else metric_function.score
-            if getattr(metric_function, "reason", None):
-                print("reason:", metric_function.reason)
-                reasons[index] = metric_function.reason
+            scores[index] = score_result if score_result is not None else metric_instance.score
+            if reason_result:
+                print(f"Row {index} reason: {reason_result[:50]}...")
+                reasons[index] = reason_result
             
             # Save checkpoint after every successful evaluation
             if checkpoint_path:
@@ -293,12 +330,15 @@ async def generate_metric_report(
         checkpoint_dir.mkdir(parents=True, exist_ok=True)
         
         semaphore = asyncio.Semaphore(40)
+        # Create a factory to produce fresh metric instances per model
+        # This avoids race conditions on metric.reason when models run in parallel
+        metric_factory = create_geval_factory(metric_function)
         pbar = tqdm(total=len(models_to_process) * len(eval_df))
         tasks = [
             get_metric_scores_for_model(
                 eval_df,
                 model_name=model,
-                metric_function=metric_function,
+                metric_factory=metric_factory,
                 semaphore=semaphore,
                 pbar=pbar,
                 position=i + 1,
@@ -319,6 +359,10 @@ async def generate_metric_report(
         else:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
             output_df = pd.DataFrame()
+        
+        # Always include question column for alignment verification
+        if 'question' not in output_df.columns and 'question' in eval_df.columns:
+            output_df.insert(0, 'question', eval_df['question'].values)
         
         # Update with new results (only for processed models)
         for result in results:

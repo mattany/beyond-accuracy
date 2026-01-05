@@ -217,6 +217,17 @@ test = ["anyio[trio]", "blockbuster (>=1.5.23)", "coverage[toml] (>=7)", "except
 trio = ["trio (>=0.26.1)"]
 
 [[package]]
+name = "appdirs"
+version = "1.4.4"
+description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
+optional = false
+python-versions = "*"
+files = [
+    {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
+    {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
+]
+
+[[package]]
 name = "async-timeout"
 version = "4.0.3"
 description = "Timeout context manager for asyncio programs"
@@ -3707,6 +3718,21 @@ doc = ["intersphinx_registry", "jupyterlite-pyodide-kernel", "jupyterlite-sphinx
 test = ["Cython", "array-api-strict (>=2.0,<2.1.1)", "asv", "gmpy2", "hypothesis (>=6.30)", "meson", "mpmath", "ninja", "pooch", "pytest", "pytest-cov", "pytest-timeout", "pytest-xdist", "scikit-umfpack", "threadpoolctl"]
 
 [[package]]
+name = "scireadability"
+version = "2.0.1"
+description = "Calculate statistical features from text, mainly scientific literature"
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "scireadability-2.0.1-py3-none-any.whl", hash = "sha256:3515397066f4ca77ecce3639a9beace56a90b23622a5047fb1903d842489c604"},
+    {file = "scireadability-2.0.1.tar.gz", hash = "sha256:014a44e292ba1e31b75eed867af0651d843091eb493512ab0efca2bb1898bfd6"},
+]
+
+[package.dependencies]
+appdirs = "*"
+setuptools = "*"
+
+[[package]]
 name = "seaborn"
 version = "0.13.2"
 description = "Statistical data visualization"
@@ -4858,4 +4884,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "3ab93f4b8c10034c51753006ea09058bde00cce7c5be05aaf5acef29498cf19d"
+content-hash = "88f2daa56d8b32b9455bcf7429eb07509063fc246a6e7a05b2448e8ac4c83342"
