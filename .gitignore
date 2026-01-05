@@ -1237,3 +1237,15 @@
 /Benchmarking/deep_eval/data/run_9/.checkpoints/scaffolding_v2/scicomma-3.1-dpo.json
 /Benchmarking/deep_eval/data/run_9/.checkpoints/scaffolding_v2/scicomma-3.1-dpo_prompt.json
 /Benchmarking/deep_eval/custom_metrics/CHECKPOINTING.md
+/Benchmarking/deep_eval/data/run_9/.checkpoints/analogy_v2/organic_dpo.json
+/Benchmarking/deep_eval/data/run_9/.checkpoints/analogy_v2/organic_dpo_prompt.json
+/Benchmarking/deep_eval/data/run_9/.checkpoints/humor_v5/organic_dpo.json
+/Benchmarking/deep_eval/data/run_9/.checkpoints/humor_v5/organic_dpo_prompt.json
+/Benchmarking/deep_eval/data/run_9/.checkpoints/metaphor_v8/organic_dpo.json
+/Benchmarking/deep_eval/data/run_9/.checkpoints/metaphor_v8/organic_dpo_prompt.json
+/Benchmarking/deep_eval/data/run_9/.checkpoints/scaffolding_v2/organic_dpo.json
+/Benchmarking/deep_eval/data/run_9/.checkpoints/scaffolding_v2/organic_dpo_prompt.json
+/Benchmarking/deep_eval/data/run_10/.checkpoints/analogy_v2/explanation_a.json
+/Benchmarking/deep_eval/data/run_10/.checkpoints/humor_v5/explanation_a.json
+/Benchmarking/deep_eval/data/run_10/.checkpoints/humor_v5/explanation_b.json
+/Benchmarking/deep_eval/data/run_10/.checkpoints/metaphor_v8/explanation_b.json
