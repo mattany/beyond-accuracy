@@ -1,6 +1,5 @@
 import os
 import asyncio
-from readability.exceptions import ReadabilityException
 from tqdm import tqdm
 from config import PROJECT_DIR, OPENAI_API_KEY
 import logging
@@ -168,11 +167,6 @@ async def evaluate_row(
                     f"Question index: {index}. Try #{i + 1}. Encountered invalid JSON. Retrying..."
                 )
                 continue
-            except ReadabilityException as e:
-                print(
-                    f"Question index: {index}. Try #{i + 1}. Ran into readability exception: {e}. Continuing"
-                )
-                break
             except Exception as e:
                 print(
                     f"Question index: {index}. Try #{i + 1}. Unexpected error: {type(e).__name__}: {e}. Retrying..."
