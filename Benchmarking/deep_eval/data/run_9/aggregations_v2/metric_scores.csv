@@ -18,6 +18,9 @@ claude-3-7-sonnet-20250219,jargon,jargon,0.4759694575663937,0.16666666666666666,
 gpt-5,jargon,jargon,0.31032650795912325,0.16666666666666666,basic,clarity
 kimi-k2-thinking,jargon,jargon,0.3689439719915776,0.16666666666666666,basic,clarity
 grok-4,jargon,jargon,0.41128556570913166,0.16666666666666666,basic,clarity
+gpt-5_prompt,jargon,jargon,0.500005167947369,0.16666666666666666,basic,clarity
+kimi-k2-thinking_prompt,jargon,jargon,0.5078133174091211,0.16666666666666666,basic,clarity
+grok-4_prompt,jargon,jargon,0.482132203935572,0.16666666666666666,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,flesch_reading_ease,flesch_reading_ease,0.34987036280787215,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,flesch_reading_ease,flesch_reading_ease,0.45045637635224595,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_y,flesch_reading_ease,flesch_reading_ease,0.42664819450476477,0.041666666666666664,basic,clarity
@@ -37,6 +40,9 @@ claude-3-7-sonnet-20250219,flesch_reading_ease,flesch_reading_ease,0.10737631470
 gpt-5,flesch_reading_ease,flesch_reading_ease,0.23516314781826358,0.041666666666666664,basic,clarity
 kimi-k2-thinking,flesch_reading_ease,flesch_reading_ease,0.09703592846847085,0.041666666666666664,basic,clarity
 grok-4,flesch_reading_ease,flesch_reading_ease,0.11189770924053295,0.041666666666666664,basic,clarity
+gpt-5_prompt,flesch_reading_ease,flesch_reading_ease,0.6030182653658882,0.041666666666666664,basic,clarity
+kimi-k2-thinking_prompt,flesch_reading_ease,flesch_reading_ease,0.4387472581423523,0.041666666666666664,basic,clarity
+grok-4_prompt,flesch_reading_ease,flesch_reading_ease,0.21281387845939342,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,flesch_kincaid,flesch_kincaid,0.3950208284909487,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,flesch_kincaid,flesch_kincaid,0.4602441917094407,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_y,flesch_kincaid,flesch_kincaid,0.41389616563881393,0.041666666666666664,basic,clarity
@@ -56,6 +62,9 @@ claude-3-7-sonnet-20250219,flesch_kincaid,flesch_kincaid,0.17026790807329367,0.0
 gpt-5,flesch_kincaid,flesch_kincaid,0.2721602656601411,0.041666666666666664,basic,clarity
 kimi-k2-thinking,flesch_kincaid,flesch_kincaid,0.1972724498042291,0.041666666666666664,basic,clarity
 grok-4,flesch_kincaid,flesch_kincaid,0.13895238172805136,0.041666666666666664,basic,clarity
+gpt-5_prompt,flesch_kincaid,flesch_kincaid,0.4837862303791759,0.041666666666666664,basic,clarity
+kimi-k2-thinking_prompt,flesch_kincaid,flesch_kincaid,0.4032333741281215,0.041666666666666664,basic,clarity
+grok-4_prompt,flesch_kincaid,flesch_kincaid,0.1253830269919367,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,dale_chall,dale_chall,0.18628184344058693,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,dale_chall,dale_chall,0.3464888739692841,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_y,dale_chall,dale_chall,0.29260150715236355,0.041666666666666664,basic,clarity
@@ -75,6 +84,9 @@ claude-3-7-sonnet-20250219,dale_chall,dale_chall,0.05466092166072995,0.041666666
 gpt-5,dale_chall,dale_chall,0.05810459426007282,0.041666666666666664,basic,clarity
 kimi-k2-thinking,dale_chall,dale_chall,0.02913585390466458,0.041666666666666664,basic,clarity
 grok-4,dale_chall,dale_chall,0.03723831572189506,0.041666666666666664,basic,clarity
+gpt-5_prompt,dale_chall,dale_chall,0.32986126354342216,0.041666666666666664,basic,clarity
+kimi-k2-thinking_prompt,dale_chall,dale_chall,0.2896746705091448,0.041666666666666664,basic,clarity
+grok-4_prompt,dale_chall,dale_chall,0.1478252962722613,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,ari,ari,0.26419405340428986,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,ari,ari,0.36132589993044917,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_y,ari,ari,0.317371202257686,0.041666666666666664,basic,clarity
@@ -94,6 +106,9 @@ claude-3-7-sonnet-20250219,ari,ari,0.07846000489965849,0.041666666666666664,basi
 gpt-5,ari,ari,0.13550595993047423,0.041666666666666664,basic,clarity
 kimi-k2-thinking,ari,ari,0.0901599339998264,0.041666666666666664,basic,clarity
 grok-4,ari,ari,0.05523810285073668,0.041666666666666664,basic,clarity
+gpt-5_prompt,ari,ari,0.2819782748828376,0.041666666666666664,basic,clarity
+kimi-k2-thinking_prompt,ari,ari,0.20240543586002224,0.041666666666666664,basic,clarity
+grok-4_prompt,ari,ari,0.027866534265502212,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,scaffolding_v2,scaffolding_v2,0.08845995819917755,0.16666666666666666,basic,knowledge_organization
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,scaffolding_v2,scaffolding_v2,0.34717166738246275,0.16666666666666666,basic,knowledge_organization
 SciComma-3.1-8B_y,scaffolding_v2,scaffolding_v2,0.2157122183768778,0.16666666666666666,basic,knowledge_organization
@@ -113,6 +128,9 @@ claude-3-7-sonnet-20250219,scaffolding_v2,scaffolding_v2,0.16708526086281117,0.1
 gpt-5,scaffolding_v2,scaffolding_v2,0.06604287868311072,0.16666666666666666,basic,knowledge_organization
 kimi-k2-thinking,scaffolding_v2,scaffolding_v2,0.11590317177128649,0.16666666666666666,basic,knowledge_organization
 grok-4,scaffolding_v2,scaffolding_v2,0.09083202450043654,0.16666666666666666,basic,knowledge_organization
+gpt-5_prompt,scaffolding_v2,scaffolding_v2,0.4944560069659744,0.16666666666666666,basic,knowledge_organization
+kimi-k2-thinking_prompt,scaffolding_v2,scaffolding_v2,0.5755287332705215,0.16666666666666666,basic,knowledge_organization
+grok-4_prompt,scaffolding_v2,scaffolding_v2,0.6513733613735849,0.16666666666666666,basic,knowledge_organization
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,analogy_v2,analogy_v2,0.03080765575355621,0.16666666666666666,intermediate,rhetorical_devices
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,analogy_v2,analogy_v2,0.4801606155781257,0.16666666666666666,intermediate,rhetorical_devices
 SciComma-3.1-8B_y,analogy_v2,analogy_v2,0.17961974980879297,0.16666666666666666,intermediate,rhetorical_devices
@@ -132,6 +150,9 @@ claude-3-7-sonnet-20250219,analogy_v2,analogy_v2,0.00855435413610563,0.166666666
 gpt-5,analogy_v2,analogy_v2,0.00950409800502174,0.16666666666666666,intermediate,rhetorical_devices
 kimi-k2-thinking,analogy_v2,analogy_v2,0.01849167210459243,0.16666666666666666,intermediate,rhetorical_devices
 grok-4,analogy_v2,analogy_v2,0.036297018564770966,0.16666666666666666,intermediate,rhetorical_devices
+gpt-5_prompt,analogy_v2,analogy_v2,0.8157820919848479,0.16666666666666666,intermediate,rhetorical_devices
+kimi-k2-thinking_prompt,analogy_v2,analogy_v2,0.9767172095054157,0.16666666666666666,intermediate,rhetorical_devices
+grok-4_prompt,analogy_v2,analogy_v2,0.9746288010692924,0.16666666666666666,intermediate,rhetorical_devices
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,metaphor_v8,metaphor_v8,0.005614047885117195,0.16666666666666666,intermediate,rhetorical_devices
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,metaphor_v8,metaphor_v8,0.23555213632882513,0.16666666666666666,intermediate,rhetorical_devices
 SciComma-3.1-8B_y,metaphor_v8,metaphor_v8,0.07109190823582466,0.16666666666666666,intermediate,rhetorical_devices
@@ -151,6 +172,9 @@ claude-3-7-sonnet-20250219,metaphor_v8,metaphor_v8,0.0,0.16666666666666666,inter
 gpt-5,metaphor_v8,metaphor_v8,0.006065338695214997,0.16666666666666666,intermediate,rhetorical_devices
 kimi-k2-thinking,metaphor_v8,metaphor_v8,0.012629191250706592,0.16666666666666666,intermediate,rhetorical_devices
 grok-4,metaphor_v8,metaphor_v8,0.005852116229343517,0.16666666666666666,intermediate,rhetorical_devices
+gpt-5_prompt,metaphor_v8,metaphor_v8,0.6901875855552709,0.16666666666666666,intermediate,rhetorical_devices
+kimi-k2-thinking_prompt,metaphor_v8,metaphor_v8,0.90997463110966,0.16666666666666666,intermediate,rhetorical_devices
+grok-4_prompt,metaphor_v8,metaphor_v8,0.8245849526827455,0.16666666666666666,intermediate,rhetorical_devices
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,humor_v5,humor_v5,0.0,0.16666666666666666,intermediate,style
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,humor_v5,humor_v5,0.0,0.16666666666666666,intermediate,style
 SciComma-3.1-8B_y,humor_v5,humor_v5,0.0,0.16666666666666666,intermediate,style
@@ -170,3 +194,6 @@ claude-3-7-sonnet-20250219,humor_v5,humor_v5,0.0,0.16666666666666666,intermediat
 gpt-5,humor_v5,humor_v5,0.0,0.16666666666666666,intermediate,style
 kimi-k2-thinking,humor_v5,humor_v5,0.0002234324469760868,0.16666666666666666,intermediate,style
 grok-4,humor_v5,humor_v5,0.0,0.16666666666666666,intermediate,style
+gpt-5_prompt,humor_v5,humor_v5,0.017051255437532806,0.16666666666666666,intermediate,style
+kimi-k2-thinking_prompt,humor_v5,humor_v5,0.04562246946911739,0.16666666666666666,intermediate,style
+grok-4_prompt,humor_v5,humor_v5,0.14137423835726232,0.16666666666666666,intermediate,style
