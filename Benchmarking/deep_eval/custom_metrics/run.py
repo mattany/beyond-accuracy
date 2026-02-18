@@ -449,9 +449,12 @@ if __name__ == "__main__":
         # "organic_dpo_prompt",
         # "organic_sft",
         # "organic_sft_prompt",
-        "gpt-5",
-        "kimi-k2-thinking",
-        "grok-4",
+        # "gpt-5",
+        # "kimi-k2-thinking",
+        # "grok-4",
+        "gpt-5_prompt",
+        "kimi-k2-thinking_prompt",
+        "grok-4_prompt",
         # "gpt-4o",
         # "llama3.1-instruct",
         # "gpt-4",
@@ -471,18 +474,18 @@ if __name__ == "__main__":
             metrics={
                 # ## BARAM TSABARI METRICS
                 "jargon": jargon_metric,
-                "metaphor_v8": metaphor_metric_explicit_v8,
-                "humor_v5": humor_metric_explicit_v5,
-                "analogy_v2": analogy_metric_explicit_v2,
+                # "metaphor_v8": metaphor_metric_explicit_v8,
+                # "humor_v5": humor_metric_explicit_v5,
+                # "analogy_v2": analogy_metric_explicit_v2,
                 # "explanation_type_v2": explanation_type_metric_explicit_v2,
                 # "connection_to_everyday_life_v2": connection_to_everyday_life_metric_explicit_v2,
                 #
                 # # ## READING EASE
-                "scaffolding_v2": scaffolding_metric_v2,
-                "flesch_kincaid": flesch_kincaid,
-                "flesch_reading_ease": flesch_reading_ease,
-                "dale_chall": dale_chall,
-                "ari": ari,
+                # "scaffolding_v2": scaffolding_metric_v2,
+                # "flesch_kincaid": flesch_kincaid,
+                # "flesch_reading_ease": flesch_reading_ease,
+                # "dale_chall": dale_chall,
+                # "ari": ari,
 
                 ### DEPRECATED
                 ## CORRECTNESS METRICS

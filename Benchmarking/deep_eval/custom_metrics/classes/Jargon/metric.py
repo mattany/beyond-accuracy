@@ -3,7 +3,7 @@ import pandas as pd
 import logging
 
 from custom_metrics.classes.Jargon.config import JARGON_BASE_PATH
-from custom_metrics.classes.Jargon.jargon_util import calculate_grade
+from custom_metrics.classes.Jargon.jargon_util import analyze_text
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 import asyncio
@@ -13,9 +13,10 @@ class JargonMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        # Optional
+        verbose_mode: bool = False,
     ):
         self.threshold = threshold
+        self.verbose_mode = verbose_mode
         self.names = set(pd.read_csv(JARGON_BASE_PATH + "names.csv", header=None)[0])
         WORDS = "DataUKUS2018-2021.csv"
         self.words = (
@@ -26,7 +27,7 @@ class JargonMetric(BaseMetric):
         # Although not required, we recommend catching errors
         # in a try block
         try:
-            self.score = calculate_grade(test_case.actual_output, self.names, self.words)
+            self.score = analyze_text(test_case.actual_output, self.words, self.names, verbose=self.verbose_mode)
             self.success = self.score >= self.threshold
             return self.score
         except Exception as e:

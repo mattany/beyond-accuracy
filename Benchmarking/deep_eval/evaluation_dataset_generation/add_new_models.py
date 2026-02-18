@@ -21,6 +21,7 @@ from tqdm.asyncio import tqdm as atqdm
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from config import PROJECT_DIR, OPENAI_API_KEY, XAI_API_KEY, MOONSHOT_API_KEY
+from prompt_templates import system_prompt
 
 RECOVERY_DIR = (
     Path(PROJECT_DIR)
@@ -47,7 +48,7 @@ MODELS = [
         "model_id": "kimi-k2-thinking",
         "api_key": MOONSHOT_API_KEY,
         "base_url": "https://api.moonshot.ai/v1",
-        "rpm": 60,  # Moonshot AI — adjust based on your account tier
+        "rpm": 30,  # Moonshot AI — adjust based on your account tier
     },
     {
         "column_name": "grok-4",
@@ -56,12 +57,41 @@ MODELS = [
         "base_url": "https://api.x.ai/v1",
         "rpm": 480,  # xAI default for grok-4
     },
+    {
+        "column_name": "gpt-5_prompt",
+        "model_id": "gpt-5",
+        "api_key": OPENAI_API_KEY,
+        "base_url": None,
+        "rpm": 500,
+        "use_system_prompt": True,
+    },
+    {
+        "column_name": "kimi-k2-thinking_prompt",
+        "model_id": "kimi-k2-thinking",
+        "api_key": MOONSHOT_API_KEY,
+        "base_url": "https://api.moonshot.ai/v1",
+        "rpm": 50,
+        "use_system_prompt": True,
+    },
+    {
+        "column_name": "grok-4_prompt",
+        "model_id": "grok-4",
+        "api_key": XAI_API_KEY,
+        "base_url": "https://api.x.ai/v1",
+        "rpm": 480,
+        "use_system_prompt": True,
+    },
 ]
 
 PROMPT = ChatPromptTemplate.from_template(
     "Answer the following question succinctly in three paragraphs or less. "
     "Keep your answer short.\nQuestion: {question}"
 )
+
+PROMPT_WITH_SYSTEM = ChatPromptTemplate.from_messages([
+    ("system", system_prompt),
+    ("human", "{question}"),
+])
 
 
 class RPMRateLimiter:
@@ -153,7 +183,8 @@ async def generate_responses(questions: list[str], model_cfg: dict) -> list[str]
         print(f"  {name}: recovered {len(recovered)}/{len(questions)} from previous run")
 
     llm = ChatOpenAI(**kwargs)
-    chain = PROMPT | llm
+    prompt = PROMPT_WITH_SYSTEM if model_cfg.get("use_system_prompt") else PROMPT
+    chain = prompt | llm
     limiter = RPMRateLimiter(model_cfg["rpm"])
     file_lock = asyncio.Lock()
 
