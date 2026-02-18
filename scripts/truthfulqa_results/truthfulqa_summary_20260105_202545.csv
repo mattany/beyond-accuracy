@@ -1,0 +1,6 @@
+model_name,description,mc2_score,n_questions
+Meta-Llama-3.1-8B-Instruct,Base LLaMA 3.1 8B (unprompted),0.4605561109591034,817
+SciComma-3.1-8B,SciComma Synthetic SFT 8B (unprompted),0.46924286520888614,817
+SciComma-3.1-8B-DPO,SciComma Synthetic DPO 8B (unprompted),0.4687017972943514,817
+organic_sft,Human-SFT 8B (unprompted),0.0,817
+organic_dpo,SFT+Human-DPO 8B (unprompted),0.0,817

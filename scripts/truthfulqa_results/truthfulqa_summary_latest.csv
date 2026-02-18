@@ -1,0 +1,3 @@
+model_name,description,mc2_score,n_questions
+organic_sft,Human-SFT 8B (unprompted),0.4709190811341828,817
+organic_dpo,SFT+Human-DPO 8B (unprompted),0.46131423304709357,817
