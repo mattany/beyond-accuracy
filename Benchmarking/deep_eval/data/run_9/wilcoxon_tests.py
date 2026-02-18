@@ -29,16 +29,20 @@ MODEL_MAP = {
     'human': 'Human',
     'gpt-3.5-turbo-0125': 'GPT-3.5 (unprompted)',
     'gpt-3.5-turbo-0125_cot': 'GPT-3.5 (Teacher) prompted',
-    'Meta-Llama-3.1-8B-Instruct-bnb-4bit': 'Base-Llama (unprompted)',
-    'Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt': 'Base-Llama (prompted)',
-    'SciComma-3.1-8B_y': 'SFT (unprompted)',
-    'SciComma-3.1-8B_prompt': 'SFT (prompted)',
-    'scicomma-3.1-dpo': 'SFT+Synth-DPO (unprompted)',
-    'scicomma-3.1-dpo_prompt': 'SFT+Synth-DPO (prompted)',
+    'Meta-Llama-3.1-8B-Instruct-bnb-4bit': 'Base-Llama-8B (unprompted)',
+    'Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt': 'Base-Llama-8B (prompted)',
+    'SciComma-3.1-8B_y': 'SciComma-8B (unprompted)',
+    'SciComma-3.1-8B_prompt': 'SciComma-8B (prompted)',
+    'scicomma-3.1-dpo': 'SciComma-8B+DPO (unprompted)',
+    'scicomma-3.1-dpo_prompt': 'SciComma-8B+DPO (prompted)',
     'organic_sft': 'Human-SFT (unprompted)',
     'organic_sft_prompt': 'Human-SFT (prompted)',
     'organic_dpo': 'SFT+Human-DPO (unprompted)',
     'organic_dpo_prompt': 'SFT+Human-DPO (prompted)',
+    # External + 70B models
+    'llama-3.3-70b': 'Llama-70B (unprompted)',
+    'SciComma-3.3-70B': 'SciComma-70B (unprompted)',
+    'claude-3-7-sonnet-20250219': 'Claude-3.7-Sonnet (unprompted)',
 }
 
 
@@ -164,6 +168,16 @@ def main():
         
         # Finding 5: SFT+Synth-DPO unprompted vs GPT prompted (internalization)
         ('scicomma-3.1-dpo', 'gpt-3.5-turbo-0125_cot'),
+        
+        # Cross-model generalization (70B models)
+        # Claude-3.7 vs Base-8B
+        ('claude-3-7-sonnet-20250219', 'Meta-Llama-3.1-8B-Instruct-bnb-4bit'),
+        # Llama-70B vs Base-8B
+        ('llama-3.3-70b', 'Meta-Llama-3.1-8B-Instruct-bnb-4bit'),
+        # SciComma-70B vs Llama-70B (base)
+        ('SciComma-3.3-70B', 'llama-3.3-70b'),
+        # SciComma-70B vs SciComma-8B (scaling comparison)
+        ('SciComma-3.3-70B', 'SciComma-3.1-8B_y'),
     ]
     
     print("\n" + "=" * 80)

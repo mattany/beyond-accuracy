@@ -12,6 +12,9 @@ organic_dpo,jargon,jargon,0.7876602573302187,0.16666666666666666,basic,clarity
 organic_dpo_prompt,jargon,jargon,0.6446414895199578,0.16666666666666666,basic,clarity
 organic_sft,jargon,jargon,0.6779719842579277,0.16666666666666666,basic,clarity
 organic_sft_prompt,jargon,jargon,0.6884618196900844,0.16666666666666666,basic,clarity
+llama-3.3-70b,jargon,jargon,0.5783112228228595,0.16666666666666666,basic,clarity
+SciComma-3.3-70B,jargon,jargon,0.6413347265278629,0.16666666666666666,basic,clarity
+claude-3-7-sonnet-20250219,jargon,jargon,0.4759694575663937,0.16666666666666666,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,flesch_reading_ease,flesch_reading_ease,0.34987036280787215,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,flesch_reading_ease,flesch_reading_ease,0.45045637635224595,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_y,flesch_reading_ease,flesch_reading_ease,0.42664819450476477,0.041666666666666664,basic,clarity
@@ -25,6 +28,9 @@ organic_dpo,flesch_reading_ease,flesch_reading_ease,0.3286150702969943,0.0416666
 organic_dpo_prompt,flesch_reading_ease,flesch_reading_ease,0.5383138333446619,0.041666666666666664,basic,clarity
 organic_sft,flesch_reading_ease,flesch_reading_ease,0.5631109858445146,0.041666666666666664,basic,clarity
 organic_sft_prompt,flesch_reading_ease,flesch_reading_ease,0.7151856649557866,0.041666666666666664,basic,clarity
+llama-3.3-70b,flesch_reading_ease,flesch_reading_ease,0.3127134205781323,0.041666666666666664,basic,clarity
+SciComma-3.3-70B,flesch_reading_ease,flesch_reading_ease,0.3998412186229051,0.041666666666666664,basic,clarity
+claude-3-7-sonnet-20250219,flesch_reading_ease,flesch_reading_ease,0.1073763147081302,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,flesch_kincaid,flesch_kincaid,0.3950208284909487,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,flesch_kincaid,flesch_kincaid,0.4602441917094407,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_y,flesch_kincaid,flesch_kincaid,0.41389616563881393,0.041666666666666664,basic,clarity
@@ -38,6 +44,9 @@ organic_dpo,flesch_kincaid,flesch_kincaid,0.3431991914707679,0.04166666666666666
 organic_dpo_prompt,flesch_kincaid,flesch_kincaid,0.5129287071007501,0.041666666666666664,basic,clarity
 organic_sft,flesch_kincaid,flesch_kincaid,0.5007700590312663,0.041666666666666664,basic,clarity
 organic_sft_prompt,flesch_kincaid,flesch_kincaid,0.6264307034659492,0.041666666666666664,basic,clarity
+llama-3.3-70b,flesch_kincaid,flesch_kincaid,0.3184443321821107,0.041666666666666664,basic,clarity
+SciComma-3.3-70B,flesch_kincaid,flesch_kincaid,0.3739290476669471,0.041666666666666664,basic,clarity
+claude-3-7-sonnet-20250219,flesch_kincaid,flesch_kincaid,0.17026790807329367,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,dale_chall,dale_chall,0.18628184344058693,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,dale_chall,dale_chall,0.3464888739692841,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_y,dale_chall,dale_chall,0.29260150715236355,0.041666666666666664,basic,clarity
@@ -51,6 +60,9 @@ organic_dpo,dale_chall,dale_chall,0.20314421819173104,0.041666666666666664,basic
 organic_dpo_prompt,dale_chall,dale_chall,0.4201046782657422,0.041666666666666664,basic,clarity
 organic_sft,dale_chall,dale_chall,0.41180963330402226,0.041666666666666664,basic,clarity
 organic_sft_prompt,dale_chall,dale_chall,0.5438618000855018,0.041666666666666664,basic,clarity
+llama-3.3-70b,dale_chall,dale_chall,0.1946822609683976,0.041666666666666664,basic,clarity
+SciComma-3.3-70B,dale_chall,dale_chall,0.29385951536104593,0.041666666666666664,basic,clarity
+claude-3-7-sonnet-20250219,dale_chall,dale_chall,0.05466092166072995,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,ari,ari,0.26419405340428986,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,ari,ari,0.36132589993044917,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_y,ari,ari,0.317371202257686,0.041666666666666664,basic,clarity
@@ -64,6 +76,9 @@ organic_dpo,ari,ari,0.21818404592927862,0.041666666666666664,basic,clarity
 organic_dpo_prompt,ari,ari,0.4098914369522008,0.041666666666666664,basic,clarity
 organic_sft,ari,ari,0.4386869173012774,0.041666666666666664,basic,clarity
 organic_sft_prompt,ari,ari,0.5659550375458889,0.041666666666666664,basic,clarity
+llama-3.3-70b,ari,ari,0.1932981010699511,0.041666666666666664,basic,clarity
+SciComma-3.3-70B,ari,ari,0.2728139317954143,0.041666666666666664,basic,clarity
+claude-3-7-sonnet-20250219,ari,ari,0.07846000489965849,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,scaffolding_v2,scaffolding_v2,0.08845995819917755,0.16666666666666666,basic,knowledge_organization
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,scaffolding_v2,scaffolding_v2,0.34717166738246275,0.16666666666666666,basic,knowledge_organization
 SciComma-3.1-8B_y,scaffolding_v2,scaffolding_v2,0.2157122183768778,0.16666666666666666,basic,knowledge_organization
@@ -77,6 +92,9 @@ organic_dpo,scaffolding_v2,scaffolding_v2,0.09391227280507197,0.1666666666666666
 organic_dpo_prompt,scaffolding_v2,scaffolding_v2,0.4962639654295788,0.16666666666666666,basic,knowledge_organization
 organic_sft,scaffolding_v2,scaffolding_v2,0.05696415149251236,0.16666666666666666,basic,knowledge_organization
 organic_sft_prompt,scaffolding_v2,scaffolding_v2,0.2902502112216977,0.16666666666666666,basic,knowledge_organization
+llama-3.3-70b,scaffolding_v2,scaffolding_v2,0.11305106899509378,0.16666666666666666,basic,knowledge_organization
+SciComma-3.3-70B,scaffolding_v2,scaffolding_v2,0.3345686589320173,0.16666666666666666,basic,knowledge_organization
+claude-3-7-sonnet-20250219,scaffolding_v2,scaffolding_v2,0.16708526086281117,0.16666666666666666,basic,knowledge_organization
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,analogy_v2,analogy_v2,0.03080765575355621,0.16666666666666666,intermediate,rhetorical_devices
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,analogy_v2,analogy_v2,0.4801606155781257,0.16666666666666666,intermediate,rhetorical_devices
 SciComma-3.1-8B_y,analogy_v2,analogy_v2,0.17961974980879297,0.16666666666666666,intermediate,rhetorical_devices
@@ -90,6 +108,9 @@ organic_dpo,analogy_v2,analogy_v2,0.015883519761388097,0.16666666666666666,inter
 organic_dpo_prompt,analogy_v2,analogy_v2,0.5569039228450673,0.16666666666666666,intermediate,rhetorical_devices
 organic_sft,analogy_v2,analogy_v2,0.021466527961538667,0.16666666666666666,intermediate,rhetorical_devices
 organic_sft_prompt,analogy_v2,analogy_v2,0.14588639879304127,0.16666666666666666,intermediate,rhetorical_devices
+llama-3.3-70b,analogy_v2,analogy_v2,0.008984334903226854,0.16666666666666666,intermediate,rhetorical_devices
+SciComma-3.3-70B,analogy_v2,analogy_v2,0.3116665588732048,0.16666666666666666,intermediate,rhetorical_devices
+claude-3-7-sonnet-20250219,analogy_v2,analogy_v2,0.00855435413610563,0.16666666666666666,intermediate,rhetorical_devices
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,metaphor_v8,metaphor_v8,0.005614047885117195,0.16666666666666666,intermediate,rhetorical_devices
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,metaphor_v8,metaphor_v8,0.23555213632882513,0.16666666666666666,intermediate,rhetorical_devices
 SciComma-3.1-8B_y,metaphor_v8,metaphor_v8,0.07109190823582466,0.16666666666666666,intermediate,rhetorical_devices
@@ -103,6 +124,9 @@ organic_dpo,metaphor_v8,metaphor_v8,0.008078972387152543,0.16666666666666666,int
 organic_dpo_prompt,metaphor_v8,metaphor_v8,0.28914422050787003,0.16666666666666666,intermediate,rhetorical_devices
 organic_sft,metaphor_v8,metaphor_v8,0.010418552806134377,0.16666666666666666,intermediate,rhetorical_devices
 organic_sft_prompt,metaphor_v8,metaphor_v8,0.07118347925706797,0.16666666666666666,intermediate,rhetorical_devices
+llama-3.3-70b,metaphor_v8,metaphor_v8,0.0,0.16666666666666666,intermediate,rhetorical_devices
+SciComma-3.3-70B,metaphor_v8,metaphor_v8,0.17593950454611582,0.16666666666666666,intermediate,rhetorical_devices
+claude-3-7-sonnet-20250219,metaphor_v8,metaphor_v8,0.0,0.16666666666666666,intermediate,rhetorical_devices
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,humor_v5,humor_v5,0.0,0.16666666666666666,intermediate,style
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,humor_v5,humor_v5,0.0,0.16666666666666666,intermediate,style
 SciComma-3.1-8B_y,humor_v5,humor_v5,0.0,0.16666666666666666,intermediate,style
@@ -116,3 +140,6 @@ organic_dpo,humor_v5,humor_v5,0.0,0.16666666666666666,intermediate,style
 organic_dpo_prompt,humor_v5,humor_v5,0.0006601531688048362,0.16666666666666666,intermediate,style
 organic_sft,humor_v5,humor_v5,0.0048840091712512,0.16666666666666666,intermediate,style
 organic_sft_prompt,humor_v5,humor_v5,0.0019452785889983164,0.16666666666666666,intermediate,style
+llama-3.3-70b,humor_v5,humor_v5,0.0,0.16666666666666666,intermediate,style
+SciComma-3.3-70B,humor_v5,humor_v5,0.0,0.16666666666666666,intermediate,style
+claude-3-7-sonnet-20250219,humor_v5,humor_v5,0.0,0.16666666666666666,intermediate,style
