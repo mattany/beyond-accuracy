@@ -1,0 +1,6 @@
+model_name,display_name,mc2_score,n_questions,std,delta_base,wilcoxon_p,cohens_d,t_test_p
+Meta-Llama-3.1-8B-Instruct,Base LLaMA 3.1,0.461,817,0.4269,,,,
+SciComma-3.1-8B,Synthetic SFT,0.469,817,0.4283,0.009,0.247,0.064,0.069
+SciComma-3.1-8B-DPO,Synthetic DPO,0.469,817,0.4291,0.008,0.27,0.053,0.131
+organic_sft,Human SFT,0.471,817,0.4149,0.01,0.308,0.075,0.033
+organic_dpo,Human DPO,0.461,817,0.4271,0.001,0.206,0.059,0.092
