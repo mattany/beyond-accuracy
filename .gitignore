@@ -1,6 +1,8 @@
 .ipynb_checkpoints
 .venv
 ./RAG/SolarSystem_pages/datapage*.csv
+**/.checkpoints/
+**/.deepeval_telemetry.txt
 ./Benchmarking/deep_eval/config.py
 /RAG/SolarSystem_pages/datapage_id_title_batch_0.csv
 /RAG/SolarSystem_pages/datapage_id_title_batch_1.csv

@@ -35,6 +35,9 @@ METRICS_DIR = Path(__file__).parent.parent.parent / "Benchmarking" / "deep_eval"
 # Cluster 3: GPT_p vs SynthDPO_p
 PROMPTED_DPO_CLUSTERS = [1, 3]
 
+# Cluster 7: Human vs GPT_cot
+HUMAN_ANSWER_CLUSTERS = [7]
+
 # Binary threshold
 BINARY_THRESHOLD = 0.5
 
@@ -138,13 +141,15 @@ def load_metric_scores() -> dict:
     return scores
 
 
-def load_evaluation_data(exclude_prompted_dpo: bool = False) -> pd.DataFrame:
+def load_evaluation_data(exclude_prompted_dpo: bool = False, exclude_human: bool = False) -> pd.DataFrame:
     """
     Load the evaluation dataset with human preferences.
     
     Args:
         exclude_prompted_dpo: If True, exclude clusters that compare prompted models with SynthDPO_p
                               (Cluster 1: SFT_p vs SynthDPO_p, Cluster 3: GPT_p vs SynthDPO_p)
+        exclude_human: If True, exclude clusters containing human-written answers
+                       (Cluster 7: Human vs GPT_cot)
     """
     eval_path = DATA_DIR / "experiment_b_eval_dataset.csv"
     if not eval_path.exists():
@@ -157,6 +162,12 @@ def load_evaluation_data(exclude_prompted_dpo: bool = False) -> pd.DataFrame:
         df = df[~df['cluster'].isin(PROMPTED_DPO_CLUSTERS)]
         excluded_len = original_len - len(df)
         print(f"  Excluded {excluded_len} comparisons from prompted-DPO clusters (clusters {PROMPTED_DPO_CLUSTERS})")
+    
+    if exclude_human:
+        original_len = len(df)
+        df = df[~df['cluster'].isin(HUMAN_ANSWER_CLUSTERS)]
+        excluded_len = original_len - len(df)
+        print(f"  Excluded {excluded_len} comparisons from human-answer clusters (clusters {HUMAN_ANSWER_CLUSTERS})")
     
     return df
 
@@ -302,6 +313,19 @@ def prepare_data(eval_df: pd.DataFrame, scores: dict, mode: str, no_readability:
                     record['readability_a_x_diff'] = np.nan
                 else:
                     record['readability_diff'] = np.nan
+        
+        # Answer length as a control variable (log-transformed word count)
+        text_a = str(row.get('explanation_a', ''))
+        text_b = str(row.get('explanation_b', ''))
+        log_len_a = np.log1p(len(text_a.split()))
+        log_len_b = np.log1p(len(text_b.split()))
+        len_diff = log_len_a - log_len_b
+
+        if model_type == MODEL_TYPE_INTERACTION:
+            record['answer_length_a'] = log_len_a
+            record['answer_length_a_x_diff'] = log_len_a * len_diff
+        else:
+            record['answer_length_diff'] = len_diff
         
         data.append(record)
     
@@ -853,23 +877,25 @@ def run_per_cluster_analysis(scores: dict, mode: str = 'continuous',
 
 
 def create_all_vs_nodpo_figure(all_df: pd.DataFrame, nodpo_df: pd.DataFrame, output_path: Path, 
-                                n_all: int, n_nodpo: int, model_type: str = 'difference'):
+                                n_all: int, n_nodpo: int, model_type: str = 'difference',
+                                label_b: str = 'Excluding Prompted-DPO'):
     """
-    Create a single matplotlib figure with both All data and No-DPO results side by side.
+    Create a single matplotlib figure with both All data and a filtered subset side by side.
     
     Args:
         all_df: DataFrame with regression results for all data
-        nodpo_df: DataFrame with regression results excluding prompted-DPO
+        nodpo_df: DataFrame with regression results for the filtered subset
         output_path: Path to save the figure
         n_all: Number of samples in all data
-        n_nodpo: Number of samples excluding DPO
+        n_nodpo: Number of samples in filtered subset
         model_type: 'difference' or 'interaction'
+        label_b: Label for the second (filtered) table
     """
     fig, axes = plt.subplots(1, 2, figsize=(16, 5))
     
     for ax, (results_df, label, n_samples) in zip(axes, [
         (all_df, 'All Data', n_all), 
-        (nodpo_df, 'Excluding Prompted-DPO', n_nodpo)
+        (nodpo_df, label_b, n_nodpo)
     ]):
         ax.axis('off')
         ax.axis('tight')
@@ -978,9 +1004,19 @@ def main():
         help="Exclude readability metrics from regression (avoids filtering rows with short explanations)"
     )
     parser.add_argument(
+        '--exclude-human',
+        action='store_true',
+        help="Exclude clusters with human-written answers (Human vs GPT_cot)"
+    )
+    parser.add_argument(
         '--compare-dpo',
         action='store_true',
         help="Run continuous mode for both All data and No-DPO, output combined figure"
+    )
+    parser.add_argument(
+        '--compare-human',
+        action='store_true',
+        help="Run continuous mode for both All data and No-Human, output combined figure"
     )
     parser.add_argument(
         '--per-cluster',
@@ -1122,6 +1158,55 @@ def main():
         )
         return
     
+    if args.compare_human:
+        print("=" * 90)
+        print(f"LOGISTIC REGRESSION: ALL vs NO-HUMAN COMPARISON ({args.model_type.upper()} MODEL)")
+        if args.no_readability:
+            print("(Excluding readability metrics)")
+        print("=" * 90)
+        
+        results = {}
+        n_samples_dict = {}
+        
+        for exclude_human, label in [(False, 'all'), (True, 'nohuman')]:
+            print(f"\n{'='*40}")
+            print(f"Running: {'Excluding Human-Answer Clusters' if exclude_human else 'All Data'}")
+            print(f"{'='*40}")
+            
+            print(f"\nLoading metrics from run {RUN_NUMBER}...")
+            scores = load_metric_scores()
+            
+            if not scores:
+                print("\nNo metric scores found.")
+                return
+            
+            print(f"\nLoading evaluation data...")
+            eval_df = load_evaluation_data(exclude_human=exclude_human)
+            print(f"Loaded {len(eval_df)} comparisons")
+            
+            print(f"\nPreparing data (continuous mode, {args.model_type} model)...")
+            data_df = prepare_data(eval_df, scores, 'continuous', no_readability=args.no_readability, model_type=model_type)
+            
+            results_df, n_samples = run_logistic_regression(data_df, 'continuous', model_type=model_type)
+            print_results_table(results_df, 'continuous')
+            
+            results[label] = results_df
+            n_samples_dict[label] = n_samples
+        
+        suffix = ""
+        if model_type == MODEL_TYPE_INTERACTION:
+            suffix += "_interaction"
+        if args.no_readability:
+            suffix += "_no_readability"
+        combined_path = DATA_DIR / f"logistic_regression_all_vs_nohuman{suffix}.png"
+        create_all_vs_nodpo_figure(
+            results['all'], results['nohuman'], combined_path,
+            n_samples_dict['all'], n_samples_dict['nohuman'],
+            model_type=model_type,
+            label_b='Excluding Human Answers'
+        )
+        return
+    
     if args.mode == 'both':
         # Run both modes and create combined figure
         results = {}
@@ -1143,7 +1228,7 @@ def main():
                 return
             
             print(f"\nLoading evaluation data...")
-            eval_df = load_evaluation_data(exclude_prompted_dpo=args.exclude_prompted_dpo)
+            eval_df = load_evaluation_data(exclude_prompted_dpo=args.exclude_prompted_dpo, exclude_human=args.exclude_human)
             print(f"Loaded {len(eval_df)} comparisons")
             
             print(f"\nPreparing data ({mode} mode, {args.model_type} model)...")
@@ -1193,7 +1278,7 @@ def main():
             return
         
         print(f"\nLoading evaluation data...")
-        eval_df = load_evaluation_data(exclude_prompted_dpo=args.exclude_prompted_dpo)
+        eval_df = load_evaluation_data(exclude_prompted_dpo=args.exclude_prompted_dpo, exclude_human=args.exclude_human)
         print(f"Loaded {len(eval_df)} comparisons")
         
         print(f"\nPreparing data ({args.mode} mode, {args.model_type} model)...")
