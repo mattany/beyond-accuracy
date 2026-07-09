@@ -1,9 +1,9 @@
 from SFT.batch_file_gen.config import PROJECT_DIR
 
 INPUT_CSV = f"{PROJECT_DIR}/SFT/data/ask_science.csv"
-OUTPUT_CSV = f"{PROJECT_DIR}/SFT/data/ask_science_gpt_answers.csv"
+OUTPUT_CSV = f"{PROJECT_DIR}/SFT/data/ask_science_gpt_5_answers.csv"
 GPT_INPUT_BATCH_DIR = f"{PROJECT_DIR}/SFT/data/input_batches"
-GPT_OUTPUT_DIR = f"{PROJECT_DIR}/SFT/data/GPT_outputs"
+GPT_OUTPUT_DIR = f"{PROJECT_DIR}/SFT/data/GPT5_outputs"
 GPT_OUTPUT_FILE_PREFIX = "gpt_output_file_"
 GPT_INPUT_BATCH_PREFIX = "sft_input_batch_file_"
 # System prompt for generating high-quality scientific answers
