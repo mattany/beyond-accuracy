@@ -1,0 +1,12 @@
+[project]
+name = "sft-batch-file-gen"
+version = "0.1.0"
+description = "Generate and upload OpenAI batch files for SFT data"
+requires-python = ">=3.10"
+dependencies = [
+    "openai>=1.0.0",
+    "pandas>=2.0.0",
+]
+
+[tool.uv]
+package = false
