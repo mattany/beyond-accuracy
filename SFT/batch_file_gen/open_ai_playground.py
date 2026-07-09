@@ -2,12 +2,8 @@ from openai import OpenAI
 import textwrap
 
 from SFT.batch_file_gen.gen_batch import SFT_SYSTEM_PROMPT
-from config import OPENAI_ORG_ID, OPENAI_PROJECT_ID, OPENAI_API_KEY
-client = OpenAI(
-  organization=OPENAI_ORG_ID,
-  project=OPENAI_PROJECT_ID,
-  api_key=OPENAI_API_KEY
-)
+from config import OPENAI_API_KEY
+client = OpenAI(api_key=OPENAI_API_KEY)
 import time
 system_prompt = SFT_SYSTEM_PROMPT
 

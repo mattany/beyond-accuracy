@@ -1,11 +1,11 @@
 import os.path
 from time import sleep
 
-from openai import OpenAI
+from openai import NotFoundError, OpenAI
 
 from SFT.batch_file_gen.constants import GPT_OUTPUT_DIR, GPT_OUTPUT_FILE_PREFIX, GPT_INPUT_BATCH_DIR, \
     GPT_INPUT_BATCH_PREFIX
-from SFT.batch_file_gen.config import OPENAI_ORG_ID, OPENAI_PROJECT_ID, OPENAI_API_KEY, PROJECT_DIR
+from SFT.batch_file_gen.config import OPENAI_API_KEY, PROJECT_DIR
 import logging
 
 RECOVERY_PATH = f"{PROJECT_DIR}/SFT/batch_status.txt"
@@ -13,12 +13,7 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 logger = logging.getLogger("main_logger")
-# Initialize OpenAI client with organization ID, project ID, and API key
-client = OpenAI(
-    organization=OPENAI_ORG_ID,
-    project=OPENAI_PROJECT_ID,
-    api_key=OPENAI_API_KEY
-)
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 
 def upload_batch_file(path_to_batch_file):
@@ -90,7 +85,14 @@ def upload_create_and_monitor_batch(path_to_batch_file, batch_index, batch_id, o
     batch_id = batch_id or create_batch(file_id=file_id)
     success = False
     while not success:
-        batch_info = retrieve_batch(batch_id)
+        try:
+            batch_info = retrieve_batch(batch_id)
+        except NotFoundError:
+            logger.warning(
+                f"batch {batch_number} id {batch_id} not found; creating a new batch."
+            )
+            batch_id = create_batch(file_id=file_id)
+            continue
         batch_status = batch_info.status
         if batch_status in {"validating", "in_progress", "finalizing"}:
             logger.info(f"batch {batch_number} is {batch_status}. Waiting 5 seconds.")
@@ -120,14 +122,22 @@ def persist_batch_status_to_disk(batch_number, batch_status, batch_id):
 def run(gpt_input_batch_dir=GPT_INPUT_BATCH_DIR, prefix=GPT_INPUT_BATCH_PREFIX, output_dir=GPT_OUTPUT_DIR):
 
     batch_amt = len([f for f in os.listdir(gpt_input_batch_dir) if os.path.isfile(os.path.join(gpt_input_batch_dir, f))])
-    batch_id = ""
+    batch_id = None
     batch_number = 0
     if os.path.exists(RECOVERY_PATH):
         with open(RECOVERY_PATH, "r") as f:
-            line = f.readline()
-            batch_status, batch_number, batch_id = line.split()
-            batch_number = int(batch_number)
+            line = f.readline().strip()
+            if line:
+                batch_status, batch_number, batch_id = line.split()
+                batch_number = int(batch_number)
+                # A completed recovery means that batch is done; continue from the next one.
+                if batch_status == "completed":
+                    batch_number += 1
+                    batch_id = None
     arguments = [f"{gpt_input_batch_dir}/{prefix}{batch_index}.jsonl" for batch_index in range(batch_number, batch_amt, 1)]
+    if not arguments:
+        logger.info("No batches left to process.")
+        return
     for i, arg in enumerate(arguments):
         if i == 0:
             upload_create_and_monitor_batch(arg, batch_index=batch_number, batch_id=batch_id, output_dir=output_dir)
