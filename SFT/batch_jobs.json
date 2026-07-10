@@ -1,0 +1,565 @@
+{
+  "0": {
+    "batch_id": "batch_6a4fce6001c08190b13530e164ff50e3",
+    "status": "cancelled",
+    "downloaded": true,
+    "counts": {
+      "completed": 198,
+      "failed": 0,
+      "total": 199
+    }
+  },
+  "1": {
+    "batch_id": "batch_6a4fd493dab48190ab5586a5aee33f0d",
+    "file_id": "file-TgFm9aoXJHzCuX4QUEV9Km",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    }
+  },
+  "2": {
+    "batch_id": "batch_6a4fd495ef6c8190b8064aa2f27fbe78",
+    "file_id": "file-4JmEZijqTtbBCDbqq5grLL",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616661
+  },
+  "3": {
+    "batch_id": "batch_6a4fd498829081909123ca948011ab6e",
+    "file_id": "file-CUakkPMGLJBanJ3yKvv3qR",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616664
+  },
+  "4": {
+    "batch_id": "batch_6a4fd49a343c8190a348cc2c9db6b741",
+    "file_id": "file-Fge7edqiV5Yh8qHYgTfC6s",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616666
+  },
+  "5": {
+    "batch_id": "batch_6a4fd49b90e88190970f45ea5930cd39",
+    "file_id": "file-Guh1aGQCqb9RGYYPWn8FnT",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616667
+  },
+  "6": {
+    "batch_id": "batch_6a4fd49ca97481909ca9cb8cb38bb467",
+    "file_id": "file-5VPpyoebphygePstK3jzHd",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616668
+  },
+  "7": {
+    "batch_id": "batch_6a4fd49e152c8190b0f015548e1d0845",
+    "file_id": "file-2QHYad68m18MtUbXoyVV3d",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616670
+  },
+  "8": {
+    "batch_id": "batch_6a4fd49f169c8190ad3376e9316bf249",
+    "file_id": "file-SQs1jhjk2SpsrC5mSPZZiM",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616671
+  },
+  "9": {
+    "batch_id": "batch_6a4fd4a038b48190b192a9cedbc5d4b5",
+    "file_id": "file-NW7Hkzy2ERfGMEuMvR1KRk",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616672
+  },
+  "10": {
+    "batch_id": "batch_6a4fd4a122748190afa8a8f0b4f1b4a4",
+    "file_id": "file-TpMMNCL9zmWW3KXRjdodsV",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616673
+  },
+  "11": {
+    "batch_id": "batch_6a4fd4a1f3088190af0463e10bd901b5",
+    "file_id": "file-LQaTgJ4kHcEyBqvvNMrPJb",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616673
+  },
+  "12": {
+    "batch_id": "batch_6a4fd4a2d5648190b9f82bc28c18f63e",
+    "file_id": "file-FRyE2JLQey4fbnz7APrmC8",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616674
+  },
+  "13": {
+    "batch_id": "batch_6a4fd4a39f308190a21aa73cd699c0d6",
+    "status": "cancelled",
+    "downloaded": true,
+    "counts": {
+      "completed": 199,
+      "failed": 0,
+      "total": 200
+    }
+  },
+  "14": {
+    "batch_id": "batch_6a4fd4a4b8e881908b469490aafaa524",
+    "file_id": "file-P1BePtTA78CsNWg3y9nrYo",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616676
+  },
+  "15": {
+    "batch_id": "batch_6a4fd4a5ac14819087af23cc15dede42",
+    "file_id": "file-YFz1AtVTzxuhoiFu1uD93H",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616677
+  },
+  "16": {
+    "batch_id": "batch_6a4fd4a676dc8190bf65177a2b0c3951",
+    "file_id": "file-RM84dnyvzX2XV53EgLsTrm",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616678
+  },
+  "17": {
+    "batch_id": "batch_6a4fd4a74af881908e369020d4a256c3",
+    "file_id": "file-VpNAz6en9uJDNCQgNSrLg8",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616679
+  },
+  "18": {
+    "batch_id": "batch_6a4fd4a80bfc81908efde63c1830f898",
+    "file_id": "file-ELajuTJtnMdvsvMDBDE2Fy",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616680
+  },
+  "19": {
+    "batch_id": "batch_6a4fd4a8f7248190b8aaa67b19226e98",
+    "file_id": "file-8AzrnERYoX2GMerMxRnNDm",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616680
+  },
+  "20": {
+    "batch_id": "batch_6a4fd4aa0d0081909481efe618988e57",
+    "file_id": "file-H3fTmsPxUZB65eetjW23Yi",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616682
+  },
+  "21": {
+    "batch_id": "batch_6a4fd4ab40348190a92e1f8112ed7829",
+    "file_id": "file-KvmKNa2FLqGeTyHR3HQN99",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616683
+  },
+  "22": {
+    "batch_id": "batch_6a4fd4ac6a548190a8289e5d4b96264c",
+    "file_id": "file-3mrpJmU9oTGNmBeZwsNAam",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616684
+  },
+  "23": {
+    "batch_id": "batch_6a4fd4ad8f048190bdda06dbc4452548",
+    "file_id": "file-BEcSqMfmXA6uwrWVwEqu73",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616685
+  },
+  "24": {
+    "batch_id": "batch_6a4fd4ae79f081908d58a4240f38f6d3",
+    "file_id": "file-AVU9VbJm9ASet2rUaHCcd3",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616686
+  },
+  "25": {
+    "batch_id": "batch_6a4fd4af507c8190863d0f76722bfd81",
+    "status": "cancelled",
+    "downloaded": true,
+    "counts": {
+      "completed": 197,
+      "failed": 0,
+      "total": 200
+    }
+  },
+  "26": {
+    "batch_id": "batch_6a4fd4b06c008190bdc4c2d1bee2315a",
+    "file_id": "file-FEWqRjoNoYtZD3TuxsJB5o",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616688
+  },
+  "27": {
+    "batch_id": "batch_6a4fd4b14df881909d3ae6d8fb729fb1",
+    "file_id": "file-4dTZmH6PGLiNJ2GDU6iSPq",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616689
+  },
+  "28": {
+    "batch_id": "batch_6a4fd4b21e1c8190b049df40aaa46daa",
+    "file_id": "file-DswiP9uWA3vRkaaMCGkg8Y",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616690
+  },
+  "29": {
+    "batch_id": "batch_6a4fd4b2fe108190ad3419250e8c02b3",
+    "file_id": "file-L4GM55pYMmxxvt6yqdVJ3R",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 199,
+      "failed": 1,
+      "total": 200
+    },
+    "created_at": 1783616690
+  },
+  "30": {
+    "batch_id": "batch_6a4fd4b42b308190962e83c183084ea4",
+    "file_id": "file-3C1zuvf14U33HRzaN2nRGm",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616692
+  },
+  "31": {
+    "batch_id": "batch_6a4fd4b57490819089a1844c425aa208",
+    "file_id": "file-DPLNFcWPn5M1fK2emVKsDB",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616693
+  },
+  "32": {
+    "batch_id": "batch_6a4fd4b63cd88190a1434a623f97c9fa",
+    "file_id": "file-NMFdhQKLFkcPhzgDacVVt3",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616694
+  },
+  "33": {
+    "batch_id": "batch_6a4fd4b74fc88190b0ebddcc3a296eda",
+    "file_id": "file-1aGwkHw6AVUtagywp7hmPM",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616695
+  },
+  "34": {
+    "batch_id": "batch_6a4fd4b835dc81908c0465666b470037",
+    "file_id": "file-WSdiTwSLCeTiU9exVbdN2d",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616696
+  },
+  "35": {
+    "batch_id": "batch_6a4fd4ba056081909f79904e21c5b189",
+    "status": "cancelled",
+    "downloaded": true,
+    "counts": {
+      "completed": 199,
+      "failed": 0,
+      "total": 200
+    }
+  },
+  "36": {
+    "batch_id": "batch_6a4fd4bacbbc819099de710043f6a66a",
+    "file_id": "file-5d5o5UMZCiE1G2Fo93r9Lu",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616698
+  },
+  "37": {
+    "batch_id": "batch_6a4fd4bb93548190a44503240f9cc7a1",
+    "file_id": "file-PyMzrLDoCYEp2KXNNWF37z",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616699
+  },
+  "38": {
+    "batch_id": "batch_6a4fd4bd211c8190918eedc03a6bb061",
+    "status": "cancelled",
+    "downloaded": true,
+    "counts": {
+      "completed": 198,
+      "failed": 0,
+      "total": 200
+    }
+  },
+  "39": {
+    "batch_id": "batch_6a4fd4bdf254819093f294841a575616",
+    "file_id": "file-BQHPyKjy6Yzy4VS1NQMvad",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616701
+  },
+  "40": {
+    "batch_id": "batch_6a4fd4bec05c819088a965061e152307",
+    "file_id": "file-8qygVkHYTRR6GdQctVtXkP",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616702
+  },
+  "41": {
+    "batch_id": "batch_6a4fd4bfa5a48190b403d5678a1e8ea0",
+    "status": "cancelled",
+    "downloaded": true,
+    "counts": {
+      "completed": 199,
+      "failed": 0,
+      "total": 200
+    }
+  },
+  "42": {
+    "batch_id": "batch_6a4fd4c075088190a698a5ed0688169f",
+    "file_id": "file-9bmB6j4H7Ptz1xb9SuPfDv",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616704
+  },
+  "43": {
+    "batch_id": "batch_6a4fd4c19d248190bd25afb877c712c1",
+    "file_id": "file-1VRNUGZdj3aKZpoXmeUFZA",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616705
+  },
+  "44": {
+    "batch_id": "batch_6a4fd4c263188190b38cb81f3ff7e745",
+    "file_id": "file-SSe9o1gZ5mVcEPtgHLuS1P",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616706
+  },
+  "45": {
+    "batch_id": "batch_6a4fd4c34c308190ac71ab2cde5d88da",
+    "file_id": "file-6Dsmd2GUB9P4Nnaf5nkJD2",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 200,
+      "failed": 0,
+      "total": 200
+    },
+    "created_at": 1783616707
+  },
+  "46": {
+    "batch_id": "batch_6a4fd4c411a481908700d074fd9e7efb",
+    "file_id": "file-JbQMTVq8CtpdqoSV4dz9pK",
+    "status": "completed",
+    "downloaded": true,
+    "counts": {
+      "completed": 114,
+      "failed": 0,
+      "total": 114
+    },
+    "created_at": 1783616708
+  },
+  "47": {
+    "batch_id": "batch_6a4ff70062cc8190935fd9d9f0db87ae",
+    "file_id": "file-RhSL8FotnpjyTqhVXmSJgE",
+    "status": "completed",
+    "downloaded": true,
+    "created_at": 1783625472,
+    "counts": {
+      "completed": 7,
+      "failed": 0,
+      "total": 7
+    }
+  }
+}

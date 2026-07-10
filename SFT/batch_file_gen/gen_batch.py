@@ -54,7 +54,7 @@ def delete_all_files_in_dir(directory):
     os.mkdir(directory)
 
 
-def create_input_batch_files(input_questions, output_dir, prefix, system_prompt, model="gpt-3.5-turbo-0125"):
+def create_input_batch_files(input_questions, output_dir, prefix, system_prompt, model="gpt-5-2025-08-07"):
     delete_all_files_in_dir(output_dir)
     question_batch_id = 0
     for index in range(0, len(input_questions), mini_batch_size):
@@ -68,14 +68,15 @@ def create_input_batch_files(input_questions, output_dir, prefix, system_prompt,
                            "body": {"model": model,
                                     "messages": [{"role": "system", "content": system_prompt},
                                                  {"role": "user", "content": content}],
-                                    "max_tokens": 256}}
+                                    "reasoning_effort": "medium",
+                                    "max_completion_tokens": 2048}}
             out_f.write(json.dumps(output_dict) + "\n")
             question_batch_id += 1
 
 
 if __name__ == "__main__":
     # Read the questions from the CSV file
-    input_questions = pd.read_csv(INPUT_CSV, sep="\t")["title"].tolist()
+    input_questions = pd.read_csv(INPUT_CSV, sep="\t")["Question"].tolist()
     create_input_batch_files(input_questions=input_questions, output_dir=GPT_INPUT_BATCH_DIR, prefix=GPT_INPUT_BATCH_PREFIX, system_prompt=SFT_SYSTEM_PROMPT)
 
 

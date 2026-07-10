@@ -1,4 +1,5 @@
 import csv
+import glob
 import json
 import os
 
@@ -36,8 +37,7 @@ def read_answers():
     dict: Dictionary where keys are question IDs and values are answers.
     """
     gpt_answers = {}
-    batch_amt = len([f for f in os.listdir(GPT_OUTPUT_DIR) if os.path.isfile(os.path.join(GPT_OUTPUT_DIR, f))])
-    gpt_output_paths = [f"{GPT_OUTPUT_DIR}/{GPT_OUTPUT_FILE_PREFIX}{batch_index}.jsonl" for batch_index in range(batch_amt)]
+    gpt_output_paths = sorted(glob.glob(f"{GPT_OUTPUT_DIR}/{GPT_OUTPUT_FILE_PREFIX}*.jsonl"))
 
     for path in gpt_output_paths:
         with open(path, mode='r', encoding='utf-8') as file:
@@ -59,12 +59,18 @@ def write_answers_to_csv(questions, answers):
     answers (dict): Dictionary of answers.
     output_csv_path (str): Path to the output CSV file.
     """
+    missing = []
     with open(OUTPUT_CSV, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerow(['Index', 'Question', 'Answer', 'Truncated'])
         for i, (question_id, question) in enumerate(questions.items()):
-            answer, truncated = answers.get(question_id, "No answer available")
+            answer, truncated = answers.get(question_id, ("No answer available", 1))
+            if question_id not in answers:
+                missing.append(question_id)
             writer.writerow([i, question, answer, truncated])
+
+    if missing:
+        print(f"{len(missing)} question(s) had no answer (failed/missing batch responses): {missing}")
 
 
 if __name__ == "__main__":
