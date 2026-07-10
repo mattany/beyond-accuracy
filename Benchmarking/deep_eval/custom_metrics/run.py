@@ -462,12 +462,14 @@ if __name__ == "__main__":
         # "SciComma-3.3-70B",
         # "o1",
         # "claude-3-7-sonnet-20250219",
-        "llama-2-7b",
+        # "llama-2-7b",
         # "SciComma-2-7b",
         # "scicomma-3.1-dpo_real_256",
         # "scicomma-3.1-dpo_real_512",
         # "scicomma-3.1-dpo_real_512_short",
         # "scicomma-3.1-dpo_full"
+        "SciComma-3.1-8B_gpt5",
+        "SciComma-3.1-8B_gpt5_prompt",
     ]
     asyncio.run(
         generate_metric_report(
