@@ -68,6 +68,7 @@ def create_input_batch_files(input_questions, output_dir, prefix, system_prompt,
                            "body": {"model": model,
                                     "messages": [{"role": "system", "content": system_prompt},
                                                  {"role": "user", "content": content}],
+                                    "reasoning_effort": "medium",
                                     "max_completion_tokens": 2048}}
             out_f.write(json.dumps(output_dict) + "\n")
             question_batch_id += 1
