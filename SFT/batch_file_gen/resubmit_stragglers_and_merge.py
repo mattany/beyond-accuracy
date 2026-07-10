@@ -11,17 +11,15 @@ import json
 import os
 import time
 
-from openai import OpenAI
-
-from SFT.batch_file_gen.config import OPENAI_API_KEY, PROJECT_DIR
 from SFT.batch_file_gen.constants import (
     GPT_INPUT_BATCH_DIR,
     GPT_INPUT_BATCH_PREFIX,
     GPT_OUTPUT_DIR,
     GPT_OUTPUT_FILE_PREFIX,
+    JOBS_PATH,
+    get_client,
 )
 from SFT.batch_file_gen.upload_batch_file import (
-    JOBS_PATH,
     create_batch,
     logger,
     output_path,
@@ -30,7 +28,7 @@ from SFT.batch_file_gen.upload_batch_file import (
     upload_batch_file,
 )
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = get_client()
 
 CANCELLED_BATCH_IDS = {
     0: "batch_6a4fce6001c08190b13530e164ff50e3",

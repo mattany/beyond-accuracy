@@ -3,16 +3,13 @@ import os
 import os.path
 from time import sleep
 
-from openai import NotFoundError, OpenAI
+from openai import NotFoundError
 from tqdm import tqdm
 
 from SFT.batch_file_gen.constants import GPT_OUTPUT_DIR, GPT_OUTPUT_FILE_PREFIX, GPT_INPUT_BATCH_DIR, \
-    GPT_INPUT_BATCH_PREFIX
-from SFT.batch_file_gen.config import OPENAI_API_KEY, PROJECT_DIR
+    GPT_INPUT_BATCH_PREFIX, JOBS_PATH, RECOVERY_PATH, COMPLETION_WINDOW, get_client
 import logging
 
-RECOVERY_PATH = f"{PROJECT_DIR}/SFT/batch_status.txt"
-JOBS_PATH = f"{PROJECT_DIR}/SFT/batch_jobs.json"
 POLL_INTERVAL_SECONDS = 30
 # "expired"/"failed" are true failures with no usable output -> resubmit the whole batch.
 # "cancelled" (e.g. from a manual cancel) still has an output file for whatever completed
@@ -38,7 +35,7 @@ logger = logging.getLogger("main_logger")
 logger.setLevel(logging.INFO)
 logger.addHandler(handler)
 logger.propagate = False
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = get_client()
 
 
 def upload_batch_file(path_to_batch_file):
@@ -51,7 +48,7 @@ def create_batch(file_id):
     res = client.batches.create(
         input_file_id=file_id,
         endpoint="/v1/chat/completions",
-        completion_window="24h",
+        completion_window=COMPLETION_WINDOW,
     )
     return res.id
 

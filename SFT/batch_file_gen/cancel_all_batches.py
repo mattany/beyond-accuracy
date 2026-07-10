@@ -7,15 +7,13 @@ was created outside of that file.
 import json
 import os
 
-from openai import NotFoundError, OpenAI
+from openai import NotFoundError
 
-from SFT.batch_file_gen.config import OPENAI_API_KEY, PROJECT_DIR
+from SFT.batch_file_gen.constants import JOBS_PATH, RECOVERY_PATH, get_client
 
-JOBS_PATH = f"{PROJECT_DIR}/SFT/batch_jobs.json"
-RECOVERY_PATH = f"{PROJECT_DIR}/SFT/batch_status.txt"
 TERMINAL_STATUSES = {"completed", "failed", "cancelled", "expired"}
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = get_client()
 
 
 def load_known_batch_ids():
