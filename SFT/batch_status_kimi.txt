@@ -1,1 +1,1 @@
-in_progress 0 batch_6a51034185cb6b000ba1ffbf
+cancelled 0 batch_6a51034185cb6b000ba1ffbf

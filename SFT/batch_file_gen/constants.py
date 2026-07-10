@@ -97,10 +97,14 @@ def build_request_body(model, system_prompt, content):
             "reasoning_effort": "medium",
             "max_completion_tokens": OUTPUT_TOKEN_LIMIT,
         }
+    # Kimi k2 models "think" by default, burning the token budget on hidden
+    # reasoning before the answer (and slowing/inflating each request). For a
+    # distillation teacher we want direct answers, so disable thinking.
     return {
         "model": model,
         "messages": messages,
         "max_tokens": OUTPUT_TOKEN_LIMIT,
+        "thinking": {"type": "disabled"},
     }
 
 

@@ -1255,3 +1255,5 @@
 /Benchmarking/deep_eval/data/run_10/.checkpoints/scaffolding_v2/explanation_a.json
 /Benchmarking/deep_eval/data/run_10/.checkpoints/scaffolding_v2/explanation_b.json
 /.deepeval/.deepeval_telemetry.txt
+# Resumable checkpoint written by realtime_gen.py; redundant with the answers CSV
+*.progress.jsonl
