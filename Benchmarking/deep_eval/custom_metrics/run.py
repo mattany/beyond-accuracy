@@ -470,6 +470,8 @@ if __name__ == "__main__":
         # "scicomma-3.1-dpo_full"
         "SciComma-3.1-8B_gpt5",
         "SciComma-3.1-8B_gpt5_prompt",
+        "kimi-k2.6-sft",
+        "kimi-k2.6-sft_prompt",
     ]
     asyncio.run(
         generate_metric_report(

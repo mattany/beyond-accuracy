@@ -24,6 +24,8 @@ grok-4_prompt,jargon,jargon,0.482132203935572,0.16666666666666666,basic,clarity
 llama-2-7b,jargon,jargon,0.6226383620959408,0.16666666666666666,basic,clarity
 SciComma-3.1-8B_gpt5,jargon,jargon,0.6346839230272797,0.16666666666666666,basic,clarity
 SciComma-3.1-8B_gpt5_prompt,jargon,jargon,0.6735109707625505,0.16666666666666666,basic,clarity
+kimi-k2.6-sft,jargon,jargon,0.5968811859828902,0.16666666666666666,basic,clarity
+kimi-k2.6-sft_prompt,jargon,jargon,0.655828269710987,0.16666666666666666,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,flesch_reading_ease,flesch_reading_ease,0.34987036280787215,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,flesch_reading_ease,flesch_reading_ease,0.45045637635224595,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_y,flesch_reading_ease,flesch_reading_ease,0.42664819450476477,0.041666666666666664,basic,clarity
@@ -49,6 +51,8 @@ grok-4_prompt,flesch_reading_ease,flesch_reading_ease,0.21281387845939342,0.0416
 llama-2-7b,flesch_reading_ease,flesch_reading_ease,0.4237262050474691,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_gpt5,flesch_reading_ease,flesch_reading_ease,0.4229888868619498,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_gpt5_prompt,flesch_reading_ease,flesch_reading_ease,0.6698158487337523,0.041666666666666664,basic,clarity
+kimi-k2.6-sft,flesch_reading_ease,flesch_reading_ease,0.3414838495660394,0.041666666666666664,basic,clarity
+kimi-k2.6-sft_prompt,flesch_reading_ease,flesch_reading_ease,0.5508119706723306,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,flesch_kincaid,flesch_kincaid,0.3950208284909487,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,flesch_kincaid,flesch_kincaid,0.4602441917094407,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_y,flesch_kincaid,flesch_kincaid,0.41389616563881393,0.041666666666666664,basic,clarity
@@ -74,6 +78,8 @@ grok-4_prompt,flesch_kincaid,flesch_kincaid,0.1253830269919367,0.041666666666666
 llama-2-7b,flesch_kincaid,flesch_kincaid,0.40292715931068074,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_gpt5,flesch_kincaid,flesch_kincaid,0.42979749600661094,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_gpt5_prompt,flesch_kincaid,flesch_kincaid,0.6268798440945004,0.041666666666666664,basic,clarity
+kimi-k2.6-sft,flesch_kincaid,flesch_kincaid,0.3374611836385082,0.041666666666666664,basic,clarity
+kimi-k2.6-sft_prompt,flesch_kincaid,flesch_kincaid,0.4265483842169217,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,dale_chall,dale_chall,0.18628184344058693,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,dale_chall,dale_chall,0.3464888739692841,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_y,dale_chall,dale_chall,0.29260150715236355,0.041666666666666664,basic,clarity
@@ -99,6 +105,8 @@ grok-4_prompt,dale_chall,dale_chall,0.1478252962722613,0.041666666666666664,basi
 llama-2-7b,dale_chall,dale_chall,0.2781594341004009,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_gpt5,dale_chall,dale_chall,0.28652554973813193,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_gpt5_prompt,dale_chall,dale_chall,0.47530387566889515,0.041666666666666664,basic,clarity
+kimi-k2.6-sft,dale_chall,dale_chall,0.25026959076805455,0.041666666666666664,basic,clarity
+kimi-k2.6-sft_prompt,dale_chall,dale_chall,0.4664557966678728,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,ari,ari,0.26419405340428986,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,ari,ari,0.36132589993044917,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_y,ari,ari,0.317371202257686,0.041666666666666664,basic,clarity
@@ -124,6 +132,8 @@ grok-4_prompt,ari,ari,0.027866534265502212,0.041666666666666664,basic,clarity
 llama-2-7b,ari,ari,0.30702568322489854,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_gpt5,ari,ari,0.32938475565432035,0.041666666666666664,basic,clarity
 SciComma-3.1-8B_gpt5_prompt,ari,ari,0.5411530863428781,0.041666666666666664,basic,clarity
+kimi-k2.6-sft,ari,ari,0.1913739368604509,0.041666666666666664,basic,clarity
+kimi-k2.6-sft_prompt,ari,ari,0.254491763445319,0.041666666666666664,basic,clarity
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,scaffolding_v2,scaffolding_v2,0.08845995819917755,0.16666666666666666,basic,knowledge_organization
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,scaffolding_v2,scaffolding_v2,0.34717166738246275,0.16666666666666666,basic,knowledge_organization
 SciComma-3.1-8B_y,scaffolding_v2,scaffolding_v2,0.2157122183768778,0.16666666666666666,basic,knowledge_organization
@@ -149,6 +159,8 @@ grok-4_prompt,scaffolding_v2,scaffolding_v2,0.6513733613735849,0.166666666666666
 llama-2-7b,scaffolding_v2,scaffolding_v2,0.04314612370723878,0.16666666666666666,basic,knowledge_organization
 SciComma-3.1-8B_gpt5,scaffolding_v2,scaffolding_v2,0.22800863808243316,0.16666666666666666,basic,knowledge_organization
 SciComma-3.1-8B_gpt5_prompt,scaffolding_v2,scaffolding_v2,0.7003569051088995,0.16666666666666666,basic,knowledge_organization
+kimi-k2.6-sft,scaffolding_v2,scaffolding_v2,0.3575651269166189,0.16666666666666666,basic,knowledge_organization
+kimi-k2.6-sft_prompt,scaffolding_v2,scaffolding_v2,0.6077151752868566,0.16666666666666666,basic,knowledge_organization
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,analogy_v2,analogy_v2,0.03080765575355621,0.16666666666666666,intermediate,rhetorical_devices
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,analogy_v2,analogy_v2,0.4801606155781257,0.16666666666666666,intermediate,rhetorical_devices
 SciComma-3.1-8B_y,analogy_v2,analogy_v2,0.17961974980879297,0.16666666666666666,intermediate,rhetorical_devices
@@ -174,6 +186,8 @@ grok-4_prompt,analogy_v2,analogy_v2,0.9746288010692924,0.16666666666666666,inter
 llama-2-7b,analogy_v2,analogy_v2,0.0001264631760651154,0.16666666666666666,intermediate,rhetorical_devices
 SciComma-3.1-8B_gpt5,analogy_v2,analogy_v2,0.1464903895411716,0.16666666666666666,intermediate,rhetorical_devices
 SciComma-3.1-8B_gpt5_prompt,analogy_v2,analogy_v2,0.8844879318965632,0.16666666666666666,intermediate,rhetorical_devices
+kimi-k2.6-sft,analogy_v2,analogy_v2,0.5237387993191169,0.16666666666666666,intermediate,rhetorical_devices
+kimi-k2.6-sft_prompt,analogy_v2,analogy_v2,0.9659877780760334,0.16666666666666666,intermediate,rhetorical_devices
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,metaphor_v8,metaphor_v8,0.005614047885117195,0.16666666666666666,intermediate,rhetorical_devices
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,metaphor_v8,metaphor_v8,0.23555213632882513,0.16666666666666666,intermediate,rhetorical_devices
 SciComma-3.1-8B_y,metaphor_v8,metaphor_v8,0.07109190823582466,0.16666666666666666,intermediate,rhetorical_devices
@@ -199,6 +213,8 @@ grok-4_prompt,metaphor_v8,metaphor_v8,0.8245849526827455,0.16666666666666666,int
 llama-2-7b,metaphor_v8,metaphor_v8,0.0,0.16666666666666666,intermediate,rhetorical_devices
 SciComma-3.1-8B_gpt5,metaphor_v8,metaphor_v8,0.0808382107508622,0.16666666666666666,intermediate,rhetorical_devices
 SciComma-3.1-8B_gpt5_prompt,metaphor_v8,metaphor_v8,0.6125973352556449,0.16666666666666666,intermediate,rhetorical_devices
+kimi-k2.6-sft,metaphor_v8,metaphor_v8,0.28581055721081255,0.16666666666666666,intermediate,rhetorical_devices
+kimi-k2.6-sft_prompt,metaphor_v8,metaphor_v8,0.8961677380659566,0.16666666666666666,intermediate,rhetorical_devices
 Meta-Llama-3.1-8B-Instruct-bnb-4bit,humor_v5,humor_v5,0.0,0.16666666666666666,intermediate,style
 Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt,humor_v5,humor_v5,0.0,0.16666666666666666,intermediate,style
 SciComma-3.1-8B_y,humor_v5,humor_v5,0.0,0.16666666666666666,intermediate,style
@@ -224,3 +240,5 @@ grok-4_prompt,humor_v5,humor_v5,0.14137423835726232,0.16666666666666666,intermed
 llama-2-7b,humor_v5,humor_v5,0.0,0.16666666666666666,intermediate,style
 SciComma-3.1-8B_gpt5,humor_v5,humor_v5,0.0,0.16666666666666666,intermediate,style
 SciComma-3.1-8B_gpt5_prompt,humor_v5,humor_v5,0.0007104779583904483,0.16666666666666666,intermediate,style
+kimi-k2.6-sft,humor_v5,humor_v5,0.00019167567082446703,0.16666666666666666,intermediate,style
+kimi-k2.6-sft_prompt,humor_v5,humor_v5,0.010054337882782942,0.16666666666666666,intermediate,style
