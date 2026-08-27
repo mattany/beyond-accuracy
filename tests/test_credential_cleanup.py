@@ -11,9 +11,10 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 PARENT_REV = "a2c1bdb"
-SCOPED_NOTEBOOKS = (
+NOTEBOOK_REGRESSION_PATHS = (
     "evaluation/model_generation/llama3_1/llama3_evaluation.ipynb",
     "training/sft/GPT_SFT_only.ipynb",
+    "evaluation/factuality/truthfulqa_benchmark.ipynb",
 )
 HF_TOUCHING_SCRIPTS = (
     "evaluation/factuality/truthfulqa_benchmark.py",
@@ -36,7 +37,20 @@ AUTH_SCRIPT_PATTERNS = (re.compile(r"\bnotebook_login\s*\("),)
 SCOPED_AUTH_CELLS = {
     "evaluation/model_generation/llama3_1/llama3_evaluation.ipynb": {3, 4},
     "training/sft/GPT_SFT_only.ipynb": {4, 6},
+    "evaluation/factuality/truthfulqa_benchmark.ipynb": {2},
 }
+TRUTHFULQA_SETUP_CELL = 2
+TRUTHFULQA_SETUP_MARKERS = (
+    "drive.mount('/content/drive/', force_remount=True)",
+    "os.environ['HF_HOME']",
+    "OUTPUT_DIR = '/content/drive/MyDrive/thesis/truthfulqa_results'",
+    "os.makedirs(OUTPUT_DIR, exist_ok=True)",
+    "import pandas as pd",
+    "import numpy as np",
+    "from datetime import datetime",
+    "from tqdm import tqdm",
+    'login(token=os.environ["HF_TOKEN"])',
+)
 
 
 def tracked_files() -> list[str]:
@@ -64,19 +78,19 @@ def scientific_output_count(nb: dict, auth_cells: set[int]) -> int:
     )
 
 
-@pytest.mark.parametrize("relative_path", SCOPED_NOTEBOOKS)
+@pytest.mark.parametrize("relative_path", NOTEBOOK_REGRESSION_PATHS)
 def test_scoped_notebooks_are_valid_json(relative_path):
     json.loads(notebook_blob(relative_path))
 
 
-@pytest.mark.parametrize("relative_path", SCOPED_NOTEBOOKS)
+@pytest.mark.parametrize("relative_path", NOTEBOOK_REGRESSION_PATHS)
 def test_scoped_notebooks_have_no_auth_patterns(relative_path):
     blob = notebook_blob(relative_path)
     for pattern in AUTH_NOTEBOOK_PATTERNS:
         assert not pattern.search(blob), pattern.pattern
 
 
-@pytest.mark.parametrize("relative_path", SCOPED_NOTEBOOKS)
+@pytest.mark.parametrize("relative_path", NOTEBOOK_REGRESSION_PATHS)
 def test_scoped_auth_cells_have_no_outputs_or_widget_metadata(relative_path):
     nb = json.loads(notebook_blob(relative_path))
     auth_cells = SCOPED_AUTH_CELLS[relative_path]
@@ -123,7 +137,7 @@ def auth_warning_output_count(nb: dict, auth_cells: set[int]) -> int:
     return count
 
 
-@pytest.mark.parametrize("relative_path", SCOPED_NOTEBOOKS)
+@pytest.mark.parametrize("relative_path", NOTEBOOK_REGRESSION_PATHS)
 def test_scoped_notebook_diff_is_auth_limited(relative_path):
     parent = load_parent_notebook(relative_path)
     current = json.loads(notebook_blob(relative_path))
@@ -141,7 +155,21 @@ def test_scoped_notebook_diff_is_auth_limited(relative_path):
         text=True,
     ).strip()
     added, deleted, _ = diff_stat.split()
-    assert int(added) + int(deleted) < 1200, diff_stat
+    line_delta = int(added) + int(deleted)
+    limit = 1200 if "truthfulqa_benchmark.ipynb" not in relative_path else 80
+    assert line_delta < limit, diff_stat
+
+
+def test_truthfulqa_setup_cell_preserves_required_definitions():
+    nb = json.loads(notebook_blob("evaluation/factuality/truthfulqa_benchmark.ipynb"))
+    setup_source = "".join(nb["cells"][TRUTHFULQA_SETUP_CELL]["source"])
+    for marker in TRUTHFULQA_SETUP_MARKERS:
+        assert marker in setup_source
+    parent = load_parent_notebook("evaluation/factuality/truthfulqa_benchmark.ipynb")
+    for index in range(len(parent["cells"])):
+        if index == TRUTHFULQA_SETUP_CELL:
+            continue
+        assert parent["cells"][index] == nb["cells"][index]
 
 
 @pytest.mark.parametrize("relative_path", HF_TOUCHING_SCRIPTS)
