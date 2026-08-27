@@ -266,20 +266,29 @@ METRIC_FALLBACKS = {
 }
 
 
-def load_bootstrap_confidence_intervals(directory: str, expected_models: set = None) -> pd.DataFrame | None:
+def load_bootstrap_confidence_intervals(
+    directory: str,
+    expected_models: set = None,
+    bootstrap_dir: str | None = None,
+) -> pd.DataFrame | None:
     """
     Load pre-computed bootstrap confidence intervals for v2 weighted scores.
     If not found or missing expected models, automatically generate them.
-    
+
     Args:
-        directory: Run directory path
+        directory: Run directory path (metric CSV source)
         expected_models: Set of model names expected to have confidence intervals
-    
+        bootstrap_dir: Optional scratch directory for bootstrap CSV read/write.
+            When omitted, uses ``<directory>/bootstrap/`` (canonical location).
+
     Returns:
         DataFrame with columns: Model, Total_Score, Bootstrap_SE, CI_Lower, CI_Upper
         or None if generation fails.
     """
-    bootstrap_path = os.path.join(directory, "bootstrap", "bootstrap_v2_results.csv")
+    if bootstrap_dir is not None:
+        bootstrap_path = os.path.join(bootstrap_dir, "bootstrap_v2_results.csv")
+    else:
+        bootstrap_path = os.path.join(directory, "bootstrap", "bootstrap_v2_results.csv")
     should_regenerate = False
     
     # Check if bootstrap results exist
@@ -315,7 +324,11 @@ def load_bootstrap_confidence_intervals(directory: str, expected_models: set = N
             from evaluation.rubrics.custom_metrics.bootstrap import bootstrap_analysis_v2
             
             # Generate bootstrap results
-            bootstrap_df = bootstrap_analysis_v2(directory, n_bootstrap=10000)
+            bootstrap_df = bootstrap_analysis_v2(
+                directory,
+                n_bootstrap=10000,
+                bootstrap_dir=bootstrap_dir,
+            )
             
             if bootstrap_df is not None and not bootstrap_df.empty:
                 print(f"  ✓ Successfully generated bootstrap confidence intervals for {len(bootstrap_df)} models")
@@ -805,11 +818,29 @@ def plot_metric_heatmap(df: pd.DataFrame, output_dir: str):
     print(f"  Saved: metric_heatmap.png")
 
 
-def main(run_number: int = RUN_NUMBER, output_dir: str | None = None):
+def main(
+    run_number: int = RUN_NUMBER,
+    output_dir: str | None = None,
+    bootstrap_dir: str | None = None,
+):
     """Main aggregation and plotting pipeline."""
     directory = result_directory(run_number)
-    output_dir = output_dir or os.path.join(directory, "aggregations_v2")
+    canonical_output_dir = os.path.join(directory, "aggregations_v2")
+    output_dir = output_dir or canonical_output_dir
     os.makedirs(output_dir, exist_ok=True)
+
+    if output_dir == canonical_output_dir:
+        print(
+            "WARNING: writing aggregation outputs to the canonical directory "
+            f"({canonical_output_dir}) may overwrite tracked publication artifacts. "
+            "Use --output-dir under /tmp for safe reruns."
+        )
+    if bootstrap_dir is None:
+        print(
+            "WARNING: bootstrap confidence intervals load/generate under the "
+            f"canonical directory ({directory}/bootstrap/) unless --bootstrap-dir "
+            "points to a scratch location."
+        )
     
     print(f"\n{'='*60}")
     print(f"Aggregate v2: Metric-weighted Scoring")
@@ -858,7 +889,11 @@ def main(run_number: int = RUN_NUMBER, output_dir: str | None = None):
     print("\n" + "-"*60)
     print("Loading bootstrap confidence intervals...")
     expected_models = set(total_df["model"].unique())
-    bootstrap_df = load_bootstrap_confidence_intervals(directory, expected_models=expected_models)
+    bootstrap_df = load_bootstrap_confidence_intervals(
+        directory,
+        expected_models=expected_models,
+        bootstrap_dir=bootstrap_dir,
+    )
     
     # Generate plots
     print("\n" + "="*60)
@@ -888,6 +923,11 @@ if __name__ == "__main__":
         default=None,
         help="directory for aggregation CSVs and plots (default: <run-dir>/aggregations_v2)",
     )
+    parser.add_argument(
+        "--bootstrap-dir",
+        default=None,
+        help="scratch directory for bootstrap CSV load/generation (default: <run-dir>/bootstrap/)",
+    )
     args = parser.parse_args()
-    main(args.run, output_dir=args.output_dir)
+    main(args.run, output_dir=args.output_dir, bootstrap_dir=args.bootstrap_dir)
 

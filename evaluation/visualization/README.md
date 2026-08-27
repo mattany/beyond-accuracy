@@ -6,12 +6,15 @@ publication figures (`fig:stacked_scores`, metric heatmaps) are produced by
 root:
 
 ```bash
-python -m evaluation.rubrics.custom_metrics.aggregate_v2
+python -m evaluation.rubrics.custom_metrics.aggregate_v2 \
+  --output-dir /tmp/rubric_aggregations_v2 \
+  --bootstrap-dir /tmp/rubric_bootstrap
 ```
 
 `plot_scores.py` contains additional exploratory plotting helpers used during
 metric development. Canonical score tables live under
 `evaluation/results/rubric_scores/`.
 
-Pass `--output-dir /tmp/rubric_aggregations_v2` when rerunning so tracked
-`aggregations_v2/` plots and CSVs are not overwritten.
+Pass both `--output-dir` and `--bootstrap-dir` under `/tmp` when rerunning so
+tracked `aggregations_v2/` plots/CSVs and `bootstrap/` confidence intervals are
+not overwritten.

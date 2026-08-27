@@ -229,7 +229,7 @@ For Kimi, prefix each command with `TEACHER_PROVIDER=kimi` and set
 | Step | Status | Command |
 |------|--------|---------|
 | Score all models on all metrics | **Paid API** | `PYTHONPATH=. poetry --directory evaluation/rubrics run python -m evaluation.rubrics.custom_metrics.run` |
-| Aggregate weighted scores and plots | **Offline** | `python -m evaluation.rubrics.custom_metrics.aggregate_v2 --output-dir /tmp/rubric_aggregations_v2` |
+| Aggregate weighted scores and plots | **Offline** | `python -m evaluation.rubrics.custom_metrics.aggregate_v2 --output-dir /tmp/rubric_aggregations_v2 --bootstrap-dir /tmp/rubric_bootstrap` |
 | Per-question win rates | **Offline** | `python -m evaluation.rubrics.custom_metrics.winrate --output /tmp/winrate_llama_vs_gpt35.csv` |
 
 The runner reads `evaluation/model_outputs/main/all_models_joined.csv`, writes
@@ -240,10 +240,13 @@ scoring uses run 10 and resumes via
 are already tracked for inspection without rerunning API calls.
 
 **Warning:** `aggregate_v2` reads metric CSVs from the canonical run directory
-but regenerates plots and aggregation tables in `--output-dir` (default:
-`evaluation/results/rubric_scores/aggregations_v2/`). `winrate` writes a
-per-question CSV; pass `--output /tmp/...` to avoid overwriting tracked
-`winrate__*.csv` files.
+but writes aggregation outputs to `--output-dir` (default:
+`evaluation/results/rubric_scores/aggregations_v2/`) and bootstrap
+load/generation to `--bootstrap-dir` (default:
+`evaluation/results/rubric_scores/bootstrap/`). Always pass both scratch flags
+for safe reruns. `winrate` writes a per-question CSV; pass
+`--output /tmp/...` to avoid overwriting tracked `winrate__*.csv` files.
+Omitting scratch flags prints a warning and may overwrite canonical artifacts.
 
 ### 5. Validate rubric judges
 
@@ -278,7 +281,8 @@ python human_study/preferences/logistic_regression.py \
   --output /tmp/logistic_regression_continuous_with_formality.csv
 
 # Metaphor over-optimization appendix analysis
-python human_study/preferences/metaphor_overoptimization.py
+python human_study/preferences/metaphor_overoptimization.py \
+  --output /tmp/dpo_rubric_up_pref_down.csv
 ```
 
 Full Experiment B metric scoring (`run_metrics_exp_b.py`) requires a **paid API**

@@ -74,7 +74,12 @@ DOCUMENTED_OFFLINE_COMMANDS = (
     ),
     (
         "human_study/preferences/metaphor_overoptimization.py",
-        ["python", "human_study/preferences/metaphor_overoptimization.py"],
+        [
+            "python",
+            "human_study/preferences/metaphor_overoptimization.py",
+            "--output",
+            "/tmp/dpo_rubric_up_pref_down_test.csv",
+        ],
     ),
 )
 
@@ -146,6 +151,7 @@ def test_readme_repo_paths_exist():
 def test_readme_documents_safe_output_flags():
     text = README.read_text(encoding="utf-8")
     assert "--output-dir" in text
+    assert "--bootstrap-dir" in text
     assert "--output" in text
     assert "Safe reruns" in text
     assert "evaluation/results/rubric_scores/.checkpoints/" in text

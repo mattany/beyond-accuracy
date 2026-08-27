@@ -12,7 +12,8 @@ configuration file is required.
 ```bash
 python -m evaluation.rubrics.custom_metrics.run
 python -m evaluation.rubrics.custom_metrics.aggregate_v2 \
-  --output-dir /tmp/rubric_aggregations_v2
+  --output-dir /tmp/rubric_aggregations_v2 \
+  --bootstrap-dir /tmp/rubric_bootstrap
 python -m evaluation.rubrics.custom_metrics.winrate \
   --output /tmp/winrate_llama_vs_gpt35.csv
 ```
@@ -26,10 +27,11 @@ via `evaluation/results/preference_metrics/.checkpoints/`.
 `evaluation/rubrics/custom_metrics/aggregate_v2.py` regenerates weighted score
 tables and plots.
 
-**Safe reruns:** pass `--output-dir` to `aggregate_v2` and `--output` to
-`winrate` so canonical `aggregations_v2/` and `winrate__*.csv` files are not
-overwritten. The API runner mutates metric CSVs in the canonical result
-directories; treat full rubric rescoring as a destructive operation.
+**Safe reruns:** pass `--output-dir` and `--bootstrap-dir` to `aggregate_v2`
+and `--output` to `winrate` so canonical `aggregations_v2/`, `bootstrap/`, and
+`winrate__*.csv` files are not overwritten. The API runner mutates metric CSVs
+in the canonical result directories; treat full rubric rescoring as a
+destructive operation.
 
 The `model_outputs/scillama3/` files are retained conservatively: they have
 different model columns from the canonical generation tables and their question

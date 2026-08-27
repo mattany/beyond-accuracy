@@ -16,7 +16,8 @@ def bootstrap_analysis_v2(
     directory: str,
     n_bootstrap: int = 10000,
     confidence_level: float = 0.95,
-    output_file: str = "bootstrap_v2_results.csv"
+    output_file: str = "bootstrap_v2_results.csv",
+    bootstrap_dir: str | None = None,
 ):
     """
     Bootstrap analysis for the v2 weighted scoring system.
@@ -165,10 +166,14 @@ def bootstrap_analysis_v2(
     # Save results
     results_df = pd.DataFrame(results)
     results_df = results_df.sort_values("Total_Score", ascending=False)
-    
-    output_dir = os.path.join(directory, "bootstrap")
-    os.makedirs(output_dir, exist_ok=True)
-    output_path = os.path.join(output_dir, output_file)
+
+    if bootstrap_dir is not None:
+        os.makedirs(bootstrap_dir, exist_ok=True)
+        output_path = os.path.join(bootstrap_dir, output_file)
+    else:
+        output_dir = os.path.join(directory, "bootstrap")
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, output_file)
     results_df.to_csv(output_path, index=False)
     
     print(f"\n{'='*60}")

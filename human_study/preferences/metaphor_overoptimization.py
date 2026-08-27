@@ -23,9 +23,10 @@ Outputs:
      with the metaphor gap highlighted.
 
 Usage:
-  python metaphor_overoptimization.py
+  python metaphor_overoptimization.py --output /tmp/dpo_rubric_up_pref_down.csv
 """
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -141,7 +142,7 @@ def metaphor_by_model(long: pd.DataFrame):
         print(f"  (scipy unavailable: {e})")
 
 
-def case_study(scores: dict, eval_df: pd.DataFrame, top_k: int = 5):
+def case_study(scores: dict, eval_df: pd.DataFrame, output_path: Path, top_k: int = 5):
     print("\n" + "=" * 70)
     print("2) CASE STUDY: DPO 'RUBRIC UP, PREFERENCE DOWN'")
     print("=" * 70)
@@ -200,8 +201,9 @@ def case_study(scores: dict, eval_df: pd.DataFrame, top_k: int = 5):
         print(f"    metaphor: DPO={r['dpo_metaphor']:.1f} vs opp={r['opp_metaphor']:.1f}")
         print(f"    Q: {str(r['question'])[:90]}")
 
-    cs.to_csv(DATA_DIR / "dpo_rubric_up_pref_down.csv", index=False)
-    print(f"\n  Saved full case list: {DATA_DIR / 'dpo_rubric_up_pref_down.csv'}")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    cs.to_csv(output_path, index=False)
+    print(f"\n  Saved full case list: {output_path}")
     return cs
 
 
@@ -231,7 +233,7 @@ def sft_dpo_contrast():
               f"(Delta {d - s:+.3f}, {ratio})")
 
 
-def main():
+def main(output_path: Path):
     eval_df = pd.read_csv(EVAL)
     scores = _load_side_scores()
     # Confirm row-alignment: metaphor scores must correspond to the eval texts.
@@ -239,9 +241,16 @@ def main():
 
     long = _to_long(scores, eval_df)
     metaphor_by_model(long)
-    case_study(scores, eval_df)
+    case_study(scores, eval_df, output_path=output_path)
     sft_dpo_contrast()
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--output",
+        required=True,
+        help="path for dpo_rubric_up_pref_down.csv (use /tmp/... to avoid overwriting canonical data)",
+    )
+    args = parser.parse_args()
+    main(output_path=Path(args.output))
