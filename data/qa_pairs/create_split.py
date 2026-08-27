@@ -4,13 +4,16 @@ membership as the reference ask_science_gpt_answers_{train,test,eval}.csv splits
 so every model version shares identical questions per fold.
 
 Examples:
-    # GPT-5 answers (original behavior)
+    # GPT-5 answers (write splits to scratch directory)
     python data/qa_pairs/create_split.py \
-        --answers data/qa_pairs/ask_science_gpt_5_answers.csv
+        --answers data/qa_pairs/ask_science_gpt_5_answers.csv \
+        --output-dir /tmp/qa_splits
 
     # Kimi answers, dropping truncated rows
     python data/qa_pairs/create_split.py \
-        --answers data/qa_pairs/ask_science_kimi_answers.csv --drop-truncated
+        --answers data/qa_pairs/ask_science_kimi_answers.csv \
+        --drop-truncated \
+        --output-dir /tmp/qa_splits
 """
 import argparse
 from pathlib import Path
@@ -28,7 +31,12 @@ def load_reference_split_indices():
     return set(train["Index"]), set(test["Index"]), set(eval_df["Index"])
 
 
-def create_split(answers_csv, drop_truncated=False, dataset_name="ask_science"):
+def create_split(
+    answers_csv,
+    drop_truncated=False,
+    dataset_name="ask_science",
+    output_dir=None,
+):
     answers_path = Path(answers_csv)
     if not answers_path.is_absolute():
         # Allow paths relative to the repo root as well as bare filenames.
@@ -52,10 +60,12 @@ def create_split(answers_csv, drop_truncated=False, dataset_name="ask_science"):
         "eval": df[df["Index"].isin(eval_idx)].copy(),
     }
 
-    stem = answers_path.with_suffix("")  # e.g. .../ask_science_kimi_answers
+    stem_name = answers_path.stem  # e.g. ask_science_kimi_answers
+    write_dir = Path(output_dir) if output_dir else answers_path.parent
+    write_dir.mkdir(parents=True, exist_ok=True)
     for name, split_df in splits.items():
         split_df["Dataset"] = dataset_name
-        out_path = Path(f"{stem}_{name}.csv")
+        out_path = write_dir / f"{stem_name}_{name}.csv"
         split_df.to_csv(out_path, index=False)
 
     covered = train_idx | test_idx | eval_idx
@@ -68,7 +78,7 @@ def create_split(answers_csv, drop_truncated=False, dataset_name="ask_science"):
     print(f"Test:  {len(splits['test']):,} rows")
     print(f"Eval:  {len(splits['eval']):,} rows")
     print(f"Not in any reference split: {len(missing):,} rows")
-    print(f"Wrote {stem}_{{train,test,eval}}.csv")
+    print(f"Wrote {write_dir}/{stem_name}_{{train,test,eval}}.csv")
 
 
 def parse_args():
@@ -78,9 +88,19 @@ def parse_args():
     p.add_argument("--drop-truncated", action="store_true",
                    help="exclude rows with Truncated == 1 (if the column exists)")
     p.add_argument("--dataset-name", default="ask_science", help="value for the Dataset column")
+    p.add_argument(
+        "--output-dir",
+        default=None,
+        help="directory for split CSVs (default: same directory as --answers)",
+    )
     return p.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
-    create_split(args.answers, drop_truncated=args.drop_truncated, dataset_name=args.dataset_name)
+    create_split(
+        args.answers,
+        drop_truncated=args.drop_truncated,
+        dataset_name=args.dataset_name,
+        output_dir=args.output_dir,
+    )

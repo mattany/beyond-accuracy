@@ -31,6 +31,12 @@ GPU training, paid API calls, and some Colab-oriented notebooks are documented
 but not required for local verification. Offline reruns can regenerate most
 tables and figures from the tracked canonical CSVs.
 
+**Safe reruns:** Commands marked **offline** read canonical tracked artifacts.
+Several scripts write new files when rerun; use explicit `--output`,
+`--output-dir`, or `/tmp` destinations documented below so you do not overwrite
+publication CSVs or plots. Compare regenerated outputs against canonical paths
+rather than writing back into tracked directories.
+
 ## Repository map
 
 | Path | Contents | Paper sections |
@@ -56,7 +62,9 @@ Component READMEs under each directory document stage-specific commands.
 
 ### QA-Pairs (`data/qa_pairs/`)
 
-Derived from Reddit *r/askscience* content (non-commercial academic use).
+Derived from Reddit *r/askscience* content. The paper reports use in compliance
+with Reddit's permitted-use terms for non-commercial academic research; this
+repository does not grant any rights beyond those of the upstream sources.
 Tracked files include human, GPT-3.5, GPT-5, and Kimi teacher answers,
 train/validation/test splits, batch inputs, and provider JSONL outputs.
 Inspect provenance with `data/qa_pairs/load_datasets.ipynb`.
@@ -64,8 +72,10 @@ Inspect provenance with `data/qa_pairs/load_datasets.ipynb`.
 ### Pref-Human and Experiment B
 
 Human preference judgments for DPO training and Experiment B live under
-`human_study/preferences/`. Raw study CSVs (`first_exp.csv`, `sec_exp.csv`)
-and processed tables are anonymized for publication. Label Studio JSON exports
+`human_study/preferences/data/`. Raw study CSVs
+(`human_study/preferences/data/first_exp.csv`,
+`human_study/preferences/data/sec_exp.csv`) and processed tables are
+anonymized for publication. Label Studio JSON exports
 under `human_study/judge_validation/` use stable `annotator_N` labels instead
 of email addresses.
 
@@ -88,9 +98,10 @@ IDs referenced in this repository:
 
 Check each model and dataset card for license terms before redistribution or
 commercial use. Reddit-derived QA-Pairs content remains subject to Reddit's
-terms and the upstream
+[User Agreement](https://www.redditinc.com/policies/user-agreement) and the
+upstream
 [dhmeltzer/ask-science-qg](https://huggingface.co/datasets/dhmeltzer/ask-science-qg)
-dataset license.
+dataset terms. The MIT License applies to repository code only.
 
 ## Installation
 
@@ -171,17 +182,24 @@ is **not present** in this repository.
 
 ### 1. Prepare QA-Pairs
 
-**Offline** — recreate train/val/test splits for alternate teacher answers:
+**Offline** — recreate train/val/test splits for alternate teacher answers.
+**Warning:** without `--output-dir`, this overwrites `*_train.csv`, `*_test.csv`,
+and `*_eval.csv` next to the answers file. Write to a scratch directory instead:
 
 ```bash
+mkdir -p /tmp/qa_splits
 python data/qa_pairs/create_split.py \
-  --answers data/qa_pairs/ask_science_gpt_5_answers.csv
+  --answers data/qa_pairs/ask_science_gpt_5_answers.csv \
+  --output-dir /tmp/qa_splits
 
 python data/qa_pairs/create_split.py \
-  --answers data/qa_pairs/ask_science_kimi_answers.csv --drop-truncated
+  --answers data/qa_pairs/ask_science_kimi_answers.csv \
+  --drop-truncated \
+  --output-dir /tmp/qa_splits
 ```
 
-Canonical splits are already tracked; rerun only when validating split logic.
+Canonical splits under `data/qa_pairs/` are already tracked; rerun only when
+validating split logic.
 
 ### 2. Generate teacher answers
 
@@ -211,13 +229,21 @@ For Kimi, prefix each command with `TEACHER_PROVIDER=kimi` and set
 | Step | Status | Command |
 |------|--------|---------|
 | Score all models on all metrics | **Paid API** | `PYTHONPATH=. poetry --directory evaluation/rubrics run python -m evaluation.rubrics.custom_metrics.run` |
-| Aggregate weighted scores and plots | **Offline** | `python -m evaluation.rubrics.custom_metrics.aggregate_v2` |
-| Per-question win rates | **Offline** | `python -m evaluation.rubrics.custom_metrics.winrate` |
+| Aggregate weighted scores and plots | **Offline** | `python -m evaluation.rubrics.custom_metrics.aggregate_v2 --output-dir /tmp/rubric_aggregations_v2` |
+| Per-question win rates | **Offline** | `python -m evaluation.rubrics.custom_metrics.winrate --output /tmp/winrate_llama_vs_gpt35.csv` |
 
 The runner reads `evaluation/model_outputs/main/all_models_joined.csv`, writes
-to `evaluation/results/rubric_scores/`, and resumes via
-`evaluation/results/preference_metrics/.checkpoints/`. Canonical metric CSVs are
-already tracked for inspection without rerunning API calls.
+main rubric metric CSVs to `evaluation/results/rubric_scores/`, and resumes via
+`evaluation/results/rubric_scores/.checkpoints/` (run 9). Experiment B metric
+scoring uses run 10 and resumes via
+`evaluation/results/preference_metrics/.checkpoints/`. Canonical metric CSVs
+are already tracked for inspection without rerunning API calls.
+
+**Warning:** `aggregate_v2` reads metric CSVs from the canonical run directory
+but regenerates plots and aggregation tables in `--output-dir` (default:
+`evaluation/results/rubric_scores/aggregations_v2/`). `winrate` writes a
+per-question CSV; pass `--output /tmp/...` to avoid overwriting tracked
+`winrate__*.csv` files.
 
 ### 5. Validate rubric judges
 
@@ -262,14 +288,25 @@ and is documented in `human_study/preferences/README.md`.
 
 | Check | Status | Command / artifact |
 |-------|--------|-------------------|
-| TruthfulQA MC2 table and figure | **Offline** from checkpoints | `python evaluation/factuality/truthfulqa_visualization.py --results-dir evaluation/factuality/truthfulqa_results` |
+| TruthfulQA MC2 table and figure | **Offline** from checkpoints | See command below |
 | TruthfulQA checkpoint regeneration | **GPU + HF_TOKEN** (Colab-oriented) | `evaluation/factuality/truthfulqa_benchmark.py` / `.ipynb` |
-| Participant accuracy ratings (Experiment B) | **Offline** | Data under `human_study/preferences/` |
+| Participant accuracy ratings (Experiment B) | **Offline** | Data under `human_study/preferences/data/` |
 | GPT-5.2 atomic-claim verification (`tab:factuality`) | **Not present** | No tracked script or result file reproduces this analysis |
 | TrustLLM auxiliary benchmark | **Offline** heatmap | `cd evaluation/factuality/trust_llm && MPLBACKEND=Agg poetry run python heatmap.py` |
 
 TrustLLM is auxiliary evidence and must not be substituted for the missing
 GPT-5.2 claim-level provenance.
+
+**TruthfulQA visualization (safe rerun):** `--output` controls only the PNG.
+The script also writes `truthfulqa_results_summary.csv` into `--results-dir`.
+Copy checkpoints to a scratch directory or pass an explicit PNG path:
+
+```bash
+cp -r evaluation/factuality/truthfulqa_results /tmp/truthfulqa_results
+python evaluation/factuality/truthfulqa_visualization.py \
+  --results-dir /tmp/truthfulqa_results \
+  --output /tmp/truthfulqa_comparison.png
+```
 
 ## Expected outputs and paper mapping
 
@@ -277,11 +314,11 @@ GPT-5.2 claim-level provenance.
 |----------------|------------------|----------------------|
 | `tab:dataset_stats`, `sec:datasets` | `data/qa_pairs/` | Yes (data inspection) |
 | `fig:stacked_scores`, `sec:exp_a_results` | `evaluation/results/rubric_scores/aggregations_v2/`, plots from `aggregate_v2` | Yes (from tracked CSVs) |
-| `tab:winrate` | `evaluation/results/rubric_scores/` + `winrate.py` | Yes |
+| `tab:winrate` | `evaluation/results/rubric_scores/` + `evaluation/rubrics/custom_metrics/winrate.py` | Yes |
 | `fig:validation_a`–`fig:validation_c` | `human_study/judge_validation/balanced_dataset_v2_human/` | Yes (`intercoder_reliability.py`) |
 | `tab:human_preferences` | `human_study/preferences/data/` | Yes (tracked tables) |
 | `tab:exp_b_regression` | `human_study/preferences/data/logistic_regression_continuous_with_formality.csv` | Yes (`logistic_regression.py --with-formality`) |
-| `tab:teacher_robustness`, `tab:teacher_composition` | `teacher_significance.py` stdout vs `evaluation/results/rubric_scores/` | Yes |
+| `tab:teacher_robustness`, `tab:teacher_composition` | `human_study/preferences/teacher_significance.py` stdout vs `evaluation/results/rubric_scores/` | Yes |
 | `tab:truthfulqa_results` | `evaluation/factuality/truthfulqa_results/` | Yes (`truthfulqa_visualization.py`) |
 | `tab:factuality` (claim-level) | — | **No** — provenance gap |
 | `sec:appendix_metaphor_examples` | `human_study/preferences/data/dpo_rubric_up_pref_down.csv`, `human_study/preferences/metaphor_overoptimization.py` | Yes |
@@ -291,8 +328,10 @@ See `docs/artifacts.md` for the full retention manifest.
 
 ## Ethics and data provenance
 
-- **Reddit / QA-Pairs:** Built from *r/askscience* content for non-commercial
-  academic research. Respect Reddit's terms and the upstream dataset license.
+- **Reddit / QA-Pairs:** Built from *r/askscience* content. The paper reports
+  compliance with Reddit's permitted-use terms for non-commercial academic
+  research; binding rights and restrictions come from Reddit's User Agreement
+  and the upstream dataset terms, not from this repository.
 - **Human annotations:** Experiment B preference data and judge-validation
   exports are anonymized for publication. Label Studio emails and draft metadata
   were replaced with stable `annotator_N` identifiers; judgment content is

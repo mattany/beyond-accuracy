@@ -805,10 +805,10 @@ def plot_metric_heatmap(df: pd.DataFrame, output_dir: str):
     print(f"  Saved: metric_heatmap.png")
 
 
-def main(run_number: int = RUN_NUMBER):
+def main(run_number: int = RUN_NUMBER, output_dir: str | None = None):
     """Main aggregation and plotting pipeline."""
     directory = result_directory(run_number)
-    output_dir = os.path.join(directory, "aggregations_v2")
+    output_dir = output_dir or os.path.join(directory, "aggregations_v2")
     os.makedirs(output_dir, exist_ok=True)
     
     print(f"\n{'='*60}")
@@ -874,6 +874,20 @@ def main(run_number: int = RUN_NUMBER):
 
 
 if __name__ == "__main__":
-    run_num = int(sys.argv[1]) if len(sys.argv) > 1 else RUN_NUMBER
-    main(run_num)
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Aggregate rubric scores (v2).")
+    parser.add_argument(
+        "--run",
+        type=int,
+        default=RUN_NUMBER,
+        help="canonical result run number (9=rubric scores, 10=preference metrics)",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=None,
+        help="directory for aggregation CSVs and plots (default: <run-dir>/aggregations_v2)",
+    )
+    args = parser.parse_args()
+    main(args.run, output_dir=args.output_dir)
 

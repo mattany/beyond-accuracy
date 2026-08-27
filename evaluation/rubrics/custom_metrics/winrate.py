@@ -78,7 +78,7 @@ def per_question_scores(directory: str, model: str) -> pd.Series:
     return weighted / weight_used.replace(0.0, np.nan)
 
 
-def main(model_a: str, model_b: str, run_number: int):
+def main(model_a: str, model_b: str, run_number: int, output_path: str | None = None):
     directory = result_directory(run_number)
 
     print(f"\nRun directory : {directory}")
@@ -123,7 +123,9 @@ def main(model_a: str, model_b: str, run_number: int):
         ),
     })
     slug_b = model_b.replace("/", "_")
-    out_path = os.path.join(directory, f"winrate__{model_a}_vs_{slug_b}.csv")
+    out_path = output_path or os.path.join(
+        directory, f"winrate__{model_a}_vs_{slug_b}.csv"
+    )
     detail.to_csv(out_path, index=False)
     print(f"Per-question breakdown saved to:\n  {out_path}\n")
 
@@ -133,6 +135,11 @@ if __name__ == "__main__":
     parser.add_argument("--model-a", default="llama-2-7b")
     parser.add_argument("--model-b", default="gpt-3.5-turbo-0125")
     parser.add_argument("--run", type=int, default=RUN_NUMBER)
+    parser.add_argument(
+        "--output",
+        default=None,
+        help="path for per-question CSV (default: canonical run directory)",
+    )
     args = parser.parse_args()
 
-    main(args.model_a, args.model_b, args.run)
+    main(args.model_a, args.model_b, args.run, output_path=args.output)
