@@ -3,7 +3,7 @@ import glob
 import json
 import os
 
-from SFT.batch_file_gen.constants import INPUT_CSV, GPT_OUTPUT_DIR, GPT_OUTPUT_FILE_PREFIX, OUTPUT_CSV
+from training.data_generation.constants import INPUT_CSV, GPT_OUTPUT_DIR, GPT_OUTPUT_FILE_PREFIX, OUTPUT_CSV
 
 
 def read_questions(csv_path):

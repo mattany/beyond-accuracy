@@ -11,7 +11,7 @@ import json
 import os
 import time
 
-from SFT.batch_file_gen.constants import (
+from training.data_generation.constants import (
     GPT_INPUT_BATCH_DIR,
     GPT_INPUT_BATCH_PREFIX,
     GPT_OUTPUT_DIR,
@@ -19,7 +19,7 @@ from SFT.batch_file_gen.constants import (
     JOBS_PATH,
     get_client,
 )
-from SFT.batch_file_gen.upload_batch_file import (
+from training.data_generation.upload_batch_file import (
     create_batch,
     logger,
     output_path,
@@ -164,8 +164,8 @@ def submit_makeup_batch(jobs, makeup_index, makeup_path):
 
 
 def run_merge():
-    from SFT.batch_file_gen.merge import read_answers, read_questions, write_answers_to_csv
-    from SFT.batch_file_gen.constants import INPUT_CSV, OUTPUT_CSV
+    from training.data_generation.merge import read_answers, read_questions, write_answers_to_csv
+    from training.data_generation.constants import INPUT_CSV, OUTPUT_CSV
 
     questions = read_questions(INPUT_CSV)
     answers = read_answers()

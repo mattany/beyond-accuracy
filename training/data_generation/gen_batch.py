@@ -4,7 +4,7 @@ import shutil
 
 import pandas as pd
 
-from SFT.batch_file_gen.constants import INPUT_CSV, GPT_INPUT_BATCH_DIR, GPT_INPUT_BATCH_PREFIX, SFT_SYSTEM_PROMPT, \
+from training.data_generation.constants import INPUT_CSV, GPT_INPUT_BATCH_DIR, GPT_INPUT_BATCH_PREFIX, SFT_SYSTEM_PROMPT, \
     MODEL, build_request_body
 # Parameters
 mini_batch_size = 1   # Only 1 is supported currently

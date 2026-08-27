@@ -1,4 +1,6 @@
+from argparse import ArgumentParser
 import asyncio
+from pathlib import Path
 import time
 import pandas as pd
 import tqdm
@@ -12,6 +14,7 @@ from ollama_model import OllamaModel
 from prompt_templates import generate_prompt, system_prompt
 
 BATCH_SIZE = 32
+ROOT = Path(__file__).resolve().parents[2]
 llama_3_1_8b_instruct = "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit"
 llama_3_8b_instruct = "mlx-community/Meta-Llama-3-8B-Instruct-4bit"
 
@@ -65,9 +68,8 @@ def create_batches(csv_file, batch_size):
     return batches
 
 
-async def main():
-    dataset_path = "/Users/mattan.yeroushalmi/studies/thesis/SFT/data/ask_science.csv"
-    batches = create_batches(dataset_path, batch_size=BATCH_SIZE)
+async def main(args):
+    batches = create_batches(args.input, batch_size=BATCH_SIZE)
     i = 0
     for batch in tqdm.tqdm(batches):
         i += 1
@@ -82,10 +84,8 @@ async def main():
         # print(f"Batch {i} took {end_time - start_time} seconds")
         # print(f"Batch {i} took {(end_time - start_time)/BATCH_SIZE} per answer. BATCH_SIZE: {BATCH_SIZE}")
         out_df = pd.DataFrame(results, columns=["index", "question", "answer"])
-        out_df.to_csv(
-            f"/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/DPO_data/llama3_18B_ask_science_answers.csv",
-            mode='a', header=False, index=False
-        )
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        out_df.to_csv(args.output, mode='a', header=False, index=False)
     # Output the results
     # for i, result in enumerate(results):
         # print(f"Prompt {i+1}: {prompts[i]}")
@@ -103,6 +103,21 @@ async def main():
 async def test():
     res = await generate_answer("how do centipedes/millipedes control all of their legs? is there some kind of simple pattern they use, or does it take a lot of brainpower?")
     print(res[1])
+
+def parse_args():
+    parser = ArgumentParser()
+    parser.add_argument(
+        "--input",
+        type=Path,
+        default=ROOT / "data" / "qa_pairs" / "ask_science.csv",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=ROOT / "training" / "dpo" / "llama3_18B_ask_science_answers.csv",
+    )
+    return parser.parse_args()
+
 
 if __name__ == "__main__":
     # asyncio.run(main())

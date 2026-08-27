@@ -5,11 +5,12 @@ so every model version shares identical questions per fold.
 
 Examples:
     # GPT-5 answers (original behavior)
-    python -m SFT.data.create_split --answers SFT/data/ask_science_gpt_5_answers.csv
+    python data/qa_pairs/create_split.py \
+        --answers data/qa_pairs/ask_science_gpt_5_answers.csv
 
     # Kimi answers, dropping truncated rows
-    python -m SFT.data.create_split \
-        --answers SFT/data/ask_science_kimi_answers.csv --drop-truncated
+    python data/qa_pairs/create_split.py \
+        --answers data/qa_pairs/ask_science_kimi_answers.csv --drop-truncated
 """
 import argparse
 from pathlib import Path

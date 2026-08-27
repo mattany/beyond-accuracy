@@ -6,10 +6,9 @@
    source .venv/bin/activate
    ```
 
-2. Add a config file to `batch_file_gen/config.py` with your credentials:
+2. Add a config file to `training/data_generation/config.py` with your
+   credentials:
    ```python
-   PROJECT_DIR = "/path/to/thesis"
-
    # OpenAI teacher (default provider)
    OPENAI_API_KEY = "sk-proj-XXXXXXXXX"
 
@@ -22,9 +21,9 @@
 
 3. From the repo root:
    ```
-   python -m SFT.batch_file_gen.gen_batch
-   python -m SFT.batch_file_gen.upload_batch_file
-   python -m SFT.batch_file_gen.merge
+   python -m training.data_generation.gen_batch
+   python -m training.data_generation.upload_batch_file
+   python -m training.data_generation.merge
    ```
 
 ## Choosing the teacher (provider)
@@ -41,9 +40,9 @@ each other:
 
 Run against Kimi by prefixing each command:
 ```
-TEACHER_PROVIDER=kimi python -m SFT.batch_file_gen.gen_batch
-TEACHER_PROVIDER=kimi python -m SFT.batch_file_gen.upload_batch_file
-TEACHER_PROVIDER=kimi python -m SFT.batch_file_gen.merge
+TEACHER_PROVIDER=kimi python -m training.data_generation.gen_batch
+TEACHER_PROVIDER=kimi python -m training.data_generation.upload_batch_file
+TEACHER_PROVIDER=kimi python -m training.data_generation.merge
 ```
 
 Note: Kimi's batch API rejects sampling params (`temperature`, `top_p`, `n`,

@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Upload Organic DPO (Human DPO) Model to HuggingFace
+"""Upload Organic SFT Model to HuggingFace
 
-Run this in Google Colab to upload the organic_dpo LoRA adapter to HuggingFace.
-Note: This was previously called "naive_dpo" or "dpo_original" in some files.
+Run this in Google Colab to upload the organic_sft LoRA adapter to HuggingFace.
 """
 
 # %%
@@ -15,7 +14,7 @@ from google.colab import drive
 drive.mount('/content/drive')
 
 import os
-os.environ['HF_HOME'] = '/content/drive/MyDrive/thesis/huggingface_cache'
+os.environ['HF_HOME'] = '/content/beyond-accuracy/.cache/huggingface'
 
 # %%
 # Login to HuggingFace
@@ -24,11 +23,11 @@ notebook_login()
 
 # %%
 # Configuration
-# Local path to the LoRA adapter (dpo_original = organic/human DPO)
-LOCAL_ADAPTER_PATH = "/content/drive/My Drive/models/dpo_original"
+# Local path to the LoRA adapter
+LOCAL_ADAPTER_PATH = "/content/drive/My Drive/models/organic_sft"
 
 # HuggingFace repository name (change 'mattany' to your username if needed)
-HF_REPO_NAME = "mattany/human-dpo-3.1-8B-lora"
+HF_REPO_NAME = "mattany/human-sft-3.1-8B-lora"
 
 # Base model used for training
 BASE_MODEL = "meta-llama/Llama-3.1-8B-Instruct"
@@ -101,22 +100,21 @@ tags:
 - llama
 - peft
 - lora
-- dpo
 - science-communication
 base_model: {BASE_MODEL}
 license: llama3.1
 ---
 
-# Organic DPO (SFT + Human-DPO) - LLaMA 3.1 8B LoRA
+# Organic SFT (Human-SFT) - LLaMA 3.1 8B LoRA
 
-This is a LoRA adapter for science communication, trained with Direct Preference Optimization (DPO) using **human preference data**.
+This is a LoRA adapter for science communication, trained on **human-written** scientific explanations from Reddit r/AskScience.
 
 ## Model Description
 
 - **Base Model:** `{BASE_MODEL}`
-- **Training Data:** Human preference pairs from r/AskScience (organic/real data)
-- **Training Method:** SFT followed by DPO with LoRA
-- **Purpose:** Generate high-quality scientific explanations aligned with human preferences
+- **Training Data:** Human-written answers from r/AskScience (organic/real data)
+- **Training Method:** Supervised Fine-Tuning (SFT) with LoRA
+- **Purpose:** Generate high-quality scientific explanations
 
 ## Usage
 
@@ -140,9 +138,7 @@ print(tokenizer.decode(outputs[0], skip_special_tokens=True))
 
 ## Training Details
 
-This model was trained as part of a research project comparing synthetic (GPT-generated) vs organic (human-written) training data for science communication. 
-
-The DPO training used human-annotated preference pairs where the preferred response was the higher-rated answer from r/AskScience.
+This model was trained as part of a research project comparing synthetic (GPT-generated) vs organic (human-written) training data for science communication.
 """
 
 # Save and upload model card

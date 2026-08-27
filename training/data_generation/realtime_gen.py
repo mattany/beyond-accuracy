@@ -8,8 +8,8 @@ unchanged. Honors account rate limits and is resumable: results stream to a
 `<output>.progress.jsonl` checkpoint, so re-running skips already-answered rows.
 
 Usage (from repo root):
-    TEACHER_PROVIDER=kimi python -m SFT.batch_file_gen.realtime_gen
-    TEACHER_PROVIDER=kimi python -m SFT.batch_file_gen.realtime_gen --limit 10   # smoke test
+    TEACHER_PROVIDER=kimi python -m training.data_generation.realtime_gen
+    TEACHER_PROVIDER=kimi python -m training.data_generation.realtime_gen --limit 10
 
 Default limits match a Kimi account with Concurrency=100, RPM=500, TPM=3,000,000.
 """
@@ -23,7 +23,7 @@ import time
 
 from tqdm import tqdm
 
-from SFT.batch_file_gen.constants import (
+from training.data_generation.constants import (
     API_KEY,
     BASE_URL,
     INPUT_CSV,
@@ -71,7 +71,7 @@ def make_client():
         key_name = "OPENAI_API_KEY" if PROVIDER == "openai" else "MOONSHOT_API_KEY"
         raise RuntimeError(
             f"No API key for provider '{PROVIDER}'. Add {key_name} to "
-            f"SFT/batch_file_gen/config.py"
+            f"training/data_generation/config.py"
         )
     kwargs = {"api_key": API_KEY, "timeout": 180.0, "max_retries": 0}
     if BASE_URL:

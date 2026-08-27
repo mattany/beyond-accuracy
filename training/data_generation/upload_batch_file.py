@@ -6,7 +6,7 @@ from time import sleep
 from openai import NotFoundError
 from tqdm import tqdm
 
-from SFT.batch_file_gen.constants import GPT_OUTPUT_DIR, GPT_OUTPUT_FILE_PREFIX, GPT_INPUT_BATCH_DIR, \
+from training.data_generation.constants import GPT_OUTPUT_DIR, GPT_OUTPUT_FILE_PREFIX, GPT_INPUT_BATCH_DIR, \
     GPT_INPUT_BATCH_PREFIX, JOBS_PATH, RECOVERY_PATH, COMPLETION_WINDOW, get_client
 import logging
 

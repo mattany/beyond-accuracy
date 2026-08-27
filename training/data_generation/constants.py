@@ -1,17 +1,20 @@
 import os
+from pathlib import Path
 
-from SFT.batch_file_gen import config
+from training.data_generation import config
 
-PROJECT_DIR = config.PROJECT_DIR
+ROOT = Path(__file__).resolve().parents[2]
+DATA_DIR = ROOT / "data" / "qa_pairs"
+STATE_DIR = Path(__file__).resolve().parent
 
 # Which teacher to distill answers from. Everything else (client, endpoint,
 # model, file layout, request body) is derived from this. Switch teachers
 # without editing code via an env var, e.g.:
-#   TEACHER_PROVIDER=kimi python -m SFT.batch_file_gen.gen_batch
+#   TEACHER_PROVIDER=kimi python -m training.data_generation.gen_batch
 PROVIDER = os.environ.get("TEACHER_PROVIDER", "openai").strip().lower()
 
 # Per-provider settings. `api_key` names refer to attributes you set in
-# SFT/batch_file_gen/config.py (which is gitignored). Both providers speak the
+# training/data_generation/config.py (which is gitignored). Both providers speak the
 # OpenAI Batch wire format, they only differ in base_url / model / request body.
 PROVIDERS = {
     "openai": {
@@ -51,15 +54,15 @@ BASE_URL = ACTIVE["base_url"]
 API_KEY = ACTIVE["api_key"]
 OUTPUT_TOKEN_LIMIT = ACTIVE["output_token_limit"]
 
-INPUT_CSV = f"{PROJECT_DIR}/SFT/data/ask_science.csv"
-OUTPUT_CSV = f"{PROJECT_DIR}/SFT/data/{ACTIVE['answers_csv']}"
-GPT_INPUT_BATCH_DIR = f"{PROJECT_DIR}/SFT/data/{ACTIVE['input_dir']}"
-GPT_OUTPUT_DIR = f"{PROJECT_DIR}/SFT/data/{ACTIVE['output_dir']}"
+INPUT_CSV = DATA_DIR / "ask_science.csv"
+OUTPUT_CSV = DATA_DIR / ACTIVE["answers_csv"]
+GPT_INPUT_BATCH_DIR = DATA_DIR / ACTIVE["input_dir"]
+GPT_OUTPUT_DIR = DATA_DIR / ACTIVE["output_dir"]
 GPT_OUTPUT_FILE_PREFIX = "gpt_output_file_"
 GPT_INPUT_BATCH_PREFIX = "sft_input_batch_file_"
 
-JOBS_PATH = f"{PROJECT_DIR}/SFT/{ACTIVE['jobs_file']}"
-RECOVERY_PATH = f"{PROJECT_DIR}/SFT/{ACTIVE['recovery_file']}"
+JOBS_PATH = STATE_DIR / ACTIVE["jobs_file"]
+RECOVERY_PATH = STATE_DIR / ACTIVE["recovery_file"]
 COMPLETION_WINDOW = "24h"
 
 
@@ -71,7 +74,7 @@ def get_client():
         key_name = "OPENAI_API_KEY" if PROVIDER == "openai" else "MOONSHOT_API_KEY"
         raise RuntimeError(
             f"No API key for provider '{PROVIDER}'. Add {key_name} = \"...\" to "
-            f"SFT/batch_file_gen/config.py"
+            f"training/data_generation/config.py"
         )
     kwargs = {"api_key": API_KEY}
     if BASE_URL:

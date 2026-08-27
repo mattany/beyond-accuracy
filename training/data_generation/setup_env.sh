@@ -27,7 +27,7 @@ Activate with:
 
 Then run from the repo root:
   cd ${REPO_ROOT}
-  python -m SFT.batch_file_gen.gen_batch
-  python -m SFT.batch_file_gen.upload_batch_file
-  python -m SFT.batch_file_gen.merge
+  python -m training.data_generation.gen_batch
+  python -m training.data_generation.upload_batch_file
+  python -m training.data_generation.merge
 EOF

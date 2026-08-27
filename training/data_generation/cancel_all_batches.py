@@ -1,6 +1,7 @@
 """Cancels every non-terminal batch we know about, so a fresh run can start clean.
 
-Sources batch ids from SFT/batch_jobs.json (written by upload_batch_file.py) and
+Sources batch ids from training/data_generation/batch_jobs.json (written by
+upload_batch_file.py) and
 also cross-checks against the live batch list from OpenAI, in case any batch
 was created outside of that file.
 """
@@ -9,7 +10,7 @@ import os
 
 from openai import NotFoundError
 
-from SFT.batch_file_gen.constants import JOBS_PATH, RECOVERY_PATH, get_client
+from training.data_generation.constants import JOBS_PATH, RECOVERY_PATH, get_client
 
 TERMINAL_STATUSES = {"completed", "failed", "cancelled", "expired"}
 

@@ -1,16 +1,14 @@
+from argparse import ArgumentParser
 import json
+from pathlib import Path
 
-from SFT.batch_file_gen.gen_batch import create_input_batch_files
-from SFT.batch_file_gen.upload_batch_file import run as get_results_from_gpt
+from training.data_generation.gen_batch import create_input_batch_files
+from training.data_generation.upload_batch_file import run as get_results_from_gpt
 import pandas as pd
-from config import PROJECT_DIR
-# GPT_BATCH_DIR = f"{PROJECT_DIR}/Benchmarking/eval_dataset_generation/output_batches/gpt_4o/"
-# GPT_OUTPUT_DIR = "/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/eval_dataset_generation/gpt4o_outputs"
-# MODEL = "gpt-4o-2024-08-06"
-# MODEL_NAME = "gpt_4o"
 
-GPT_BATCH_DIR = f"{PROJECT_DIR}/Benchmarking/eval_dataset_generation/output_batches/gpt_4/"
-GPT_OUTPUT_DIR = "/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/eval_dataset_generation/gpt4_outputs"
+ROOT = Path(__file__).resolve().parents[2]
+GPT_BATCH_DIR = ROOT / "Benchmarking" / "eval_dataset_generation" / "output_batches" / "gpt_4"
+GPT_OUTPUT_DIR = ROOT / "Benchmarking" / "eval_dataset_generation" / "gpt4_outputs"
 MODEL = "gpt-4-turbo-2024-04-09"
 MODEL_NAME = "gpt_4"
 
@@ -30,9 +28,22 @@ def add_gpt_column_to_eval_dataset(eval_dataset, gpt_outputs_jsonl, model_name="
 
 
 
+def parse_args():
+    parser = ArgumentParser()
+    parser.add_argument(
+        "--input",
+        type=Path,
+        default=ROOT / "Benchmarking" / "deep_eval" / "data" / "evaluation_dataset.csv",
+    )
+    parser.add_argument("--output-dir", type=Path, default=GPT_OUTPUT_DIR)
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    eval_dataset = "/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/evaluation_dataset.csv"
+    args = parse_args()
+    eval_dataset = args.input
+    args.output_dir.mkdir(parents=True, exist_ok=True)
     questions = pd.read_csv(eval_dataset)["question"].tolist()
     create_input_batch_files(questions, output_dir=GPT_BATCH_DIR, prefix="eval_dataset_", system_prompt="", model=MODEL)
-    get_results_from_gpt(gpt_input_batch_dir=GPT_BATCH_DIR, prefix="eval_dataset_", output_dir=GPT_OUTPUT_DIR)
-    add_gpt_column_to_eval_dataset(eval_dataset, f"{GPT_OUTPUT_DIR}/gpt_output_file_0.jsonl", model_name=MODEL_NAME)
+    get_results_from_gpt(gpt_input_batch_dir=GPT_BATCH_DIR, prefix="eval_dataset_", output_dir=args.output_dir)
+    add_gpt_column_to_eval_dataset(eval_dataset, args.output_dir / "gpt_output_file_0.jsonl", model_name=MODEL_NAME)

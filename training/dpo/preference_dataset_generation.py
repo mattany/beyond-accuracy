@@ -1,9 +1,16 @@
-import random
-from datasets import Dataset, DatasetDict
+"""Prepare pairwise preference data from per-answer scores and model outputs.
 
-import pandas as pd
+This module constructs DPO-compatible ``prompt``, ``chosen``, and ``rejected``
+records. It does not train a model; no end-to-end DPO trainer is tracked here.
+"""
+
+from argparse import ArgumentParser
 import itertools
-from config import PROJECT_DIR, RUN_NUMBER
+from pathlib import Path
+import random
+
+from datasets import Dataset, DatasetDict
+import pandas as pd
 
 
 def generate_pairwise_comparisons(
@@ -125,12 +132,37 @@ def generate_pairwise_comparisons(
     )
 
 
+def parse_args():
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--scores",
+        type=Path,
+        required=True,
+        help="per-question score CSV indexed by Index, with one column per model",
+    )
+    parser.add_argument(
+        "--answers",
+        type=Path,
+        required=True,
+        help="answer CSV indexed by index, with question and model-answer columns",
+    )
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--top-k", type=int)
+    parser.add_argument("--min-diff", type=float, default=1.0)
+    parser.add_argument("--no-shuffle", action="store_true")
+    parser.add_argument("--push-to-hub", action="store_true")
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
+    args = parse_args()
+    args.output.parent.mkdir(parents=True, exist_ok=True)
     generate_pairwise_comparisons(
-        scores_path=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{RUN_NUMBER}/aggregations/aggregate_scores.csv",
-        answers_path=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv",
-        output_path=f"{PROJECT_DIR}/Benchmarking/deep_eval/data/run_{RUN_NUMBER}/aggregations/preference_dataset_1_stddev.csv",
-        # top_k=3,
-        min_diff=1,
-        push_to_hub=False,
+        scores_path=args.scores,
+        answers_path=args.answers,
+        output_path=args.output,
+        top_k=args.top_k,
+        min_diff=args.min_diff,
+        shuffle=not args.no_shuffle,
+        push_to_hub=args.push_to_hub,
     )

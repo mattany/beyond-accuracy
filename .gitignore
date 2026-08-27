@@ -1155,7 +1155,7 @@
 /SFT/.idea/vcs.xml
 /SFT/.idea/SFT.iml
 /.idea/*
-/SFT/batch_file_gen/config.py
+/training/data_generation/config.py
 /Benchmarking/*/config.py
 *.pyc
 *.DS_Store
