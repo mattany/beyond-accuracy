@@ -13,6 +13,7 @@ from tools.verify_repository import (
     PLANNED_ENV_EXAMPLE,
     REQUIRED_PUBLIC_PATHS,
     REQUIRED_STRUCTURE,
+    SECRET_PATTERNS,
     verify_repository,
 )
 
@@ -20,6 +21,30 @@ from tools.verify_repository import (
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_DIRECTORIES = [path for path, kind in REQUIRED_STRUCTURE if kind == "dir"]
 REQUIRED_FILES = [path for path, kind in REQUIRED_STRUCTURE if kind == "file"]
+SECRET_VIOLATION_PREFIXES = tuple(f"{label} in " for label in SECRET_PATTERNS)
+TRACKED_SECRET_PATTERN = re.compile(
+    r"(sk-(proj-|ant-api[0-9]+-)?[A-Za-z0-9_-]{20,}|"
+    r"hf_[A-Za-z0-9]{20,}|"
+    r"AIza[A-Za-z0-9_-]{30,}|"
+    r"AKIA[0-9A-Z]{16}|"
+    r"gh[pousr]_[A-Za-z0-9]{20,}|"
+    r"xai-[A-Za-z0-9_-]{20,}|"
+    r"lsv2_[A-Za-z0-9_:-]{20,})",
+    re.IGNORECASE,
+)
+REDDIT_ASSIGNMENT_PATTERN = re.compile(
+    r'(?:client_id|client_secret)\s*=\s*["\'][A-Za-z0-9_-]{16,}["\']',
+    re.IGNORECASE,
+)
+
+
+def secret_violations(violations: list[str]) -> list[str]:
+    return [
+        violation
+        for violation in violations
+        if violation.startswith(SECRET_VIOLATION_PREFIXES)
+        or violation.startswith("non-example value in .env.example")
+    ]
 
 
 def build_valid_public_tree(root: Path) -> None:
@@ -319,9 +344,47 @@ def test_isolated_cli_fails_on_invalid_tree(tmp_path):
     assert not re.search(r"\bhf_[A-Za-z0-9]{20,}", combined)
 
 
+def test_live_repository_has_no_secret_violations():
+    violations = secret_violations(verify_repository(ROOT))
+    assert violations == []
+
+
+def test_live_repository_may_still_miss_publication_docs():
+    violations = verify_repository(ROOT)
+    assert any(error.startswith("required public path missing: README.md") for error in violations)
+    assert any(error.startswith("required public path missing: LICENSE") for error in violations)
+
+
+def test_tracked_git_files_have_no_secret_patterns():
+    result = subprocess.run(
+        [
+            "git",
+            "grep",
+            "-nEi",
+            TRACKED_SECRET_PATTERN.pattern,
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 1, "tracked secret pattern matches found"
+    assert not result.stdout.strip()
+
+
+def test_tracked_git_files_have_no_reddit_assignments():
+    matches = []
+    for path in subprocess.check_output(["git", "ls-files"], cwd=ROOT, text=True).splitlines():
+        text = (ROOT / path).read_text(encoding="utf-8", errors="ignore")
+        if REDDIT_ASSIGNMENT_PATTERN.search(text):
+            matches.append(path)
+    assert matches == []
+
+
 def test_live_repository_has_violations_without_leaking_secrets():
     violations = verify_repository(ROOT)
     assert violations
+    assert secret_violations(violations) == []
     output = "\n".join(violations)
     assert not re.search(r"\bsk-(?:proj-|ant-api\d+-)?[A-Za-z0-9_-]{20,}", output)
     assert not re.search(r"\bhf_[A-Za-z0-9]{20,}", output)

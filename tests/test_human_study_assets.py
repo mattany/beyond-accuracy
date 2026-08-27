@@ -1,6 +1,7 @@
 import hashlib
 import json
 import re
+import runpy
 import shutil
 import subprocess
 import sys
@@ -140,6 +141,28 @@ def test_prep_scripts_import_canonical_rubrics_modules():
         assert "from evaluation.rubrics.custom_metrics.metrics import" in text
         assert "from custom_metrics.metrics import" not in text
         assert "from config import OPENAI_API_KEY" not in text
+
+
+def test_fetch_reddit_formatting_uses_environment_credentials():
+    text = (
+        ROOT / "human_study/judge_validation/fetch_reddit_formatting.py"
+    ).read_text(encoding="utf-8")
+    assert 'REDDIT_CLIENT_ID = "' not in text
+    assert 'REDDIT_CLIENT_SECRET = "' not in text
+    assert 'required_env("REDDIT_CLIENT_ID")' in text
+    assert 'required_env("REDDIT_CLIENT_SECRET")' in text
+
+
+def test_fetch_reddit_formatting_requires_env_before_api_use(monkeypatch):
+    script = ROOT / "human_study/judge_validation/fetch_reddit_formatting.py"
+    monkeypatch.delenv("REDDIT_CLIENT_ID", raising=False)
+    monkeypatch.delenv("REDDIT_CLIENT_SECRET", raising=False)
+    monkeypatch.setattr(sys, "argv", [str(script), "missing.csv"])
+
+    namespace = runpy.run_path(str(script), run_name="credential_check")
+
+    with pytest.raises(RuntimeError, match="REDDIT_CLIENT_ID"):
+        namespace["main"]()
 
 
 def test_prep_import_paths_resolve_without_api_calls():

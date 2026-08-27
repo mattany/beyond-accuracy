@@ -1,9 +1,12 @@
 import os
 from pathlib import Path
 
-from training.data_generation import config
-
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def _optional_env(name: str) -> str | None:
+    value = os.getenv(name)
+    return value.strip() if value and value.strip() else None
 DATA_DIR = ROOT / "data" / "qa_pairs"
 STATE_DIR = Path(__file__).resolve().parent
 
@@ -13,12 +16,12 @@ STATE_DIR = Path(__file__).resolve().parent
 #   TEACHER_PROVIDER=kimi python -m training.data_generation.gen_batch
 PROVIDER = os.environ.get("TEACHER_PROVIDER", "openai").strip().lower()
 
-# Per-provider settings. `api_key` names refer to attributes you set in
-# training/data_generation/config.py (which is gitignored). Both providers speak the
-# OpenAI Batch wire format, they only differ in base_url / model / request body.
+# Per-provider settings loaded from environment variables (see `.env.example`).
+# Both providers speak the OpenAI Batch wire format; they only differ in
+# base_url / model / request body.
 PROVIDERS = {
     "openai": {
-        "api_key": getattr(config, "OPENAI_API_KEY", None),
+        "api_key": _optional_env("OPENAI_API_KEY"),
         "base_url": None,  # default OpenAI endpoint
         "model": "gpt-5-2025-08-07",
         "output_token_limit": 2048,
@@ -31,10 +34,10 @@ PROVIDERS = {
     "kimi": {
         # Moonshot's OpenAI-compatible endpoint. This is the international host;
         # use https://api.moonshot.cn/v1 if your key is a mainland-China account.
-        "api_key": getattr(config, "MOONSHOT_API_KEY", None),
-        "base_url": getattr(config, "MOONSHOT_BASE_URL", "https://api.moonshot.ai/v1"),
-        "model": getattr(config, "MOONSHOT_MODEL", "kimi-k2.6"),
-        "output_token_limit": getattr(config, "MOONSHOT_MAX_TOKENS", 768),
+        "api_key": _optional_env("MOONSHOT_API_KEY"),
+        "base_url": os.getenv("MOONSHOT_BASE_URL", "https://api.moonshot.ai/v1"),
+        "model": os.getenv("MOONSHOT_MODEL", "kimi-k2.6"),
+        "output_token_limit": int(os.getenv("MOONSHOT_MAX_TOKENS", "768")),
         "input_dir": "kimi_input_batches",
         "output_dir": "kimi_outputs",
         "answers_csv": "ask_science_kimi_answers.csv",
@@ -73,8 +76,8 @@ def get_client():
     if not API_KEY:
         key_name = "OPENAI_API_KEY" if PROVIDER == "openai" else "MOONSHOT_API_KEY"
         raise RuntimeError(
-            f"No API key for provider '{PROVIDER}'. Add {key_name} = \"...\" to "
-            f"training/data_generation/config.py"
+            f"No API key for provider '{PROVIDER}'. Set {key_name} in your "
+            f"environment or `.env` file (see `.env.example`)."
         )
     kwargs = {"api_key": API_KEY}
     if BASE_URL:

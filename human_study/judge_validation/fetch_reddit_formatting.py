@@ -48,10 +48,11 @@ except ImportError as e:
     print("Install with: pip install praw selenium")
     sys.exit(1)
 
-# Reddit API credentials
-REDDIT_CLIENT_ID = "XxtFsMTYONOz3opDovuo6A"
-REDDIT_CLIENT_SECRET = "UQsuqpFzrDUN2odyEraeIkCriepecA"
-REDDIT_USER_AGENT = "reddit_formatting_fetcher/1.0"
+def required_env(name: str) -> str:
+    value = os.getenv(name)
+    if not value:
+        raise RuntimeError(f"Set {name} before running this script.")
+    return value
 
 
 def normalize_text(text):
@@ -257,9 +258,12 @@ def main():
     # Initialize Reddit API
     print("Connecting to Reddit API...")
     reddit = praw.Reddit(
-        client_id=REDDIT_CLIENT_ID,
-        client_secret=REDDIT_CLIENT_SECRET,
-        user_agent=REDDIT_USER_AGENT
+        client_id=required_env("REDDIT_CLIENT_ID"),
+        client_secret=required_env("REDDIT_CLIENT_SECRET"),
+        user_agent=os.getenv(
+            "REDDIT_USER_AGENT",
+            "beyond-accuracy research script",
+        ),
     )
     
     # Initialize Selenium driver

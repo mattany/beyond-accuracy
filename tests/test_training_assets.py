@@ -87,6 +87,35 @@ def test_openai_playground_fails_clearly_without_api_key(monkeypatch):
         runpy.run_path(str(script), run_name="__main__")
 
 
+def test_data_generation_constants_load_keys_from_environment(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", " example-openai-key ")
+    monkeypatch.setenv("MOONSHOT_API_KEY", " example-moonshot-key ")
+    monkeypatch.delenv("TEACHER_PROVIDER", raising=False)
+
+    import importlib
+
+    from training.data_generation import constants
+
+    constants = importlib.reload(constants)
+
+    assert constants.PROVIDERS["openai"]["api_key"] == "example-openai-key"
+    assert constants.PROVIDERS["kimi"]["api_key"] == "example-moonshot-key"
+
+
+def test_data_generation_client_requires_provider_key(monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("TEACHER_PROVIDER", raising=False)
+
+    import importlib
+
+    from training.data_generation import constants
+
+    constants = importlib.reload(constants)
+
+    with pytest.raises(RuntimeError, match="OPENAI_API_KEY"):
+        constants.get_client()
+
+
 def test_push_to_hub_requires_repository(tmp_path):
     common = [
         "--scores",

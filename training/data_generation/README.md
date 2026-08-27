@@ -6,17 +6,16 @@
    source .venv/bin/activate
    ```
 
-2. Add a config file to `training/data_generation/config.py` with your
-   credentials:
-   ```python
+2. Copy `.env.example` to `.env` and set the provider keys you use:
+   ```dotenv
    # OpenAI teacher (default provider)
-   OPENAI_API_KEY = "sk-proj-XXXXXXXXX"
+   OPENAI_API_KEY=
 
    # Kimi / Moonshot teacher (only needed when TEACHER_PROVIDER=kimi)
-   MOONSHOT_API_KEY = "sk-XXXXXXXXX"
+   MOONSHOT_API_KEY=
    # Optional overrides (defaults shown):
-   # MOONSHOT_BASE_URL = "https://api.moonshot.ai/v1"  # use .cn for a China account
-   # MOONSHOT_MODEL = "kimi-k2.6"
+   # MOONSHOT_BASE_URL=https://api.moonshot.ai/v1  # use .cn for a China account
+   # MOONSHOT_MODEL=kimi-k2.6
    ```
 
 3. From the repo root:
@@ -33,8 +32,8 @@ providers speak the OpenAI Batch wire format; only the endpoint, model, and
 request body differ. Each provider writes to its own files so runs never clobber
 each other:
 
-| Provider | API key in config | Model | Answers CSV | Output dir |
-|----------|-------------------|-------|-------------|------------|
+| Provider | API key env var | Model | Answers CSV | Output dir |
+|----------|-----------------|-------|-------------|------------|
 | `openai` (default) | `OPENAI_API_KEY` | `gpt-5-2025-08-07` | `ask_science_gpt_5_answers.csv` | `GPT5_outputs/` |
 | `kimi` | `MOONSHOT_API_KEY` | `kimi-k2.6` | `ask_science_kimi_answers.csv` | `kimi_outputs/` |
 
