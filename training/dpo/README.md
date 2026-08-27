@@ -14,3 +14,7 @@ python training/dpo/preference_dataset_generation.py \
 
 This repository does not contain an end-to-end DPO trainer or optimizer. The
 script documents preference-data construction only.
+
+Publishing is opt-in. Pass both `--push-to-hub` and an explicit
+`--hub-repo ORGANIZATION/DATASET`; no personal Hub destination is embedded in
+the generator.

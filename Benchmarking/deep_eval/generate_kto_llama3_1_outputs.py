@@ -1,15 +1,12 @@
 from argparse import ArgumentParser
 import asyncio
 from pathlib import Path
-import time
+import textwrap
+
 import pandas as pd
 import tqdm
 from tqdm.asyncio import tqdm_asyncio
-from deepeval import assert_test
-from deepeval.test_case import LLMTestCase
-from deepeval.metrics import AnswerRelevancyMetric
-import textwrap
-from mlx_model import MLXModel
+
 from ollama_model import OllamaModel
 from prompt_templates import generate_prompt, system_prompt
 
@@ -17,8 +14,6 @@ BATCH_SIZE = 32
 ROOT = Path(__file__).resolve().parents[2]
 llama_3_1_8b_instruct = "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit"
 llama_3_8b_instruct = "mlx-community/Meta-Llama-3-8B-Instruct-4bit"
-
-# custom_llm = MLXModel(llama_3_8b_instruct)
 
 custom_llm = OllamaModel(system_prompt=system_prompt, visual=True)
 # custom_llm = OllamaModel(visual=False)
@@ -86,25 +81,8 @@ async def main(args):
         out_df = pd.DataFrame(results, columns=["index", "question", "answer"])
         args.output.parent.mkdir(parents=True, exist_ok=True)
         out_df.to_csv(args.output, mode='a', header=False, index=False)
-    # Output the results
-    # for i, result in enumerate(results):
-        # print(f"Prompt {i+1}: {prompts[i]}")
-        # print(f"Response: {result}\n")
-        # print(result)
-# def test_answer_relevancy():
-#     answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
-#     test_case = LLMTestCase(
-#         input="What if these shoes don't fit?",
-#         # Replace this with the actual output of your LLM application
-#         actual_output="We offer a 30-day full refund at no extra cost."
-#     )
-#     assert_test(test_case, [answer_relevancy_metric])
 
-async def test():
-    res = await generate_answer("how do centipedes/millipedes control all of their legs? is there some kind of simple pattern they use, or does it take a lot of brainpower?")
-    print(res[1])
-
-def parse_args():
+def parse_args(argv=None):
     parser = ArgumentParser()
     parser.add_argument(
         "--input",
@@ -116,9 +94,8 @@ def parse_args():
         type=Path,
         default=ROOT / "training" / "dpo" / "llama3_18B_ask_science_answers.csv",
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 if __name__ == "__main__":
-    # asyncio.run(main())
-    asyncio.run(test())
+    asyncio.run(main(parse_args()))

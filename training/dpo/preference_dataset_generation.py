@@ -22,6 +22,7 @@ def generate_pairwise_comparisons(
     min_diff=0,
     shuffle=True,
     push_to_hub=False,
+    hub_repo=None,
 ):
     """
 
@@ -103,6 +104,8 @@ def generate_pairwise_comparisons(
         result_df = result_df.sample(frac=1).reset_index(drop=True)
 
     if push_to_hub:
+        if not hub_repo:
+            raise ValueError("hub_repo is required when push_to_hub is enabled")
         unique_ids = result_df["question_id"].unique().tolist()
         random.seed(42)
         random.shuffle(unique_ids)
@@ -124,7 +127,7 @@ def generate_pairwise_comparisons(
                 "test": eval_dataset,  # ~10%
             }
         )
-        final_dataset.push_to_hub("mattany/ask_science_preference_dataset_1_stddev")
+        final_dataset.push_to_hub(hub_repo)
 
     result_df.to_csv(output_path, index=False)
     print(
@@ -132,7 +135,7 @@ def generate_pairwise_comparisons(
     )
 
 
-def parse_args():
+def parse_args(argv=None):
     parser = ArgumentParser(description=__doc__)
     parser.add_argument(
         "--scores",
@@ -151,7 +154,11 @@ def parse_args():
     parser.add_argument("--min-diff", type=float, default=1.0)
     parser.add_argument("--no-shuffle", action="store_true")
     parser.add_argument("--push-to-hub", action="store_true")
-    return parser.parse_args()
+    parser.add_argument("--hub-repo", help="Hugging Face dataset repository ID")
+    args = parser.parse_args(argv)
+    if args.push_to_hub and not args.hub_repo:
+        parser.error("--hub-repo is required with --push-to-hub")
+    return args
 
 
 if __name__ == "__main__":
@@ -165,4 +172,5 @@ if __name__ == "__main__":
         min_diff=args.min_diff,
         shuffle=not args.no_shuffle,
         push_to_hub=args.push_to_hub,
+        hub_repo=args.hub_repo,
     )
