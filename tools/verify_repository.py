@@ -28,7 +28,6 @@ REQUIRED_STRUCTURE: tuple[tuple[str, str], ...] = (
     ("data/qa_pairs", "dir"),
     ("docs", "dir"),
     ("docs/artifacts.md", "file"),
-    ("docs/superpowers", "dir"),
     ("evaluation", "dir"),
     ("evaluation/factuality", "dir"),
     ("evaluation/model_generation", "dir"),

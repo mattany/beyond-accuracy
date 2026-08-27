@@ -33,9 +33,11 @@ and `--output` to `winrate` so canonical `aggregations_v2/`, `bootstrap/`, and
 in the canonical result directories; treat full rubric rescoring as a
 destructive operation.
 
-The `model_outputs/scillama3/` files are retained conservatively: they have
-different model columns from the canonical generation tables and their question
-set is not byte-for-byte identical.
+The `model_outputs/scillama3/` directory holds exploratory Llama-3.3-70B base
+and SFT answers (`base_model_output.csv`, `output.csv` with `llama70B_SFT`).
+These are not duplicated in `model_outputs/main/` (8B SciComma variants) and are
+kept for 70B comparisons. `processing.py` converts the raw `qa.txt` /
+`base_model_qa.txt` dumps to CSV when needed.
 
 ## Factuality
 

@@ -1,13 +1,9 @@
-from datetime import datetime
-from pathlib import Path
 import pandas as pd
-import logging
 
 from evaluation.rubrics.custom_metrics.classes.Jargon.config import JARGON_BASE_PATH
 from evaluation.rubrics.custom_metrics.classes.Jargon.jargon_util import analyze_text
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
-import asyncio
 
 
 class JargonMetric(BaseMetric):
@@ -49,37 +45,3 @@ class JargonMetric(BaseMetric):
     @property
     def __name__(self):
         return "Jargon Metric"
-
-
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger("main_logger")
-
-
-def answer_generator_from_csv(csv_path, indexes):
-    df = pd.read_csv(csv_path)
-    df = df.where(df["index"].isin(indexes)).dropna()
-    return df
-
-
-def add_answer_grades(answers_df: pd.DataFrame):
-    answers_df["dejargonizer_report"] = None
-    results = [calculate_grade(row["answer"]) for index, row in answers_df.iterrows()]
-    answers_df["dejargonizer_report"] = results
-    return answers_df
-
-
-def main():
-    random_sample = [3898, 8916, 2136, 6061, 7766]
-    answers = answer_generator_from_csv(
-        Path(__file__).resolve().parents[5] / "evaluation/model_outputs/scillama3/base_model_output.csv",
-        random_sample,
-    )
-    answers = add_answer_grades(answers)
-
-    answers.to_csv(
-        Path(__file__).resolve().parents[5] / "evaluation/model_outputs/scillama3/base_model_jargon_index.csv"
-    )
-
-
-if __name__ == "__main__":
-    main()

@@ -62,8 +62,9 @@ tree.
   Experiment B metric scoring.
 - `evaluation/model_outputs/main/`, `evaluation/model_outputs/dpo_variants/`,
   `evaluation/model_outputs/human_variants/` — canonical generation tables.
-- `evaluation/model_outputs/scillama3/` — retained conservatively (different model
-  columns; 90/91 question overlap with canonical tables).
+- `evaluation/model_outputs/scillama3/` — exploratory Llama-3.3-70B base/SFT
+  outputs (`base_model_output.csv`, `output.csv`); not duplicated in `main/`.
+  `processing.py` converts the raw QA text dumps to CSV.
 - `evaluation/results/rubric_scores/wilcoxon_tests.py` — significance tests.
 - `evaluation/results/preference_metrics/regression_metrics_merged.csv` — merged
   Experiment B regression inputs.

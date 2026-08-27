@@ -1,49 +1,48 @@
+"""Convert SciComma Llama 3.3 70B QA dumps to CSV.
+
+The ``output.csv`` and ``base_model_output.csv`` files in this directory hold
+Llama-3.3-70B SFT and base-model answers for the 91-item evaluation subset.
+They are not duplicated in ``evaluation/model_outputs/main/`` (which covers the
+8B SciComma variants) and are retained for exploratory 70B comparisons.
+"""
+
+from __future__ import annotations
+
+import argparse
 import csv
 import re
-import pandas as pd
+from pathlib import Path
 
-def process_file(input_file, output_file):
-    with open(input_file, 'r') as f:
-        data = f.read()
 
-    # Regular expression to capture index, question, and answer
+def process_file(input_file: str | Path, output_file: str | Path) -> None:
+    """Parse a QA text dump and write ``row_index,index,question,answer`` CSV."""
+    with open(input_file, "r", encoding="utf-8") as handle:
+        data = handle.read()
+
     pattern = re.compile(
         r"### Index: (\d+)\n<\|begin_of_text\|>.*?### Question:\n(.*?)\n\n### Answer:\n(.*?)(?=\n### Index:|<\|eot_id\|>|$)",
-        re.DOTALL
+        re.DOTALL,
     )
-
-    # Extract matches
     matches = pattern.findall(data)
 
-    # Write to CSV
-    with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
+    with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(["row_index", "index", "question", "answer"])
-
         for row_index, match in enumerate(matches, start=1):
             index, question, answer = match
-            # Clean up special tokens from question and answer
-            question = question.strip()
-            answer = answer.strip()
-            writer.writerow([row_index, index, question, answer])
+            writer.writerow([row_index, index.strip(), question.strip(), answer.strip()])
 
 
-#
-# # # Input and output file paths
-# input_file = "base_model_qa.txt"
-# output_file = "base_model_output.csv"
-# #
-# process_file(input_file, output_file)
-# print(f"Conversion completed. CSV saved to {output_file}")
-#
-#
-# df = pd.read_csv("../data/test_data/corrected_evaluation_dataset.csv")
-# llama_df = pd.read_csv("../scillama3/base_model_output.csv").drop(columns=["question"])
-# out_df = df.merge(llama_df, right_on="index", left_on="index")
-# out_df.to_csv("../scillama3/corrected_evaluation_dataset.csv")
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Convert a SciComma Llama QA text dump to CSV."
+    )
+    parser.add_argument("input_file", type=Path, help="Source QA text dump")
+    parser.add_argument("output_file", type=Path, help="Destination CSV path")
+    args = parser.parse_args()
+    process_file(args.input_file, args.output_file)
+    print(f"Conversion completed. CSV saved to {args.output_file}")
 
 
-df = pd.read_csv("../scillama3/corrected_evaluation_dataset.csv")
-llama_df = pd.read_csv("../scillama3/output.csv").drop(columns=["question"])
-out_df = df.merge(llama_df, right_on="index", left_on="index")
-out_df.to_csv("../scillama3/corrected_evaluation_dataset.csv")
+if __name__ == "__main__":
+    main()

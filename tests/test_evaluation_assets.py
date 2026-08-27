@@ -228,6 +228,25 @@ def test_canonical_output_blob_identity(relative_path, expected_sha256):
     assert digest == expected_sha256
 
 
+def test_bootstrap_module_imports_package_safe():
+    from evaluation.rubrics.custom_metrics.bootstrap import (
+        bootstrap_analysis,
+        bootstrap_analysis_v2,
+    )
+
+    assert callable(bootstrap_analysis)
+    assert callable(bootstrap_analysis_v2)
+
+
+def test_scillama3_processing_import_is_side_effect_free():
+    namespace = runpy.run_path(
+        str(ROOT / "evaluation/model_outputs/scillama3/processing.py"),
+        run_name="scillama3_processing_import",
+    )
+    assert callable(namespace["process_file"])
+    assert callable(namespace["main"])
+
+
 def test_environment_settings_strip_values_and_resolve_repository(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "  example-openai-key  ")
     monkeypatch.setenv("HF_TOKEN", "   ")

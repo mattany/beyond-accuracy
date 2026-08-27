@@ -3,10 +3,9 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 
-# Import v2 definitions from aggregate_v2.py to keep in sync
-from aggregate_v2 import (
-    METRIC_WEIGHTS, 
-    METRIC_FALLBACKS, 
+from evaluation.rubrics.custom_metrics.aggregate_v2 import (
+    METRIC_FALLBACKS,
+    METRIC_WEIGHTS,
     LOWER_IS_BETTER,
     NORMALIZATION_RANGES,
 )
@@ -291,25 +290,18 @@ def bootstrap_analysis(
     print("\nSnippet of Results:")
     print(results_df[["Metric", "Model", "Mean_Score", "Bootstrap_SE"]].head(10).to_string(index=False))
 
-# --- Run configuration ---
-from evaluation.rubrics.settings import result_directory
-
-target_directory = result_directory(9)
 
 if __name__ == "__main__":
-    # Ensure numpy seed for reproducibility
-    np.random.seed(42)
-    
     import sys
-    
-    if len(sys.argv) > 1:
-        target_directory = sys.argv[1]
-        print(f"Analyzing directory provided by argument: {target_directory}")
-    else:
-        print(f"Analyzing default directory: {target_directory}")
-    
-    # Run original bootstrap analysis
+
+    from evaluation.rubrics.settings import result_directory
+
+    np.random.seed(42)
+
+    target_directory = (
+        sys.argv[1] if len(sys.argv) > 1 else result_directory(9)
+    )
+    print(f"Analyzing directory: {target_directory}")
+
     bootstrap_analysis(target_directory)
-    
-    # Run v2 bootstrap analysis
     bootstrap_analysis_v2(target_directory)
