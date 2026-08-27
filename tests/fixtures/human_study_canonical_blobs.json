@@ -1,0 +1,448 @@
+{
+  "parent_commit": "c7c6d252ad5d337459ef63ec5137ca29e70da538",
+  "artifacts": [
+    {
+      "path": "human_study/judge_validation/balanced_dataset_v2_human/ask_science_human_metrics.csv",
+      "parent_path": "scripts/judge_alignment/balanced_dataset_v2_human/ask_science_human_metrics.csv",
+      "git_blob": "1b3505cc5592ecf6f6cf6f7ce17b19b8c4f97064"
+    },
+    {
+      "path": "human_study/judge_validation/balanced_dataset_v2_human/balanced_10.csv",
+      "parent_path": "scripts/judge_alignment/balanced_dataset_v2_human/balanced_10.csv",
+      "git_blob": "f800785b28b38dc2223b1a33d32ab7a6cfe4180d"
+    },
+    {
+      "path": "human_study/judge_validation/balanced_dataset_v2_human/balanced_20_humor_v4.csv",
+      "parent_path": "scripts/judge_alignment/balanced_dataset_v2_human/balanced_20_humor_v4.csv",
+      "git_blob": "0ac64c6c4a7881c05a7191b1f0f4700655207a6a"
+    },
+    {
+      "path": "human_study/judge_validation/balanced_dataset_v2_human/balanced_20_humor_v5_conn_v4.csv",
+      "parent_path": "scripts/judge_alignment/balanced_dataset_v2_human/balanced_20_humor_v5_conn_v4.csv",
+      "git_blob": "8b6b6ae0c27c6e8cd03253d0851ffcaa8a867af6"
+    },
+    {
+      "path": "human_study/judge_validation/balanced_dataset_v2_human/balanced_20_scaffolding.csv",
+      "parent_path": "scripts/judge_alignment/balanced_dataset_v2_human/balanced_20_scaffolding.csv",
+      "git_blob": "e2612ee3f8700b336946c469a1061852faef4ffb"
+    },
+    {
+      "path": "human_study/judge_validation/balanced_dataset_v2_human/balanced_30.csv",
+      "parent_path": "scripts/judge_alignment/balanced_dataset_v2_human/balanced_30.csv",
+      "git_blob": "188e834e3935847bac2155dc64795ef983ef3284"
+    },
+    {
+      "path": "human_study/judge_validation/balanced_dataset_v2_human/balanced_30_formatted.csv",
+      "parent_path": "scripts/judge_alignment/balanced_dataset_v2_human/balanced_30_formatted.csv",
+      "git_blob": "a1ad305ffc1e2e91580f0efcf76c97cac48951e6"
+    },
+    {
+      "path": "human_study/judge_validation/balanced_dataset_v2_human/combined_analysis.png",
+      "parent_path": "scripts/judge_alignment/balanced_dataset_v2_human/combined_analysis.png",
+      "git_blob": "0a12d9c56a9dc245be2ea6eb4ca3a028e31ef54d"
+    },
+    {
+      "path": "human_study/judge_validation/balanced_dataset_v2_human/connection_reasons.csv",
+      "parent_path": "scripts/judge_alignment/balanced_dataset_v2_human/connection_reasons.csv",
+      "git_blob": "20fba4eacc424678acca30e080527c6cd542e2d0"
+    },
+    {
+      "path": "human_study/judge_validation/balanced_dataset_v2_human/human_llm_corr_majority.csv",
+      "parent_path": "scripts/judge_alignment/balanced_dataset_v2_human/human_llm_corr_majority.csv",
+      "git_blob": "0d9f10fbe95dc65b2295e00c2b424e9178f74c59"
+    },
+    {
+      "path": "human_study/judge_validation/balanced_dataset_v2_human/human_llm_corr_mean.csv",
+      "parent_path": "scripts/judge_alignment/balanced_dataset_v2_human/human_llm_corr_mean.csv",
+      "git_blob": "ed23901a26b45b8fa00e5434ba06e6ccbf09f77e"
+    },
+    {
+      "path": "human_study/judge_validation/balanced_dataset_v2_human/intercoder_reliability.csv",
+      "parent_path": "scripts/judge_alignment/balanced_dataset_v2_human/intercoder_reliability.csv",
+      "git_blob": "cd2027f6b390a453e054ca28147770f0d78f20f4"
+    },
+    {
+      "path": "human_study/judge_validation/balanced_dataset_v2_human/metaphor_v6_balanced_20.csv",
+      "parent_path": "scripts/judge_alignment/balanced_dataset_v2_human/metaphor_v6_balanced_20.csv",
+      "git_blob": "58d09f2af4ef1a13a54223b85b0faa596f9d76a6"
+    },
+    {
+      "path": "human_study/judge_validation/balanced_dataset_v2_human/metric_correlations.png",
+      "parent_path": "scripts/judge_alignment/balanced_dataset_v2_human/metric_correlations.png",
+      "git_blob": "280fbe252348620d8fba7a8ed1053f229f21c968"
+    },
+    {
+      "path": "human_study/judge_validation/combined_analysis.png",
+      "parent_path": "scripts/judge_alignment/combined_analysis.png",
+      "git_blob": "7b5cab7d17ae7ebaa5c03611e96d69ef7987bf17"
+    },
+    {
+      "path": "human_study/judge_validation/exclude_indices.csv",
+      "parent_path": "scripts/judge_alignment/exclude_indices.csv",
+      "git_blob": "494fb214a17f811698476a6d74fdebc9d4eb77d8"
+    },
+    {
+      "path": "human_study/judge_validation/human_llm_corr_majority.csv",
+      "parent_path": "scripts/judge_alignment/human_llm_corr_majority.csv",
+      "git_blob": "2b996bb045b6991b824f33791b7749a92152312a"
+    },
+    {
+      "path": "human_study/judge_validation/human_llm_corr_mean.csv",
+      "parent_path": "scripts/judge_alignment/human_llm_corr_mean.csv",
+      "git_blob": "ca8af10130f26f209a717a6b8fa86a49a0ebdd80"
+    },
+    {
+      "path": "human_study/judge_validation/intercoder_reliability.csv",
+      "parent_path": "scripts/judge_alignment/intercoder_reliability.csv",
+      "git_blob": "9ebaa659173c6b838a1dc332d08eb1d2a0cf9c09"
+    },
+    {
+      "path": "human_study/judge_validation/merged_all_metrics_annotations.csv",
+      "parent_path": "scripts/judge_alignment/merged_all_metrics_annotations.csv",
+      "git_blob": "cc3c5a35c6fb8b51599c149d6df606e1240194d3"
+    },
+    {
+      "path": "human_study/judge_validation/tie_breaker_v2/analogy_v2_disagreements.csv",
+      "parent_path": "scripts/judge_alignment/tie_breaker_v2/analogy_v2_disagreements.csv",
+      "git_blob": "5f27dbfedd6e080cd006fca0addc1fb1bc442675"
+    },
+    {
+      "path": "human_study/judge_validation/tie_breaker_v2/balanced_30_analogy_formatted.csv",
+      "parent_path": "scripts/judge_alignment/tie_breaker_v2/balanced_30_analogy_formatted.csv",
+      "git_blob": "abe9229b5c30b445f89a0c9a02ff7ae097e9a48c"
+    },
+    {
+      "path": "human_study/judge_validation/tie_breaker_v2/balanced_30_analogy_only_formatted.csv",
+      "parent_path": "scripts/judge_alignment/tie_breaker_v2/balanced_30_analogy_only_formatted.csv",
+      "git_blob": "025143d1a5b70535f245dad7beeaad96f111fdc5"
+    },
+    {
+      "path": "human_study/judge_validation/tie_breaker_v2/combined_all_metrics.csv",
+      "parent_path": "scripts/judge_alignment/tie_breaker_v2/combined_all_metrics.csv",
+      "git_blob": "7322836dd7917d43fc3f8fbe906e324cec458a96"
+    },
+    {
+      "path": "human_study/judge_validation/tie_breaker_v2/combined_all_metrics_stacked.csv",
+      "parent_path": "scripts/judge_alignment/tie_breaker_v2/combined_all_metrics_stacked.csv",
+      "git_blob": "e8f72cd77ecc2a826902468806edf0e0c5987997"
+    },
+    {
+      "path": "human_study/judge_validation/tie_breaker_v2/combined_analysis.png",
+      "parent_path": "scripts/judge_alignment/tie_breaker_v2/combined_analysis.png",
+      "git_blob": "fdb4a29a5953e840f26990eca53594d2b07a7825"
+    },
+    {
+      "path": "human_study/judge_validation/tie_breaker_v2/human_llm_corr_majority.csv",
+      "parent_path": "scripts/judge_alignment/tie_breaker_v2/human_llm_corr_majority.csv",
+      "git_blob": "94f808c9c637324a108e17caa0287e8c3928ee0d"
+    },
+    {
+      "path": "human_study/judge_validation/tie_breaker_v2/human_llm_corr_mean.csv",
+      "parent_path": "scripts/judge_alignment/tie_breaker_v2/human_llm_corr_mean.csv",
+      "git_blob": "d73e19df40ca63b1eec3ccdb756c0c946e37e96a"
+    },
+    {
+      "path": "human_study/judge_validation/tie_breaker_v2/intercoder_reliability.csv",
+      "parent_path": "scripts/judge_alignment/tie_breaker_v2/intercoder_reliability.csv",
+      "git_blob": "fe8d152582b0f4b6c9ffb3b1ece17b0f8eadd34d"
+    },
+    {
+      "path": "human_study/judge_validation/unstable_questions_292_402.csv",
+      "parent_path": "scripts/judge_alignment/unstable_questions_292_402.csv",
+      "git_blob": "b90ff6f3fe3df7dd9b7f91a9507ed18a63a8ad59"
+    },
+    {
+      "path": "human_study/preferences/data/aggregate_statistics.csv",
+      "parent_path": "scripts/experiment_b/data/aggregate_statistics.csv",
+      "git_blob": "4ab3e72d1a852a205bb2e7075f40afadf306c40b"
+    },
+    {
+      "path": "human_study/preferences/data/cluster_statistics.csv",
+      "parent_path": "scripts/experiment_b/data/cluster_statistics.csv",
+      "git_blob": "325c5ea2ae6b23a1813f412a0cebc8e5bebbf979"
+    },
+    {
+      "path": "human_study/preferences/data/combined_cluster_analysis.png",
+      "parent_path": "scripts/experiment_b/data/combined_cluster_analysis.png",
+      "git_blob": "7b070246aa75a5cd840ca6b450bc7555ef865ef4"
+    },
+    {
+      "path": "human_study/preferences/data/correlation_results.csv",
+      "parent_path": "scripts/experiment_b/data/correlation_results.csv",
+      "git_blob": "675da70ef363c6c8c2707ce97f8e344dbccbf001"
+    },
+    {
+      "path": "human_study/preferences/data/dpo_rubric_up_pref_down.csv",
+      "parent_path": "scripts/experiment_b/data/dpo_rubric_up_pref_down.csv",
+      "git_blob": "aa0dceb2e4f78ec500d35fd5000f37307c02ec84"
+    },
+    {
+      "path": "human_study/preferences/data/experiment_b_eval_dataset.csv",
+      "parent_path": "scripts/experiment_b/data/experiment_b_eval_dataset.csv",
+      "git_blob": "71dd5805fceef26871abc66f5496ca5d30ea6b34"
+    },
+    {
+      "path": "human_study/preferences/data/experiment_b_eval_dataset_original.csv",
+      "parent_path": "scripts/experiment_b/data/experiment_b_eval_dataset_original.csv",
+      "git_blob": "ae2e1c1d6a7d583f254511bae2e233bfacd19f48"
+    },
+    {
+      "path": "human_study/preferences/data/experiment_b_merged.csv",
+      "parent_path": "scripts/experiment_b/data/experiment_b_merged.csv",
+      "git_blob": "31ab3fcd6bbb77feb4653e44160484dd6ff3add1"
+    },
+    {
+      "path": "human_study/preferences/data/experiment_b_sampled.csv",
+      "parent_path": "scripts/experiment_b/data/experiment_b_sampled.csv",
+      "git_blob": "8571a3c44bf38e16fbf5a91b0eff21624a72be40"
+    },
+    {
+      "path": "human_study/preferences/data/first_exp.csv",
+      "parent_path": "scripts/experiment_b/data/first_exp.csv",
+      "git_blob": "8a2ef713e989ac5c56ee15ef2b618979c1f84f35"
+    },
+    {
+      "path": "human_study/preferences/data/first_exp_filtered.csv",
+      "parent_path": "scripts/experiment_b/data/first_exp_filtered.csv",
+      "git_blob": "6e1a97d746f15fe137630db1fdc8a84e59587a01"
+    },
+    {
+      "path": "human_study/preferences/data/formality_scores.csv",
+      "parent_path": "scripts/experiment_b/data/formality_scores.csv",
+      "git_blob": "73325094e3868092b8a6515a17d3cc94480c85a4"
+    },
+    {
+      "path": "human_study/preferences/data/llm_metric_to_eval_mapping.csv",
+      "parent_path": "scripts/experiment_b/data/llm_metric_to_eval_mapping.csv",
+      "git_blob": "9e5cd14939268accdb3b534fad0f2fb90f7329ec"
+    },
+    {
+      "path": "human_study/preferences/data/logistic_regression_all_vs_nodpo.png",
+      "parent_path": "scripts/experiment_b/data/logistic_regression_all_vs_nodpo.png",
+      "git_blob": "ffab6b018e7c1ba32816ef80c409f6f69e446ce4"
+    },
+    {
+      "path": "human_study/preferences/data/logistic_regression_all_vs_nodpo_interaction.png",
+      "parent_path": "scripts/experiment_b/data/logistic_regression_all_vs_nodpo_interaction.png",
+      "git_blob": "d8be974af2003047a429de7834f0abf1fd22d0ba"
+    },
+    {
+      "path": "human_study/preferences/data/logistic_regression_all_vs_nohuman.png",
+      "parent_path": "scripts/experiment_b/data/logistic_regression_all_vs_nohuman.png",
+      "git_blob": "13ff34fad013271a6bcf1357423921506b758bf5"
+    },
+    {
+      "path": "human_study/preferences/data/logistic_regression_binarized.csv",
+      "parent_path": "scripts/experiment_b/data/logistic_regression_binarized.csv",
+      "git_blob": "917b87ef456fcb53d64492b8cc5bfde6db5711ea"
+    },
+    {
+      "path": "human_study/preferences/data/logistic_regression_combined.png",
+      "parent_path": "scripts/experiment_b/data/logistic_regression_combined.png",
+      "git_blob": "8d84b13a93a3b883559fb87b6098cdd011c0b4fd"
+    },
+    {
+      "path": "human_study/preferences/data/logistic_regression_continuous.csv",
+      "parent_path": "scripts/experiment_b/data/logistic_regression_continuous.csv",
+      "git_blob": "57576031b40f55f649ba0be5290253e5aa50e2d7"
+    },
+    {
+      "path": "human_study/preferences/data/logistic_regression_continuous.png",
+      "parent_path": "scripts/experiment_b/data/logistic_regression_continuous.png",
+      "git_blob": "2ba8a79ec55d42ec0409d9920f453bd4bebd1f20"
+    },
+    {
+      "path": "human_study/preferences/data/logistic_regression_continuous_interaction.csv",
+      "parent_path": "scripts/experiment_b/data/logistic_regression_continuous_interaction.csv",
+      "git_blob": "e051609982e00770276ec965df244f08176b96f9"
+    },
+    {
+      "path": "human_study/preferences/data/logistic_regression_continuous_interaction.png",
+      "parent_path": "scripts/experiment_b/data/logistic_regression_continuous_interaction.png",
+      "git_blob": "3645b6ec7e43717f772186abb2251b37eea27cef"
+    },
+    {
+      "path": "human_study/preferences/data/logistic_regression_continuous_interaction_no_prompted_dpo.csv",
+      "parent_path": "scripts/experiment_b/data/logistic_regression_continuous_interaction_no_prompted_dpo.csv",
+      "git_blob": "c42296cecf1e4b6a013d679b1dd0ca11e4f909c1"
+    },
+    {
+      "path": "human_study/preferences/data/logistic_regression_continuous_no_prompted_dpo.csv",
+      "parent_path": "scripts/experiment_b/data/logistic_regression_continuous_no_prompted_dpo.csv",
+      "git_blob": "f2db4992bc692ed9c506c8f8bbfef7fd5d98ba73"
+    },
+    {
+      "path": "human_study/preferences/data/logistic_regression_continuous_no_prompted_dpo.png",
+      "parent_path": "scripts/experiment_b/data/logistic_regression_continuous_no_prompted_dpo.png",
+      "git_blob": "4788a1aae3cadad60018f9c21fb6f3e34952a33c"
+    },
+    {
+      "path": "human_study/preferences/data/logistic_regression_continuous_with_formality.csv",
+      "parent_path": "scripts/experiment_b/data/logistic_regression_continuous_with_formality.csv",
+      "git_blob": "4805c210de44f0a26dafef45ea7ea8c3a5fd9ce8"
+    },
+    {
+      "path": "human_study/preferences/data/logistic_regression_continuous_with_formality_human_only.csv",
+      "parent_path": "scripts/experiment_b/data/logistic_regression_continuous_with_formality_human_only.csv",
+      "git_blob": "f6522a9d2a31338a2fa90d9104606f3757202f99"
+    },
+    {
+      "path": "human_study/preferences/data/logistic_regression_continuous_with_formality_no_human.csv",
+      "parent_path": "scripts/experiment_b/data/logistic_regression_continuous_with_formality_no_human.csv",
+      "git_blob": "23bdc7c36bd3a9e9967b0e15161902b65c94269b"
+    },
+    {
+      "path": "human_study/preferences/data/logistic_regression_continuous_with_formality_no_prompted_dpo.csv",
+      "parent_path": "scripts/experiment_b/data/logistic_regression_continuous_with_formality_no_prompted_dpo.csv",
+      "git_blob": "5370f96575c35583c4dc33ecd3da8f5ceaf7e4f5"
+    },
+    {
+      "path": "human_study/preferences/data/metric_to_eval_mapping.csv",
+      "parent_path": "scripts/experiment_b/data/metric_to_eval_mapping.csv",
+      "git_blob": "ba18068227d6bcf115babcb9cd34ebc68fb63c0e"
+    },
+    {
+      "path": "human_study/preferences/data/normalization_ranges.json",
+      "parent_path": "scripts/experiment_b/data/normalization_ranges.json",
+      "git_blob": "aec889f7a6686cc62349e94c250501da789e24c0"
+    },
+    {
+      "path": "human_study/preferences/data/per_cluster/cluster_0.csv",
+      "parent_path": "scripts/experiment_b/data/per_cluster/cluster_0.csv",
+      "git_blob": "b67a33d1fd324fac72e2b752777076f8875df93a"
+    },
+    {
+      "path": "human_study/preferences/data/per_cluster/cluster_1.csv",
+      "parent_path": "scripts/experiment_b/data/per_cluster/cluster_1.csv",
+      "git_blob": "b3669791e19039fec48ec32efb95c7885edb0b5f"
+    },
+    {
+      "path": "human_study/preferences/data/per_cluster/cluster_2.csv",
+      "parent_path": "scripts/experiment_b/data/per_cluster/cluster_2.csv",
+      "git_blob": "75bffe8945024a7b0b83c85f497017ddc3d1e3b0"
+    },
+    {
+      "path": "human_study/preferences/data/per_cluster/cluster_3.csv",
+      "parent_path": "scripts/experiment_b/data/per_cluster/cluster_3.csv",
+      "git_blob": "e4614519af563fbe4ce5cdd7a4694238b9f15dc4"
+    },
+    {
+      "path": "human_study/preferences/data/per_cluster/cluster_4.csv",
+      "parent_path": "scripts/experiment_b/data/per_cluster/cluster_4.csv",
+      "git_blob": "73d410ebd40f0e61c7e96da99a262b45857ecd27"
+    },
+    {
+      "path": "human_study/preferences/data/per_cluster/cluster_5.csv",
+      "parent_path": "scripts/experiment_b/data/per_cluster/cluster_5.csv",
+      "git_blob": "29b81a56506b4eabec10f326aac8845fd510ac2d"
+    },
+    {
+      "path": "human_study/preferences/data/per_cluster/cluster_6.csv",
+      "parent_path": "scripts/experiment_b/data/per_cluster/cluster_6.csv",
+      "git_blob": "ff47f643884110e313155971cdeaf8c4a67c4868"
+    },
+    {
+      "path": "human_study/preferences/data/per_cluster/cluster_7.csv",
+      "parent_path": "scripts/experiment_b/data/per_cluster/cluster_7.csv",
+      "git_blob": "35f9bbc5fd45d50017e75a2aa1be608055b8d7c0"
+    },
+    {
+      "path": "human_study/preferences/data/per_cluster/per_cluster_combined.png",
+      "parent_path": "scripts/experiment_b/data/per_cluster/per_cluster_combined.png",
+      "git_blob": "b80ad4c250083255b4712fdc08e718341a3e4b64"
+    },
+    {
+      "path": "human_study/preferences/data/per_cluster_with_readability/cluster_0.csv",
+      "parent_path": "scripts/experiment_b/data/per_cluster_with_readability/cluster_0.csv",
+      "git_blob": "4de81d313cd2312945a60fc4eba77e85359be6c8"
+    },
+    {
+      "path": "human_study/preferences/data/per_cluster_with_readability/cluster_1.csv",
+      "parent_path": "scripts/experiment_b/data/per_cluster_with_readability/cluster_1.csv",
+      "git_blob": "7a6d6b57d34a3acd6e8fe857850ab91a2cca2d3f"
+    },
+    {
+      "path": "human_study/preferences/data/per_cluster_with_readability/cluster_2.csv",
+      "parent_path": "scripts/experiment_b/data/per_cluster_with_readability/cluster_2.csv",
+      "git_blob": "ccbc761b2ec5c903c0380303111bb5920ad39306"
+    },
+    {
+      "path": "human_study/preferences/data/per_cluster_with_readability/cluster_3.csv",
+      "parent_path": "scripts/experiment_b/data/per_cluster_with_readability/cluster_3.csv",
+      "git_blob": "f54aa65f4a620873702e8b45594ee098449e9359"
+    },
+    {
+      "path": "human_study/preferences/data/per_cluster_with_readability/cluster_4.csv",
+      "parent_path": "scripts/experiment_b/data/per_cluster_with_readability/cluster_4.csv",
+      "git_blob": "588fdd1eb2553c0304105cb7f03e86efd7945bfa"
+    },
+    {
+      "path": "human_study/preferences/data/per_cluster_with_readability/cluster_5.csv",
+      "parent_path": "scripts/experiment_b/data/per_cluster_with_readability/cluster_5.csv",
+      "git_blob": "05ea9fe1dbed90f932d2aa38ae7af930e980d09b"
+    },
+    {
+      "path": "human_study/preferences/data/per_cluster_with_readability/cluster_6.csv",
+      "parent_path": "scripts/experiment_b/data/per_cluster_with_readability/cluster_6.csv",
+      "git_blob": "02d5600080fc1d31a482ceca4c31d5da6699c256"
+    },
+    {
+      "path": "human_study/preferences/data/per_cluster_with_readability/cluster_7.csv",
+      "parent_path": "scripts/experiment_b/data/per_cluster_with_readability/cluster_7.csv",
+      "git_blob": "03a14d38ca825ccce3e34a7c5e3c044967900a76"
+    },
+    {
+      "path": "human_study/preferences/data/per_cluster_with_readability/per_cluster_combined.png",
+      "parent_path": "scripts/experiment_b/data/per_cluster_with_readability/per_cluster_combined.png",
+      "git_blob": "02731c768a8fe026cb5d0d2ad7a851f6dc50d8ed"
+    },
+    {
+      "path": "human_study/preferences/data/questions_by_model.csv",
+      "parent_path": "scripts/experiment_b/data/questions_by_model.csv",
+      "git_blob": "9eece456b936a5e89edbf532170c2e1f4a1d958e"
+    },
+    {
+      "path": "human_study/preferences/data/regression_input_data.zip",
+      "parent_path": "scripts/experiment_b/data/regression_input_data.zip",
+      "git_blob": "06b0d8ae7704bff5fbf4a1ed9b1b7fd6f7f6541d"
+    },
+    {
+      "path": "human_study/preferences/data/rows_needing_llm_metrics.csv",
+      "parent_path": "scripts/experiment_b/data/rows_needing_llm_metrics.csv",
+      "git_blob": "2cefc0018308bf0a820e9657e79be0de84bec08f"
+    },
+    {
+      "path": "human_study/preferences/data/sec_exp.csv",
+      "parent_path": "scripts/experiment_b/data/sec_exp.csv",
+      "git_blob": "ff6e908fe196b19e456dc25ca9c097c9042dc762"
+    },
+    {
+      "path": "human_study/preferences/data/sec_exp_filtered.csv",
+      "parent_path": "scripts/experiment_b/data/sec_exp_filtered.csv",
+      "git_blob": "50dbc558aca54512b8d4f89d4b02bfc2e642f9d4"
+    },
+    {
+      "path": "human_study/preferences/data/summary_statistics.csv",
+      "parent_path": "scripts/experiment_b/data/summary_statistics.csv",
+      "git_blob": "fefeb3e4ec87bbd9bc637b6f9d006ed7fbe55d31"
+    }
+  ],
+  "privacy_sanitized_exports": {
+    "human_study/judge_validation/balanced_dataset_v2_human/labelstudio_output.json": {
+      "annotation_stats": {
+        "task_count": 30,
+        "annotation_count": 60,
+        "annotator_count": 2
+      },
+      "git_blob": "17b5c458b068934f3e825e8c575b37e1b103cf1c"
+    },
+    "human_study/judge_validation/tie_breaker_v2/labelstudio_output.json": {
+      "annotation_stats": {
+        "task_count": 5,
+        "annotation_count": 5,
+        "annotator_count": 1
+      },
+      "git_blob": "0eaf2762ab12fecf49e000bdb77b4074bc19d6f3"
+    }
+  }
+}

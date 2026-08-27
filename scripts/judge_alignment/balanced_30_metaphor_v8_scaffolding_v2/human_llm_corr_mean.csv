@@ -1,6 +1,0 @@
-metric,pearson_mean,spearman_mean,spearman_excl_ties_mean,kendall_mean,binary_agreement_mean,binary_agr_excl_ties_mean,precision_mean,recall_mean,f1_mean,precision_excl_ties_mean,recall_excl_ties_mean,f1_excl_ties_mean,tp_mean,fp_mean,fn_mean,tn_mean,n_ties_mean,n_consensus_mean
-Analogy,,,,,,,,,,,,,0,0,0,0,0,0
-Metaphor,0.668153104781061,0.668153104781061,0.7359800721939872,0.6681531047810609,0.8333333333333334,0.8636363636363636,0.8,0.8571428571428571,0.8275862068965518,0.6666666666666666,0.42857142857142855,0.5217391304347826,12,3,2,13,8,22
-Humor,,,,,,,,,,,,,0,0,0,0,0,0
-Connection,,,,,,,,,,,,,0,0,0,0,0,0
-Scaffolding,0.28284271247461895,0.282842712474619,0.5673665146135801,0.282842712474619,0.6333333333333333,0.7916666666666666,0.8,0.6,0.6857142857142857,0.8,0.6,0.6857142857142857,12,3,8,7,6,24
