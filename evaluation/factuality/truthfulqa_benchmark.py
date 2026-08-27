@@ -31,10 +31,10 @@ from datetime import datetime
 from tqdm import tqdm
 
 # Set HuggingFace cache to Google Drive
-os.environ['HF_HOME'] = '/content/drive/MyDrive/thesis/huggingface_cache'
+os.environ['HF_HOME'] = '/content/beyond-accuracy/.cache/huggingface'
 
 # Output directory for TruthfulQA results
-OUTPUT_DIR = '/content/drive/MyDrive/thesis/truthfulqa_results'
+OUTPUT_DIR = '/content/beyond-accuracy/evaluation/factuality/truthfulqa_results'
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Login to HuggingFace (for gated models)

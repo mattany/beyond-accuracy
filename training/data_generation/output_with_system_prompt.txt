@@ -1,4 +1,4 @@
-/opt/homebrew/anaconda3/bin/python /Users/mattan.yeroushalmi/studies/thesis/SFT/batch_file_gen/open_ai_playground.py
+# Sample output from training/data_generation/open_ai_playground.py
 Time: 2.6178276538848877 seconds
 CompletionUsage(completion_tokens=187, prompt_tokens=189, total_tokens=376)
 When constructing a dam, engineers use a method called cofferdams. Imagine you have a leaking pipe in your house but can't turn off the water supply. You might wrap a temporary barrier around the leak to contain the water, allowing you to fix the pipe

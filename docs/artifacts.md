@@ -21,7 +21,7 @@ factuality).
 | `scripts/judge_alignment/` | `human_study/judge_validation/` |
 | `trust_llm/` | `evaluation/factuality/trust_llm/` |
 
-Removed roots (`RAG/`, `rebuttal/`, `science-QA_jsonl/`, `Benchmarking/baram_tsabari/`,
+Removed legacy trees (RAG, rebuttal, science-QA_jsonl, Benchmarking/baram_tsabari,
 obsolete judge-validation dataset versions, and IDE/OS artifacts) are not listed
 here; they fail the publication retention test and are absent from the final
 tree.

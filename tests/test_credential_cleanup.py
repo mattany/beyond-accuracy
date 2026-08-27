@@ -43,7 +43,7 @@ TRUTHFULQA_SETUP_CELL = 2
 TRUTHFULQA_SETUP_MARKERS = (
     "drive.mount('/content/drive/', force_remount=True)",
     "os.environ['HF_HOME']",
-    "OUTPUT_DIR = '/content/drive/MyDrive/thesis/truthfulqa_results'",
+    "OUTPUT_DIR = '/content/beyond-accuracy/evaluation/factuality/truthfulqa_results'",
     "os.makedirs(OUTPUT_DIR, exist_ok=True)",
     "import pandas as pd",
     "import numpy as np",
