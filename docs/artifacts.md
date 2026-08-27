@@ -6,7 +6,7 @@ table, appendix result, or reproducibility step in the ACL paper. Paths below
 refer to the pre-cleanup tree; Tasks 3--7 apply the stated moves.
 
 ## QA-Pairs and teacher datasets
-- Keep and move `SFT/data/` to `data/qa_pairs/`.
+- Keep and move `data/qa_pairs/` to `data/qa_pairs/`.
 - Keep current generators from `SFT/batch_file_gen/`.
 - Remove `SFT/batch_file_gen/archive/`, batch status/job logs, and local setup residue.
 - Keep the human, GPT-3.5, GPT-5, and Kimi source CSVs, train/validation/test
@@ -14,12 +14,12 @@ refer to the pre-cleanup tree; Tasks 3--7 apply the stated moves.
   support QA-Pairs, the synthetic preference pairs, the generation prompt in
   Appendix `sec:appendix_sft_prompt`, and the second-teacher experiment in
   Appendix `sec:appendix_teacher`.
-- Keep `SFT/data/load_datasets.ipynb` as dataset inspection/provenance support.
-- Treat `SFT/data/example_batch_test/` as test residue to remove after confirming
+- Keep `data/qa_pairs/load_datasets.ipynb` as dataset inspection/provenance support.
+- Treat `data/qa_pairs/example_batch_test/` as test residue to remove after confirming
   that the active generators do not consume it.
 - Remove root prompt copies (`prompts_0.csv`, `prompts_copy.csv`, and
   `prompts_original.csv`) if the Task 3 hash/content comparison confirms that
-  retained `SFT/data/` sources are canonical.
+  retained `data/qa_pairs/` sources are canonical.
 
 ## Model training
 - Keep `SFT/training/GPT_SFT_only.ipynb`.
@@ -43,38 +43,42 @@ refer to the pre-cleanup tree; Tasks 3--7 apply the stated moves.
   publication model generation.
 
 ## Rubric evaluation and model outputs
-- Keep non-RAG code under `Benchmarking/deep_eval/`.
-- Keep canonical final rubric outputs `Benchmarking/deep_eval/data/run_9/`.
-- Keep Experiment B metric outputs `Benchmarking/deep_eval/data/run_10/`.
-- Keep final generation outputs under `scripts/generations/`, `scripts/generations_2/`, and `scripts/generations_3/`.
+- Keep non-RAG code under `evaluation/rubrics/`.
+- Keep canonical final rubric outputs `evaluation/results/rubric_scores/`.
+- Keep Experiment B metric outputs `evaluation/results/preference_metrics/`.
+- Keep final generation outputs under `evaluation/model_outputs/main/`, `evaluation/model_outputs/dpo_variants/`, and `evaluation/model_outputs/human_variants/`.
 - Remove runs 3–8, archived/test data, model-metric exploratory data, consistency experiments, RAG evaluation, and Ollama failure investigations.
 - Keep the production metric definitions, prompts, aggregation and bootstrap
   code, win-rate code, evaluation-dataset generation, dependency metadata, and
   visualization code needed to regenerate `fig:stacked_scores`, the rubric
   results in `sec:exp_a_results`, and Appendix `tab:winrate`.
-- Keep both legacy and final-version metric CSVs inside `run_9/` because the
+- Keep both legacy and final-version metric CSVs inside `evaluation/results/rubric_scores/` because the
   final aggregate, teacher-robustness, and win-rate analyses select named metric
-  versions from that canonical run. Keep `run_9/wilcoxon_tests.py` and its
+  versions from that canonical run. Keep `evaluation/results/rubric_scores/wilcoxon_tests.py` and its
   outputs.
-- Keep all metric CSVs and `regression_metrics_merged.csv` in `run_10/`; the
+- Keep all metric CSVs and `regression_metrics_merged.csv` in `evaluation/results/preference_metrics/`; the
   Experiment B regression loads analogy, metaphor, scaffolding, jargon, and
   four readability metrics from this run for `tab:exp_b_regression`.
-- **Unresolved verification item (Task 5):** conservatively retain
-  `run_10/.checkpoints/` until Task 5 determines whether it is required to
-  resume the retained metric run. Remove it as operational residue only after
-  that dependency check is recorded.
-- Remove `Benchmarking/deep_eval/custom_metrics/consistency_check.py`,
-  `visualize_consistency.py`, `aggregate_bootstrap.py`, and `bootstrap.py` when
-  their only live references are to deleted consistency data or runs 7--8.
+- Keep `evaluation/results/preference_metrics/.checkpoints/`. Task 5 confirmed
+  that `evaluation/rubrics/custom_metrics/run.py` loads per-model JSON
+  checkpoints, skips completed rows, and writes updates after successful
+  evaluations; the retained checkpoint is therefore resume state, not merely
+  operational residue.
+- Remove `evaluation/rubrics/custom_metrics/consistency_check.py`,
+  `visualize_consistency.py`, and `aggregate_bootstrap.py`; their only live
+  references were to deleted consistency data or runs 7--8. Keep
+  `bootstrap.py`, which `aggregate_v2.py` imports to regenerate confidence
+  intervals when canonical results are missing expected models.
   Preserve `aggregate.py`, `aggregate_v2.py`, `rerun_readability.py`, `run.py`,
   `winrate.py`, metric classes, and their package/configuration dependencies.
-- Remove `Benchmarking/visualization/images/plots/run_5/` and `images.zip` as
+- Remove `evaluation/visualization/images/plots/run_5/` and `images.zip` as
   superseded visualization output; retain the plotting source so canonical
-  `run_9/` results can be visualized after Task 5 updates its paths.
-- **Unresolved verification item (Task 5):** conservatively retain
-  `Benchmarking/deep_eval/scillama3/` until Task 5 compares it with canonical
-  generation outputs and confirms that no retained evaluator consumes it.
-  Remove it only after that verification is recorded.
+  `evaluation/results/rubric_scores/` results can be visualized after Task 5 updates its paths.
+- Keep the legacy `evaluation/model_outputs/scillama3/` outputs
+  conservatively. Task 5 found different model columns from the canonical
+  generation tables and only 90 of 91 normalized questions in common, so the
+  directory is not an exact duplicate. No retained evaluator consumes it
+  directly, but the evidence does not support deletion.
 
 ## Judge validation
 - Keep final validation code and the final `balanced_dataset_v2_human/` and `tie_breaker_v2/` artifacts.
@@ -119,7 +123,7 @@ refer to the pre-cleanup tree; Tasks 3--7 apply the stated moves.
 - Remove superseded plots/tables not referenced by the paper while retaining the inputs needed to recreate final reported outputs.
 - Keep `first_exp.csv`, `sec_exp.csv`, their filtered forms, the sampled and
   merged study data, the evaluation dataset, formality scores, metric mappings,
-  normalization metadata, and `run_10/` metric inputs. These support the pairwise
+  normalization metadata, and `evaluation/results/preference_metrics/` metric inputs. These support the pairwise
   preferences in `tab:human_preferences`, the regression in
   `tab:exp_b_regression`, and the metaphor over-optimization analysis in
   `sec:rubric_preference_alignment` and `sec:appendix_metaphor_examples`.
@@ -130,7 +134,7 @@ refer to the pre-cleanup tree; Tasks 3--7 apply the stated moves.
   analysis.
 - Keep the untracked `scripts/experiment_b/teacher_significance.py` unchanged
   and uncommitted in Task 1. Task 6 will move and update it; it consumes the
-  canonical `run_9/` metric CSVs for `tab:teacher_robustness` and
+  canonical `evaluation/results/rubric_scores/` metric CSVs for `tab:teacher_robustness` and
   `tab:teacher_composition`.
 - Preserve raw and processed data before removing any plot or table. Candidate
   removals are exploratory cluster outputs, interaction/binarized regressions,
@@ -139,23 +143,22 @@ refer to the pre-cleanup tree; Tasks 3--7 apply the stated moves.
   them.
 
 ## Factuality
-- Keep `scripts/truthfulqa_results/`, `scripts/truthfulqa_visualization.py`, and `trust_llm/`.
-- Keep `Benchmarking/deep_eval/truthfulqa_benchmark.py` and its notebook form as
-  the executable provenance for Appendix `tab:truthfulqa_results`; move them
-  with the factuality pipeline in Task 5.
+- Keep `evaluation/factuality/truthfulqa_results/`, `evaluation/factuality/truthfulqa_visualization.py`, and `evaluation/factuality/trust_llm/`.
+- Keep `evaluation/factuality/truthfulqa_benchmark.py` and its notebook form as
+  the executable provenance for Appendix `tab:truthfulqa_results`.
 - Keep all per-model TruthfulQA checkpoints and summary data needed to reproduce
   the reported MC2 scores and significance/effect-size comparison. Earlier
   timestamped summaries may be removed only after confirming that
   `truthfulqa_summary_latest.csv` plus checkpoints can exactly regenerate the
   table and figure.
-- Keep `trust_llm/` code, dependency locks, and evaluation JSON outputs as a
+- Keep `evaluation/factuality/trust_llm/` code, dependency locks, and evaluation JSON outputs as a
   retained auxiliary factuality benchmark. Its `heatmap.py` consumes
   TrustLLM truthfulness JSON, so it must not be described as the source of the
   paper's GPT-5.2 claim-level verification.
-- The scoped tracked inventory does not expose an obvious script or result file
+- A second full tracked-tree search in Task 5 found no script or result file
   for the GPT-5.2 atomic-claim analysis behind Appendix `tab:factuality`.
-  Preserve any such artifact found in later full-tree review and document this
-  provenance gap rather than substituting TrustLLM results.
+  This remains a provenance gap; TrustLLM must not be substituted or
+  misattributed as that analysis.
 - Human-study accuracy ratings remain with the retained Experiment B data and
   support the second of the paper's three factuality checks.
 
@@ -171,22 +174,22 @@ refer to the pre-cleanup tree; Tasks 3--7 apply the stated moves.
 ## Paper-to-artifact coverage
 
 - `tab:dataset_stats`, `sec:datasets`, and `sec:appendix_sft_prompt`:
-  `SFT/data/`, `SFT/batch_file_gen/`, and the SFT/DPO procedures.
+  `data/qa_pairs/`, `training/data_generation/`, and the SFT/DPO procedures.
 - `fig:stacked_scores` and `sec:exp_a_results`: final model generations,
-  production rubrics, and canonical `run_9/`.
+  production rubrics, and canonical `evaluation/results/rubric_scores/`.
 - `fig:validation_a`--`fig:validation_c` and `sec:metrics_validation`:
   `balanced_dataset_v2_human/`, `tie_breaker_v2/`, Label Studio interfaces, and
   final reliability/correlation analysis.
 - `tab:human_preferences`, `tab:exp_b_regression`, and
   `sec:rubric_preference_alignment`: anonymized Experiment B inputs,
-  `run_10/`, final regression outputs, and metaphor-overoptimization inputs.
+  `evaluation/results/preference_metrics/`, final regression outputs, and metaphor-overoptimization inputs.
 - `tab:truthfulqa_results`: TruthfulQA checkpoints/results and visualization;
   `tab:factuality`: participant-rating data plus the claim-level artifact to be
-  located during the full-tree review. `trust_llm/` remains auxiliary
+  located during the full-tree review. `evaluation/factuality/trust_llm/` remains auxiliary
   factuality evidence, not a substitute for either table.
-- `tab:winrate`: canonical `run_9/` metric inputs and win-rate outputs.
+- `tab:winrate`: canonical `evaluation/results/rubric_scores/` metric inputs and win-rate outputs.
 - `tab:teacher_robustness` and `tab:teacher_composition`: GPT-5/Kimi QA-Pairs
-  data and outputs, canonical `run_9/`, and `teacher_significance.py`.
+  data and outputs, canonical `evaluation/results/rubric_scores/`, and `teacher_significance.py`.
 - `sec:appendix_deployment`: retained SFT procedure and documented model
   artifacts; the throughput figures are reported measurements, not a local
   benchmark that must be rerun during cleanup.

@@ -12,12 +12,13 @@ from pathlib import Path
 
 # Add the project root to path for imports
 PROJECT_ROOT = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT / "Benchmarking" / "deep_eval"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from config import PROJECT_DIR, OPENAI_API_KEY
-os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+from evaluation.rubrics.settings import OPENAI_API_KEY, require_env
+if OPENAI_API_KEY:
+    os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
-from custom_metrics.metrics import (
+from evaluation.rubrics.custom_metrics.metrics import (
     scaffolding_metric_v2,
     metaphor_metric_explicit_v8,
     humor_metric_explicit_v5,
@@ -28,7 +29,7 @@ from custom_metrics.metrics import (
     dale_chall,
     ari,
 )
-from custom_metrics.run import generate_metric_report
+from evaluation.rubrics.custom_metrics.run import generate_metric_report
 
 # =============================================================================
 # CONFIGURATION
@@ -92,6 +93,7 @@ async def run_metrics_on_explanations():
     Run all metrics on both explanation_a and explanation_b.
     Uses the existing infrastructure with checkpointing.
     """
+    require_env("OPENAI_API_KEY", OPENAI_API_KEY)
     result = prepare_data_for_metrics()
     if result is None:
         return

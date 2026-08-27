@@ -36,19 +36,17 @@ sys.path.append(str(Path(__file__).resolve().parent))
 from logistic_regression import normalize_score  # noqa: E402
 
 DATA_DIR = Path(__file__).parent / "data"
-DEEP_EVAL_DATA = (
-    Path(__file__).parent.parent.parent / "Benchmarking" / "deep_eval" / "data"
-)
-RUN_DIR = DEEP_EVAL_DATA / "run_10"
-# run_9 is the per-model rubric evaluation (one column per model), which unlike
+RESULTS_DIR = Path(__file__).resolve().parents[2] / "evaluation" / "results"
+RUN_DIR = RESULTS_DIR / "preference_metrics"
+# rubric_scores is the per-model rubric evaluation (one column per model), which unlike
 # the pairwise Experiment-B set includes the Human-DPO (organic_dpo) variant.
-PER_MODEL_RUN = DEEP_EVAL_DATA / "run_9"
+PER_MODEL_RUN = RESULTS_DIR / "rubric_scores"
 EVAL = DATA_DIR / "experiment_b_eval_dataset.csv"
 
 DPO_MODELS = {"scicomma-3.1-dpo", "scicomma-3.1-dpo_prompt"}
 
 # SFT -> DPO pairs for isolating the cause of metaphor over-optimization.
-# (label, SFT model column stem, DPO model column stem) in run_9.
+# (label, SFT model column stem, DPO model column stem) in rubric_scores.
 SFT_DPO_PAIRS = [
     ("Synthetic, unprompted", "SciComma-3.1-8B_y", "scicomma-3.1-dpo"),
     ("Synthetic, prompted", "SciComma-3.1-8B_prompt", "scicomma-3.1-dpo_prompt"),
@@ -210,12 +208,12 @@ def case_study(scores: dict, eval_df: pd.DataFrame, top_k: int = 5):
 def sft_dpo_contrast():
     """Isolate the cause: metaphor rate change from each SFT base to its DPO.
 
-    Uses the per-model rubric evaluation (run_9), which includes Human-DPO
+    Uses the per-model rubric evaluation (rubric_scores), which includes Human-DPO
     (organic_dpo). Shows that the metaphor inflation is specific to the
     *synthetic* preference signal, not DPO itself.
     """
     print("\n" + "=" * 70)
-    print("3) SFT -> DPO METAPHOR CONTRAST (run_9 per-model eval)")
+    print("3) SFT -> DPO METAPHOR CONTRAST (rubric_scores per-model eval)")
     print("=" * 70)
     path = PER_MODEL_RUN / "metaphor_v8.csv"
     if not path.exists():

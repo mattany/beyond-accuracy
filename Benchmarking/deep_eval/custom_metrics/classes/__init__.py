@@ -1,2 +1,0 @@
-from custom_metrics.classes.Jargon.metric import JargonMetric
-from custom_metrics.classes.readability_metric.metric import ReadabilityMetric

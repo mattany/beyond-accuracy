@@ -2,11 +2,13 @@ import pandas as pd
 from pathlib import Path
 
 # Configuration
-INPUT_DIR = Path("/Users/mattan.yeroushalmi/studies/thesis/scripts/generations_3")
-MAIN_DATASET_PATH = "/Users/mattan.yeroushalmi/studies/thesis/Benchmarking/deep_eval/data/test_data/corrected_evaluation_dataset.csv"
+ROOT = Path(__file__).resolve().parents[1]
+INPUT_DIR = ROOT / "evaluation/model_outputs/human_variants"
+MAIN_DATASET_PATH = ROOT / "evaluation/model_outputs/main/all_models_joined.csv"
 
 # Load the main dataset
 main_df = pd.read_csv(MAIN_DATASET_PATH)
+main_df = main_df.rename(columns={"Question": "question"})
 main_df['question'] = main_df['question'].astype(str)
 
 # Get all CSV files from the input directory

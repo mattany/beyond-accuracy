@@ -4,7 +4,7 @@ This zip file contains all data needed to reproduce the logistic regression anal
 
 ## Files
 
-### Metric Scores (from run_10)
+### Metric Scores (from preference metrics)
 | File | Description |
 |------|-------------|
 | `metaphor_v8.csv` | Metaphor usage scores (LLM-judged, 0-1) |

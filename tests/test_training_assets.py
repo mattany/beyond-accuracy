@@ -27,7 +27,7 @@ def test_model_variant_representation_is_documented():
 
 
 def test_generation_cli_passes_paths_to_main(monkeypatch, tmp_path):
-    script = ROOT / "Benchmarking" / "deep_eval" / "generate_kto_llama3_1_outputs.py"
+    script = ROOT / "evaluation" / "rubrics" / "generate_kto_llama3_1_outputs.py"
     input_path = tmp_path / "questions.csv"
     output_path = tmp_path / "answers.csv"
     captured = {}

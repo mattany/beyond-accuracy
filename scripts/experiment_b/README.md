@@ -20,7 +20,7 @@ experiment_b_merged.csv (2343 rows, 8 clusters)
 experiment_b_sampled.csv (100 per cluster = 800 rows)
          │
          ▼ (run_metrics_exp_b.py)
-Metric scores in Benchmarking/deep_eval/data/run_10/
+Metric scores in evaluation/results/preference_metrics/
          │
          ▼ (metric_correlation.py)
 correlation_results.csv
@@ -63,9 +63,9 @@ combined_cluster_analysis.png + statistics CSVs
 - Runs these metrics on both explanation_a and explanation_b:
   - **LLM-based**: analogy_v2, metaphor_v8, scaffolding_v2, humor_v5, jargon
   - **Readability**: flesch_kincaid, flesch_reading_ease, dale_chall, ari
-- Uses run_10 checkpoint directory for incremental processing
+- Uses preference-metric checkpoint directory for incremental processing
 
-**Output**: Metric CSVs in `Benchmarking/deep_eval/data/run_10/`
+**Output**: Metric CSVs in `evaluation/results/preference_metrics/`
 
 ### 4. `metric_correlation.py`
 **Purpose**: Calculate correlations between metrics and human preferences.
