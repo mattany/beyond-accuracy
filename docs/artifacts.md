@@ -81,24 +81,31 @@ refer to the pre-cleanup tree; Tasks 3--7 apply the stated moves.
   directly, but the evidence does not support deletion.
 
 ## Judge validation
-- Keep final validation code and the final `balanced_dataset_v2_human/` and `tie_breaker_v2/` artifacts.
+- Keep final validation code and the final `human_study/judge_validation/balanced_dataset_v2_human/` and `human_study/judge_validation/tie_breaker_v2/` artifacts.
 - Keep Label Studio interfaces required to reproduce those exports.
 - Remove superseded balanced-dataset versions, disagreement experiments, and one-off obsolete metric runners after confirming the final scripts do not consume them.
-- Keep `scripts/judge_alignment/intercoder_reliability.py`; it consumes a
-  caller-supplied Label Studio JSON export and writes the reliability,
-  human--LLM correlation, and plots beside that export. Point the documented
-  final command at `balanced_dataset_v2_human/labelstudio_output.json`.
-- Keep `scripts/judge_alignment/apply_tiebreaker_to_formatted_csvs.py`,
-  `tie_breaker_v2/`, and `labeling_interface/labelstudio_tiebreaker_v2.xml` as
+- Keep `human_study/judge_validation/intercoder_reliability.py`; it consumes a
+  caller-supplied Label Studio JSON export and writes reliability,
+  human--LLM correlation, and plots to a required `--output-dir`. Point the documented
+  final command at `human_study/judge_validation/balanced_dataset_v2_human/labelstudio_output.json`.
+- Keep `human_study/judge_validation/apply_tiebreaker_to_formatted_csvs.py`,
+  `human_study/judge_validation/tie_breaker_v2/`, and `human_study/judge_validation/labeling_interface/labelstudio_tiebreaker_v2.xml` as
   the adjudication trail for the paper's two-primary-annotator plus third-author
   protocol in `sec:metrics_validation`.
-- Keep the complete contents of `balanced_dataset_v2_human/` and
-  `tie_breaker_v2/`, including source/formatted CSVs, Label Studio exports,
+- Keep the complete contents of `human_study/judge_validation/balanced_dataset_v2_human/` and
+  `human_study/judge_validation/tie_breaker_v2/`, including source/formatted CSVs, Label Studio exports,
   metric-bearing intermediates, and final CSV/plot outputs used by the
   validation figures and appendix annotation tables.
-- Keep the Label Studio XML files needed to interpret retained exports. Task 6
-  may remove interfaces for discarded dataset versions after matching each
-  retained export to its interface.
+- Retained Label Studio JSON exports are anonymized for publication: annotator
+  emails and draft metadata are replaced with stable `annotator_N` labels while
+  preserving all judgments and coder grouping. Derived numerical CSV outputs remain
+  byte-identical to the pre-cleanup publication artifacts.
+- Keep only the Label Studio XML files tied to retained exports:
+  `labeling_interface/labelstudio_v2.xml` and
+  `labeling_interface/labelstudio_tiebreaker_v2.xml`.
+- `human_study/judge_validation/analyze_balance_options.py` and
+  `human_study/judge_validation/run_connection_reasons.py` remain API-required
+  dataset-prep utilities outside the publication rerun command set.
 - `add_coder_labels.py`, `reorder_columns.py`, `generate_v2_dataset.py`, and
   `intercoder_reliability_v2.py` explicitly consume superseded
   `balanced_dataset/` or `balanced_dataset_v2/` paths. Treat those scripts and
@@ -119,7 +126,7 @@ refer to the pre-cleanup tree; Tasks 3--7 apply the stated moves.
   `tie_breaker_dataset/`, and `unbalanced_dataset/`.
 
 ## Human preference study
-- Keep `scripts/experiment_b/`, including raw anonymized study data, processed data, final regression outputs, and `teacher_significance.py`.
+- Keep `human_study/preferences/`, including raw anonymized study data, processed data, final regression outputs, and tracked `teacher_significance.py`.
 - Remove superseded plots/tables not referenced by the paper while retaining the inputs needed to recreate final reported outputs.
 - Keep `first_exp.csv`, `sec_exp.csv`, their filtered forms, the sampled and
   merged study data, the evaluation dataset, formality scores, metric mappings,
@@ -132,8 +139,7 @@ refer to the pre-cleanup tree; Tasks 3--7 apply the stated moves.
   and the final continuous-with-formality regression CSVs. Keep
   `dpo_rubric_up_pref_down.csv` because it supplies the 141-case appendix
   analysis.
-- Keep the untracked `scripts/experiment_b/teacher_significance.py` unchanged
-  and uncommitted in Task 1. Task 6 will move and update it; it consumes the
+- Keep tracked `human_study/preferences/teacher_significance.py`; it consumes the
   canonical `evaluation/results/rubric_scores/` metric CSVs for `tab:teacher_robustness` and
   `tab:teacher_composition`.
 - Preserve raw and processed data before removing any plot or table. Candidate
@@ -178,10 +184,11 @@ refer to the pre-cleanup tree; Tasks 3--7 apply the stated moves.
 - `fig:stacked_scores` and `sec:exp_a_results`: final model generations,
   production rubrics, and canonical `evaluation/results/rubric_scores/`.
 - `fig:validation_a`--`fig:validation_c` and `sec:metrics_validation`:
-  `balanced_dataset_v2_human/`, `tie_breaker_v2/`, Label Studio interfaces, and
+  `human_study/judge_validation/balanced_dataset_v2_human/`, `human_study/judge_validation/tie_breaker_v2/`, Label Studio interfaces, and
   final reliability/correlation analysis.
 - `tab:human_preferences`, `tab:exp_b_regression`, and
-  `sec:rubric_preference_alignment`: anonymized Experiment B inputs,
+  `sec:rubric_preference_alignment`: anonymized Experiment B inputs under
+  `human_study/preferences/`,
   `evaluation/results/preference_metrics/`, final regression outputs, and metaphor-overoptimization inputs.
 - `tab:truthfulqa_results`: TruthfulQA checkpoints/results and visualization;
   `tab:factuality`: participant-rating data plus the claim-level artifact to be
@@ -189,7 +196,7 @@ refer to the pre-cleanup tree; Tasks 3--7 apply the stated moves.
   factuality evidence, not a substitute for either table.
 - `tab:winrate`: canonical `evaluation/results/rubric_scores/` metric inputs and win-rate outputs.
 - `tab:teacher_robustness` and `tab:teacher_composition`: GPT-5/Kimi QA-Pairs
-  data and outputs, canonical `evaluation/results/rubric_scores/`, and `teacher_significance.py`.
+  data and outputs, canonical `evaluation/results/rubric_scores/`, and `human_study/preferences/teacher_significance.py`.
 - `sec:appendix_deployment`: retained SFT procedure and documented model
   artifacts; the throughput figures are reported measurements, not a local
   benchmark that must be rerun during cleanup.

@@ -245,6 +245,25 @@ python per_cluster_analysis.py
 python visualize_cluster_analysis.py
 ```
 
+## Publication rerun commands
+
+These scripts read canonical tracked outputs and print results without mutating
+the publication CSVs when invoked as documented:
+
+```bash
+# Teacher robustness / composition tables (stdout only)
+python human_study/preferences/teacher_significance.py
+
+# Experiment B continuous regression with formality covariate
+python human_study/preferences/logistic_regression.py \
+  --mode continuous \
+  --with-formality \
+  --output /tmp/logistic_regression_continuous_with_formality.csv
+```
+
+Compare regenerated outputs against the canonical CSVs under
+`human_study/preferences/data/` rather than writing back into that directory.
+
 ---
 
 ## Key Findings (100 examples/cluster)

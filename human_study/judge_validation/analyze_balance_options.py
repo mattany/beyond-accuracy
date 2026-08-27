@@ -2,6 +2,9 @@
 """
 Analyze and generate balanced survey datasets from ask_science_human_metrics.csv.
 
+API-required prep utility: not part of the publication rerun command set.
+Requires `OPENAI_API_KEY` when `--generate` is used.
+
 This script:
 1. Analyzes existing metrics data to find the best achievable balance
 2. Can save balanced datasets to CSV files
@@ -575,9 +578,10 @@ def setup_deepeval(metrics_to_run=None):
         LLMTestCase class and dictionary of metric name -> metric function
     """
     sys.path.insert(0, str(SCRIPT_DIR.parent.parent))
-    
-    from config import OPENAI_API_KEY
-    os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+
+    from evaluation.rubrics.settings import OPENAI_API_KEY
+    if OPENAI_API_KEY:
+        os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
     
     logging.getLogger("httpcore").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -586,7 +590,7 @@ def setup_deepeval(metrics_to_run=None):
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     
     from deepeval.test_case import LLMTestCase
-    from custom_metrics.metrics import (
+    from evaluation.rubrics.custom_metrics.metrics import (
         humor_metric_explicit_v2,
         humor_metric_explicit_v3,
         humor_metric_explicit_v4,

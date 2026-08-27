@@ -52,12 +52,13 @@ def load_tasks(json_path: str) -> List[Dict[str, Any]]:
 
 
 def extract_annotators(tasks: List[Dict[str, Any]]) -> List[str]:
-    """Get sorted list of annotator emails present in the data."""
+    """Get sorted list of anonymized annotator labels present in the data."""
     annotators = sorted(
         {
             ann["completed_by"]["email"]
             for t in tasks
             for ann in t.get("annotations", [])
+            if ann.get("completed_by", {}).get("email")
         }
     )
     return annotators
@@ -105,10 +106,10 @@ def build_item_table(tasks: List[Dict[str, Any]]) -> Tuple[pd.DataFrame, List[st
         # Latest annotation per annotator
         latest: Dict[str, Dict[str, Any]] = {}
         for ann in t.get("annotations", []):
-            email = ann["completed_by"]["email"]
+            annotator = ann["completed_by"]["email"]
             ts = ann["updated_at"]
-            if email not in latest or ts > latest[email]["ts"]:
-                latest[email] = {
+            if annotator not in latest or ts > latest[annotator]["ts"]:
+                latest[annotator] = {
                     "ts": ts,
                     "metrics": extract_metrics_from_result(ann.get("result", [])),
                 }
@@ -122,7 +123,7 @@ def build_item_table(tasks: List[Dict[str, Any]]) -> Tuple[pd.DataFrame, List[st
         # Store per-annotator binary labels as list in a stable order
         for metric in METRIC_NAMES:
             row[f"{metric}_per_annotator"] = [
-                latest[email]["metrics"][metric] for email in annotators
+                latest[annotator]["metrics"][metric] for annotator in annotators
             ]
 
         # Human mean metrics
@@ -401,8 +402,8 @@ def main(json_path: str, output_dir: str | None = None) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     print("\nAnnotators (sorted):")
-    for a in annotators:
-        print("  ", a)
+    for annotator in annotators:
+        print("  ", annotator)
 
     print(f"\nNumber of (question, model) items with complete annotations: {len(df)}")
 
@@ -454,8 +455,8 @@ if __name__ == "__main__":
     parser.add_argument("json_path", help="Label Studio JSON export to analyze")
     parser.add_argument(
         "--output-dir",
-        default=None,
-        help="Directory for CSV/plot outputs (default: same directory as the JSON export)",
+        required=True,
+        help="Directory for CSV/plot outputs (required to avoid overwriting canonical exports)",
     )
     args = parser.parse_args()
     main(args.json_path, output_dir=args.output_dir)

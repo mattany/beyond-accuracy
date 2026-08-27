@@ -5,12 +5,23 @@ This script analyzes agreement between human annotators and compares human label
 ## Usage
 
 ```bash
-python intercoder_reliability.py path/to/export.json [--output-dir path/to/results]
+python intercoder_reliability.py path/to/export.json --output-dir path/to/results
 ```
 
-By default, CSV/plot outputs are written beside the input JSON. Pass `--output-dir`
-when reproducing analyses during tests or exploratory reruns so canonical tracked
-artifacts are not overwritten.
+`--output-dir` is required so reruns never overwrite canonical tracked exports
+that live beside the Label Studio JSON files.
+
+### Final offline command
+
+```bash
+python human_study/judge_validation/intercoder_reliability.py \
+  human_study/judge_validation/balanced_dataset_v2_human/labelstudio_output.json \
+  --output-dir /tmp/judge_validation_results
+```
+
+Compare generated CSVs against the canonical publication artifacts under
+`human_study/judge_validation/balanced_dataset_v2_human/` rather than writing
+back into that directory.
 
 ## Label Studio interfaces
 
@@ -31,7 +42,7 @@ Measures agreement among human annotators for each metric.
 
 | Column | Description |
 |--------|-------------|
-| `metric` | The metric being evaluated (Analogy, Metaphor, Humor, Connection) |
+| `metric` | The metric being evaluated (Analogy, Metaphor, Humor, Connection, Scaffolding) |
 | `percent_agreement` | Proportion of items where **all** annotators gave the same label (0 or 1). Range: 0–1 |
 | `kappa` | Fleiss' kappa coefficient, measuring agreement beyond chance. Range: -1 to 1 (0 = chance, 1 = perfect) |
 | `ac1` | Gwet's AC1 coefficient, an alternative that handles skewed distributions better. Range: -1 to 1 |
@@ -95,17 +106,16 @@ Correlations between the **majority-vote** human label and LLM scores.
 | **Metaphor** | Explanation uses a metaphor |
 | **Humor** | Explanation incorporates humor |
 | **Connection** | Explanation connects to everyday life |
+| **Scaffolding** | Explanation scaffolds understanding for a lay audience |
 
 ## Data Requirements
 
-The input JSON should be a Label Studio export containing:
-- `data.question_id`: Unique question identifier
-- `data.model`: Model name
-- `data.analogy_explicit_score`: LLM score for analogy
-- `data.metaphor_explicit_score`: LLM score for metaphor
-- `data.humor_explicit_score`: LLM score for humor
-- `data.connection_to_everyday_life_score`: LLM score for connection
+The input JSON should be a publication-anonymized Label Studio export containing:
+- `data.Index` or `data.question_id`: Unique item identifier
+- LLM score columns such as `analogy_v2_score`, `metaphor_v2_score`, `humor_v2_score`,
+  `connection_to_everyday_life_v2_score`, and `scaffolding_score`
 - `annotations`: List of annotator responses with choices for each metric
+- `annotations[].completed_by.email`: Stable anonymous labels such as `annotator_1`
 
 Only items with annotations from **all** annotators are included in the analysis.
 

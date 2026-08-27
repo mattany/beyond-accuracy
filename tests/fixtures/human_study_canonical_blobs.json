@@ -62,11 +62,6 @@
       "git_blob": "cd2027f6b390a453e054ca28147770f0d78f20f4"
     },
     {
-      "path": "human_study/judge_validation/balanced_dataset_v2_human/labelstudio_output.json",
-      "parent_path": "scripts/judge_alignment/balanced_dataset_v2_human/labelstudio_output.json",
-      "git_blob": "4b3a7a2960706c877a3283751a8c31d013581980"
-    },
-    {
       "path": "human_study/judge_validation/balanced_dataset_v2_human/metaphor_v6_balanced_20.csv",
       "parent_path": "scripts/judge_alignment/balanced_dataset_v2_human/metaphor_v6_balanced_20.csv",
       "git_blob": "58d09f2af4ef1a13a54223b85b0faa596f9d76a6"
@@ -150,11 +145,6 @@
       "path": "human_study/judge_validation/tie_breaker_v2/intercoder_reliability.csv",
       "parent_path": "scripts/judge_alignment/tie_breaker_v2/intercoder_reliability.csv",
       "git_blob": "fe8d152582b0f4b6c9ffb3b1ece17b0f8eadd34d"
-    },
-    {
-      "path": "human_study/judge_validation/tie_breaker_v2/labelstudio_output.json",
-      "parent_path": "scripts/judge_alignment/tie_breaker_v2/labelstudio_output.json",
-      "git_blob": "cf817d8e390a9f93ff7df1a6a82d506fc3cac792"
     },
     {
       "path": "human_study/judge_validation/unstable_questions_292_402.csv",
@@ -436,5 +426,23 @@
       "parent_path": "scripts/experiment_b/data/summary_statistics.csv",
       "git_blob": "fefeb3e4ec87bbd9bc637b6f9d006ed7fbe55d31"
     }
-  ]
+  ],
+  "privacy_sanitized_exports": {
+    "human_study/judge_validation/balanced_dataset_v2_human/labelstudio_output.json": {
+      "annotation_stats": {
+        "task_count": 30,
+        "annotation_count": 60,
+        "annotator_count": 2
+      },
+      "git_blob": "17b5c458b068934f3e825e8c575b37e1b103cf1c"
+    },
+    "human_study/judge_validation/tie_breaker_v2/labelstudio_output.json": {
+      "annotation_stats": {
+        "task_count": 5,
+        "annotation_count": 5,
+        "annotator_count": 1
+      },
+      "git_blob": "0eaf2762ab12fecf49e000bdb77b4074bc19d6f3"
+    }
+  }
 }
