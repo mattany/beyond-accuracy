@@ -1,9 +1,0 @@
-model,final_score
-SciComma-3.1-8B_prompt__score,0.6731444691627837
-scicomma-3.1-dpo_prompt__score,0.6557329005286098
-scicomma-3.1-dpo__score,0.6305441325004169
-gpt-3.5-turbo-0125_cot__score,0.6245141800937413
-Meta-Llama-3.1-8B-Instruct-bnb-4bit_prompt__score,0.6204212273663534
-SciComma-3.1-8B_y__score,0.5639765098873286
-gpt-3.5-turbo-0125__score,0.524886415483176
-Meta-Llama-3.1-8B-Instruct-bnb-4bit__score,0.5231598914471257
