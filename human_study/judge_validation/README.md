@@ -5,10 +5,23 @@ This script analyzes agreement between human annotators and compares human label
 ## Usage
 
 ```bash
-python intercoder_reliability.py path/to/export.json
+python intercoder_reliability.py path/to/export.json [--output-dir path/to/results]
 ```
 
-Output CSVs and plots are saved to the same directory as the input JSON file.
+By default, CSV/plot outputs are written beside the input JSON. Pass `--output-dir`
+when reproducing analyses during tests or exploratory reruns so canonical tracked
+artifacts are not overwritten.
+
+## Label Studio interfaces
+
+Only the interfaces tied to retained exports are kept:
+
+| File | Retained export |
+|------|-----------------|
+| `labeling_interface/labelstudio_v2.xml` | `balanced_dataset_v2_human/labelstudio_output.json` |
+| `labeling_interface/labelstudio_tiebreaker_v2.xml` | `tie_breaker_v2/labelstudio_output.json` |
+
+Interfaces for superseded dataset versions were removed in Task 6.
 
 ## Output Files
 

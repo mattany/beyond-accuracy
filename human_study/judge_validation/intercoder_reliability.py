@@ -391,14 +391,14 @@ def plot_human_llm_correlations(
     print(f"  Saved: {output_path.name}")
 
 
-def main(json_path: str) -> None:
+def main(json_path: str, output_dir: str | None = None) -> None:
     print(f"Loading tasks from: {json_path}")
     tasks = load_tasks(json_path)
     df, annotators = build_item_table(tasks)
 
-    # Determine output directory (same as input file's parent)
     input_path = Path(json_path)
-    output_dir = input_path.parent
+    output_dir = Path(output_dir) if output_dir else input_path.parent
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     print("\nAnnotators (sorted):")
     for a in annotators:
@@ -446,7 +446,16 @@ def main(json_path: str) -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python annotation_analysis.py path/to/export.json")
-        sys.exit(1)
-    main(sys.argv[1])
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Analyze inter-coder reliability and human-LLM agreement."
+    )
+    parser.add_argument("json_path", help="Label Studio JSON export to analyze")
+    parser.add_argument(
+        "--output-dir",
+        default=None,
+        help="Directory for CSV/plot outputs (default: same directory as the JSON export)",
+    )
+    args = parser.parse_args()
+    main(args.json_path, output_dir=args.output_dir)
