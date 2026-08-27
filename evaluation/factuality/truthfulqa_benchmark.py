@@ -38,8 +38,9 @@ OUTPUT_DIR = '/content/drive/MyDrive/thesis/truthfulqa_results'
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Login to HuggingFace (for gated models)
-from huggingface_hub import notebook_login
-notebook_login()
+from huggingface_hub import login
+
+login(token=os.environ["HF_TOKEN"])
 
 # %%
 # Define Models to Evaluate

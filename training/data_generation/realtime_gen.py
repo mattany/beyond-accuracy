@@ -70,8 +70,8 @@ def make_client():
     if not API_KEY:
         key_name = "OPENAI_API_KEY" if PROVIDER == "openai" else "MOONSHOT_API_KEY"
         raise RuntimeError(
-            f"No API key for provider '{PROVIDER}'. Add {key_name} to "
-            f"training/data_generation/config.py"
+            f"No API key for provider '{PROVIDER}'. Set {key_name} in your "
+            f"environment or `.env` file (see `.env.example`)."
         )
     kwargs = {"api_key": API_KEY, "timeout": 180.0, "max_retries": 0}
     if BASE_URL:

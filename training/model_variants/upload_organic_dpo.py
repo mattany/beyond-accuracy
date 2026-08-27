@@ -19,8 +19,9 @@ os.environ['HF_HOME'] = '/content/beyond-accuracy/.cache/huggingface'
 
 # %%
 # Login to HuggingFace
-from huggingface_hub import notebook_login, HfApi
-notebook_login()
+from huggingface_hub import HfApi, login
+
+login(token=os.environ["HF_TOKEN"])
 
 # %%
 # Configuration
