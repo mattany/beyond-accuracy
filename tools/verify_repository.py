@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
@@ -18,16 +19,54 @@ ALLOWED_TOP_LEVEL = {
     "tools",
     "training",
 }
-REQUIRED_PUBLIC_PATHS = [
-    "README.md",
-    "LICENSE",
-    ".env.example",
-    "docs/artifacts.md",
-    "training",
-    "evaluation",
-    "human_study",
-    "data/qa_pairs",
-]
+REQUIRED_STRUCTURE: tuple[tuple[str, str], ...] = (
+    ("README.md", "file"),
+    ("LICENSE", "file"),
+    (".env.example", "file"),
+    (".gitignore", "file"),
+    ("data", "dir"),
+    ("data/qa_pairs", "dir"),
+    ("docs", "dir"),
+    ("docs/artifacts.md", "file"),
+    ("docs/superpowers", "dir"),
+    ("evaluation", "dir"),
+    ("evaluation/factuality", "dir"),
+    ("evaluation/model_generation", "dir"),
+    ("evaluation/model_outputs", "dir"),
+    ("evaluation/results/rubric_scores", "dir"),
+    ("evaluation/results/preference_metrics", "dir"),
+    ("evaluation/rubrics", "dir"),
+    ("evaluation/visualization", "dir"),
+    ("human_study", "dir"),
+    ("human_study/judge_validation", "dir"),
+    ("human_study/preferences", "dir"),
+    ("training", "dir"),
+    ("training/data_generation", "dir"),
+    ("training/dpo", "dir"),
+    ("training/model_variants", "dir"),
+    ("training/sft", "dir"),
+    ("tools", "dir"),
+    ("tools/verify_repository.py", "file"),
+    ("tests", "dir"),
+    ("tests/test_public_repository.py", "file"),
+)
+REQUIRED_PUBLIC_PATHS = [relative_path for relative_path, _ in REQUIRED_STRUCTURE]
+PLANNED_ENV_EXAMPLE = """# Copy to .env and set only the providers you use.
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+DEEPSEEK_API_KEY=
+GOOGLE_API_KEY=
+XAI_API_KEY=
+MOONSHOT_API_KEY=
+HF_TOKEN=
+LANGCHAIN_API_KEY=
+REDDIT_CLIENT_ID=
+REDDIT_CLIENT_SECRET=
+REDDIT_USER_AGENT=beyond-accuracy research script
+"""
+ALLOWED_ENV_EXAMPLE_VALUES = {
+    "REDDIT_USER_AGENT": frozenset({"beyond-accuracy research script"}),
+}
 FORBIDDEN_ROOTS = {
     "Benchmarking",
     "DPO",
@@ -87,16 +126,16 @@ EXAMPLE_VALUE_MARKERS = (
     "***",
 )
 ENV_ASSIGNMENT = re.compile(r"^\s*(?:export\s+)?([A-Z0-9_]+)\s*=\s*(.*)$")
-MAX_SCAN_BYTES = 1_000_000
+SCAN_CHUNK_SIZE = 65_536
+SCAN_OVERLAP = 256
+BINARY_SAMPLE_SIZE = 8192
 
 
 def verify_repository(root: Path) -> list[str]:
     errors: list[str] = []
     root = root.resolve()
 
-    for relative_path in REQUIRED_PUBLIC_PATHS:
-        if not (root / relative_path).exists():
-            errors.append(f"required public path missing: {relative_path}")
+    errors.extend(_check_required_structure(root))
 
     for entry in root.iterdir():
         if entry.name == ".git":
@@ -124,29 +163,53 @@ def verify_repository(root: Path) -> list[str]:
         if not path.is_file():
             continue
         if path.name == ".env.example":
-            text = _read_text_safely(path)
-            if text is not None:
-                errors.extend(_scan_secrets(text, relative))
-                errors.extend(_validate_env_example(text, relative))
+            errors.extend(_scan_env_example(path, relative))
             continue
         if _should_scan_file(path):
-            text = _read_text_safely(path)
-            if text is not None:
-                errors.extend(_scan_secrets(text, relative))
+            errors.extend(_scan_file(path, relative))
 
     return sorted(errors)
 
 
-def _iter_repository_paths(root: Path):
-    for path in root.rglob("*"):
-        if ".git" in path.parts:
+def _check_required_structure(root: Path) -> list[str]:
+    errors: list[str] = []
+    for relative_path, kind in REQUIRED_STRUCTURE:
+        path = root / relative_path
+        if not path.exists():
+            errors.append(f"required public path missing: {relative_path}")
             continue
-        yield path
+        if kind == "file":
+            if not path.is_file():
+                errors.append(
+                    f"required public path has wrong type: {relative_path} (expected file)"
+                )
+        elif not path.is_dir():
+            errors.append(
+                f"required public path has wrong type: {relative_path} (expected directory)"
+            )
+    return errors
+
+
+def _iter_repository_paths(root: Path):
+    for dirpath, dirnames, filenames in os.walk(root, topdown=True, followlinks=False):
+        current = Path(dirpath)
+        if ".git" in current.parts:
+            dirnames.clear()
+            continue
+        if current == root:
+            dirnames[:] = [name for name in dirnames if name != ".git"]
+        for name in dirnames:
+            yield current / name
+        for name in filenames:
+            yield current / name
 
 
 def _check_symlink(path: Path, relative: Path, root: Path) -> list[str]:
     try:
         resolved = path.resolve()
+    except (OSError, RuntimeError, RecursionError):
+        return [f"symlink requires manual review: {relative}"]
+    try:
         resolved.relative_to(root)
     except ValueError:
         return [f"symlink escapes repository: {relative}"]
@@ -157,21 +220,79 @@ def _should_scan_file(path: Path) -> bool:
     suffix = path.suffix.lower()
     if suffix in TEXT_SUFFIXES:
         return True
-    if suffix == "":
-        return True
-    return False
+    return suffix == ""
 
 
-def _read_text_safely(path: Path) -> str | None:
+def _scan_env_example(path: Path, relative: Path) -> list[str]:
+    text, read_errors = _read_text_for_scan(path, relative)
+    if read_errors:
+        return read_errors
+    if text is None:
+        return [f"unreadable file requires manual review: {relative}"]
+    errors = _scan_secrets(text, relative)
+    errors.extend(_validate_env_example(text, relative))
+    return errors
+
+
+def _scan_file(path: Path, relative: Path) -> list[str]:
     try:
-        data = path.read_bytes()
+        if _looks_binary(path):
+            return []
     except OSError:
-        return None
-    if len(data) > MAX_SCAN_BYTES:
-        return None
-    if b"\x00" in data[:8192]:
-        return None
-    return data.decode("utf-8", errors="ignore")
+        return [f"unreadable file requires manual review: {relative}"]
+    return _stream_scan_secrets(path, relative)
+
+
+def _looks_binary(path: Path) -> bool:
+    with path.open("rb") as handle:
+        sample = handle.read(BINARY_SAMPLE_SIZE)
+    if not sample:
+        return False
+    return b"\x00" in sample
+
+
+def _read_text_for_scan(path: Path, relative: Path) -> tuple[str | None, list[str]]:
+    try:
+        with path.open("rb") as handle:
+            data = handle.read()
+    except OSError:
+        return None, [f"unreadable file requires manual review: {relative}"]
+    if b"\x00" in data[:BINARY_SAMPLE_SIZE]:
+        return None, []
+    return data.decode("utf-8", errors="ignore"), []
+
+
+def _stream_scan_secrets(path: Path, relative: Path) -> list[str]:
+    errors: list[str] = []
+    found_labels: set[str] = set()
+    carry = b""
+    try:
+        with path.open("rb") as handle:
+            while True:
+                chunk = handle.read(SCAN_CHUNK_SIZE)
+                if not chunk:
+                    break
+                combined = carry + chunk
+                text = combined.decode("utf-8", errors="ignore")
+                if len(chunk) == SCAN_CHUNK_SIZE:
+                    carry = combined[-SCAN_OVERLAP:]
+                else:
+                    carry = b""
+                for label, pattern in SECRET_PATTERNS.items():
+                    if label in found_labels:
+                        continue
+                    match = pattern.search(text)
+                    if not match:
+                        continue
+                    if label == "Reddit client assignment" and _is_placeholder_value(
+                        match.group(1)
+                    ):
+                        continue
+                    errors.append(f"{label} in {relative}")
+                    found_labels.add(label)
+    except OSError:
+        return [f"unreadable file requires manual review: {relative}"]
+    return errors
 
 
 def _scan_secrets(text: str, relative: Path) -> list[str]:
@@ -180,10 +301,8 @@ def _scan_secrets(text: str, relative: Path) -> list[str]:
         match = pattern.search(text)
         if not match:
             continue
-        if label == "Reddit client assignment":
-            value = match.group(1)
-            if _is_placeholder_value(value):
-                continue
+        if label == "Reddit client assignment" and _is_placeholder_value(match.group(1)):
+            continue
         errors.append(f"{label} in {relative}")
     return errors
 
@@ -197,8 +316,11 @@ def _validate_env_example(text: str, relative: Path) -> list[str]:
         match = ENV_ASSIGNMENT.match(stripped)
         if not match:
             continue
+        variable = match.group(1)
         value = match.group(2).strip().strip('"').strip("'")
         if not value:
+            continue
+        if variable in ALLOWED_ENV_EXAMPLE_VALUES and value in ALLOWED_ENV_EXAMPLE_VALUES[variable]:
             continue
         if _is_placeholder_value(value):
             continue
