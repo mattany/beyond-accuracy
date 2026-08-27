@@ -23,12 +23,18 @@ refer to the pre-cleanup tree; Tasks 3--7 apply the stated moves.
 
 ## Model training
 - Keep `SFT/training/GPT_SFT_only.ipynb`.
-- Keep `DPO/preference_dataset_generation.py`.
+- Keep `DPO/preference_dataset_generation.py` only as the preference-dataset
+  preparation step; it is not an end-to-end DPO training procedure.
 - Keep the non-RAG model-variant scripts in `Benchmarking/truthfulness/` where they document paper model generation or publication.
-- These artifacts support the Human/Synthetic SFT and Human/Synthetic DPO
-  methods in `sec:model_evaluation`, the QA-Pairs win-rate analysis in
-  `tab:winrate`, and the organic-model comparisons in
-  `tab:human_preferences`.
+- **DPO reproducibility gap:** a repository-wide tracked-file search found no
+  `DPOTrainer` or `DPOConfig` implementation. End-to-end Human and Synthetic
+  DPO training is therefore a missing or external reproducibility stage; the
+  retained generator establishes preference-data construction only, and the
+  repository must not imply that it reproduces DPO optimization.
+- The retained SFT notebook supports the Human/Synthetic SFT methods in
+  `sec:model_evaluation`; the preference generator supports construction of DPO
+  inputs; the canonical outputs support the QA-Pairs win-rate analysis in
+  `tab:winrate` and organic-model comparisons in `tab:human_preferences`.
 - Keep the GPT-5 and Kimi training inputs and outputs identified above because
   `tab:teacher_robustness` and `tab:teacher_composition` rerun the same SFT
   procedure with alternate teachers.
@@ -53,8 +59,10 @@ refer to the pre-cleanup tree; Tasks 3--7 apply the stated moves.
 - Keep all metric CSVs and `regression_metrics_merged.csv` in `run_10/`; the
   Experiment B regression loads analogy, metaphor, scaffolding, jargon, and
   four readability metrics from this run for `tab:exp_b_regression`.
-- Keep `.checkpoints/` under `run_10/` only if Task 5 confirms it is required to
-  resume the retained metric run; otherwise remove it as operational residue.
+- **Unresolved verification item (Task 5):** conservatively retain
+  `run_10/.checkpoints/` until Task 5 determines whether it is required to
+  resume the retained metric run. Remove it as operational residue only after
+  that dependency check is recorded.
 - Remove `Benchmarking/deep_eval/custom_metrics/consistency_check.py`,
   `visualize_consistency.py`, `aggregate_bootstrap.py`, and `bootstrap.py` when
   their only live references are to deleted consistency data or runs 7--8.
@@ -63,9 +71,10 @@ refer to the pre-cleanup tree; Tasks 3--7 apply the stated moves.
 - Remove `Benchmarking/visualization/images/plots/run_5/` and `images.zip` as
   superseded visualization output; retain the plotting source so canonical
   `run_9/` results can be visualized after Task 5 updates its paths.
-- Remove `Benchmarking/deep_eval/scillama3/` only after Task 5 confirms the
-  canonical generation outputs contain the same model answers and no retained
-  evaluator consumes this duplicate area.
+- **Unresolved verification item (Task 5):** conservatively retain
+  `Benchmarking/deep_eval/scillama3/` until Task 5 compares it with canonical
+  generation outputs and confirms that no retained evaluator consumes it.
+  Remove it only after that verification is recorded.
 
 ## Judge validation
 - Keep final validation code and the final `balanced_dataset_v2_human/` and `tie_breaker_v2/` artifacts.
