@@ -1,9 +1,11 @@
 # Paper artifact map
 
-This manifest freezes the publication scope before files are moved or removed.
+This manifest records the publication scope of the cleaned repository.
 The retention test is whether an artifact supports a method, dataset, figure,
 table, appendix result, or reproducibility step in the ACL paper. Paths below
-refer to the pre-cleanup tree; Tasks 3--7 apply the stated moves.
+use the final public layout (`training/`, `evaluation/`, `human_study/`,
+`data/`). See the root `README.md` for runnable commands and reproducibility
+gaps (DPO training, GPT-5.2 claim-level factuality).
 
 ## QA-Pairs and teacher datasets
 - Keep and move `data/qa_pairs/` to `data/qa_pairs/`.
@@ -180,7 +182,9 @@ refer to the pre-cleanup tree; Tasks 3--7 apply the stated moves.
 ## Paper-to-artifact coverage
 
 - `tab:dataset_stats`, `sec:datasets`, and `sec:appendix_sft_prompt`:
-  `data/qa_pairs/`, `training/data_generation/`, and the SFT/DPO procedures.
+  `data/qa_pairs/`, `training/data_generation/`, and the retained SFT notebook
+  plus preference-data construction (`training/dpo/`; end-to-end DPO training is
+  external/missing).
 - `fig:stacked_scores` and `sec:exp_a_results`: final model generations,
   production rubrics, and canonical `evaluation/results/rubric_scores/`.
 - `fig:validation_a`--`fig:validation_c` and `sec:metrics_validation`:

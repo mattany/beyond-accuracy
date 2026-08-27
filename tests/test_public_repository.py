@@ -349,10 +349,15 @@ def test_live_repository_has_no_secret_violations():
     assert violations == []
 
 
-def test_live_repository_may_still_miss_publication_docs():
+def test_live_repository_has_publication_docs():
+    assert (ROOT / "README.md").is_file()
+    assert (ROOT / "LICENSE").is_file()
     violations = verify_repository(ROOT)
-    assert any(error.startswith("required public path missing: README.md") for error in violations)
-    assert any(error.startswith("required public path missing: LICENSE") for error in violations)
+    assert not any(
+        error.startswith("required public path missing: README.md")
+        or error.startswith("required public path missing: LICENSE")
+        for error in violations
+    )
 
 
 def test_tracked_git_files_have_no_secret_patterns():
