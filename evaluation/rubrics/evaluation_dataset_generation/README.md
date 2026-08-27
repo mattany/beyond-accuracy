@@ -71,6 +71,12 @@ Both dataset generation processes use a fixed random seed (42) to ensure reprodu
 - Order randomization within pairs
 - Final dataset shuffling
 
-The datasets are saved in CSV format at:
-- `data/test_data/boolean_metrics/boolean_dataset_1.csv`
-- `data/test_data/boolean_metrics/side_by_side_dataset.csv` 
+The retained generation utilities now consume the canonical model-answer table
+at `evaluation/model_outputs/main/all_models_joined.csv`. Pair generation writes:
+
+- `evaluation/model_outputs/main/comparison_tasks.csv`
+- `evaluation/model_outputs/main/model_pairs_metadata.csv`
+
+Provider-backed scripts update or create model-answer CSVs beside the canonical
+table. Credentials are read from environment variables through
+`evaluation.rubrics.settings`.

@@ -1,5 +1,15 @@
-import os
+import argparse
 import asyncio
+from functools import partial
+import json
+import logging
+import os
+from pathlib import Path
+import sys
+
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+
 from tqdm import tqdm
 from evaluation.rubrics.settings import (
     OPENAI_API_KEY,
@@ -7,11 +17,6 @@ from evaluation.rubrics.settings import (
     require_env,
     result_directory,
 )
-import logging
-import json
-from pathlib import Path
-import argparse
-from functools import partial
 
 from evaluation.rubrics.custom_metrics.aggregate_v2 import RUN_NUMBER
 from deepeval.metrics import GEval

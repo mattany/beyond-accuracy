@@ -1,14 +1,18 @@
 from argparse import ArgumentParser
 import asyncio
 from pathlib import Path
+import sys
 import textwrap
+
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import pandas as pd
 import tqdm
 from tqdm.asyncio import tqdm_asyncio
 
-from ollama_model import OllamaModel
-from prompt_templates import generate_prompt, system_prompt
+from evaluation.rubrics.ollama_model import OllamaModel
+from evaluation.rubrics.prompt_templates import generate_prompt, system_prompt
 
 BATCH_SIZE = 32
 ROOT = Path(__file__).resolve().parents[2]

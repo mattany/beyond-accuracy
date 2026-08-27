@@ -311,7 +311,10 @@ def main():
         '--results-dir', '-r',
         type=str,
         default=str(default_results),
-        help='Directory containing checkpoint_*.csv files (default: scripts/truthfulqa_results/)'
+        help=(
+            'Directory containing checkpoint_*.csv files '
+            '(default: evaluation/factuality/truthfulqa_results/)'
+        )
     )
     parser.add_argument(
         '--output', '-o',

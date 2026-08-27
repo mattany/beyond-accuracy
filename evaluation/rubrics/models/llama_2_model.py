@@ -1,3 +1,9 @@
+from pathlib import Path
+import sys
+
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+
 import transformers
 import torch
 from transformers import BitsAndBytesConfig
@@ -5,7 +11,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 # from huggingface_hub import login
 from deepeval.models import DeepEvalBaseLLM
 
-from models.util import create_model_and_tokenizer
+from evaluation.rubrics.models.util import create_model_and_tokenizer
 
 
 # from evaluation.rubrics.settings import HF_TOKEN

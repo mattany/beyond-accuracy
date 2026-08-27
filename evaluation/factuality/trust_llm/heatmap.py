@@ -1,10 +1,11 @@
 import os
 import json
+from pathlib import Path
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-EVAL_DIR = "eval_results"
+EVAL_DIR = Path(__file__).resolve().parent / "eval_results"
 
 def flatten_json(d, parent_key='', sep='.'):
     items = []
@@ -25,7 +26,7 @@ model_results = {}
 for file in os.listdir(EVAL_DIR):
     if file.endswith(".json"):
         model_name = file.replace("_eval_truthfulness.json", "")
-        with open(os.path.join(EVAL_DIR, file), "r") as f:
+        with (EVAL_DIR / file).open("r", encoding="utf-8") as f:
             data = json.load(f)
         model_results[model_name] = flatten_json(data)
 

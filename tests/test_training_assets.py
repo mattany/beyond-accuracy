@@ -40,9 +40,9 @@ def test_generation_cli_passes_paths_to_main(monkeypatch, tmp_path):
     metrics.AnswerRelevancyMetric = object
     mlx_model = ModuleType("mlx_model")
     mlx_model.MLXModel = object
-    ollama_model = ModuleType("ollama_model")
+    ollama_model = ModuleType("evaluation.rubrics.ollama_model")
     ollama_model.OllamaModel = lambda *args, **kwargs: object()
-    prompt_templates = ModuleType("prompt_templates")
+    prompt_templates = ModuleType("evaluation.rubrics.prompt_templates")
     prompt_templates.generate_prompt = lambda prompt: prompt
     prompt_templates.system_prompt = "system"
 
@@ -51,8 +51,8 @@ def test_generation_cli_passes_paths_to_main(monkeypatch, tmp_path):
         "deepeval.test_case": test_case,
         "deepeval.metrics": metrics,
         "mlx_model": mlx_model,
-        "ollama_model": ollama_model,
-        "prompt_templates": prompt_templates,
+        "evaluation.rubrics.ollama_model": ollama_model,
+        "evaluation.rubrics.prompt_templates": prompt_templates,
     }.items():
         monkeypatch.setitem(sys.modules, name, module)
 
