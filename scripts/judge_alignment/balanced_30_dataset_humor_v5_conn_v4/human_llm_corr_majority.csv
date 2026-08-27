@@ -1,6 +1,0 @@
-metric,pearson_majority,spearman_majority,spearman_excl_ties_majority,kendall_majority,binary_agreement_majority,binary_agr_excl_ties_majority,precision_majority,recall_majority,f1_majority,precision_excl_ties_majority,recall_excl_ties_majority,f1_excl_ties_majority,tp_majority,fp_majority,fn_majority,tn_majority,n_ties_majority,n_consensus_majority
-Analogy,,,,,,,,,,,,,0,0,0,0,0,0
-Metaphor,,,,,,,,,,,,,0,0,0,0,0,0
-Humor,0.34585723193303736,0.3458572319330374,0.3458572319330374,0.34585723193303736,0.6666666666666666,0.6666666666666666,0.5333333333333333,0.7272727272727273,0.6153846153846153,0.5333333333333333,0.7272727272727273,0.6153846153846153,8,7,3,12,0,30
-Connection,0.1507556722888818,0.15075567228888181,0.15075567228888181,0.15075567228888181,0.5666666666666667,0.5666666666666667,0.3333333333333333,0.625,0.43478260869565216,0.3333333333333333,0.625,0.43478260869565216,5,10,3,12,0,30
-Scaffolding,,,,,,,,,,,,,0,0,0,0,0,0

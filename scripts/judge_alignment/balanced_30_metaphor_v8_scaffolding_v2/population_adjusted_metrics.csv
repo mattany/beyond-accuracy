@@ -1,3 +1,0 @@
-metric,n_full_dataset,n_full_llm_pos,n_full_llm_neg,n_sample_llm_pos,n_sample_llm_neg,weight_llm_pos,weight_llm_neg,sample_precision,est_total_positives,est_tp_population,est_fp_population,est_fn_population,est_tn_population,adj_precision,adj_recall,adj_f1,sample_recall
-Metaphor,2000,119,1881,15,15,7.933333333333334,125.4,0.4,47.6,47.6,71.4,0.0,1881.0,0.4,1.0,0.5714285714285715,1.0
-Scaffolding,2560,117,2443,15,15,7.8,162.86666666666667,0.8,419.33333333333337,93.6,23.4,325.73333333333335,2117.266666666667,0.7999999999999999,0.22321144674085847,0.3490366687383467,0.8571428571428571

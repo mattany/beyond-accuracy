@@ -58,7 +58,9 @@ def rerun_readability_for_run(run_number: int, models: list = None):
     # Load the evaluation dataset to get the actual text
     if run_number == 10:
         # Experiment B uses experiment_b_eval_dataset
-        eval_df = pd.read_csv(PROJECT_ROOT / "scripts/experiment_b/data/experiment_b_eval_dataset.csv")
+        eval_df = pd.read_csv(
+            PROJECT_ROOT / "human_study/preferences/data/experiment_b_eval_dataset.csv"
+        )
     else:
         # Standard runs use corrected_evaluation_dataset
         eval_df = pd.read_csv(PROJECT_ROOT / "evaluation/model_outputs/main/all_models_joined.csv")
