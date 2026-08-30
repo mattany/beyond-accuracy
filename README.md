@@ -52,6 +52,7 @@ rather than writing back into tracked directories.
 | `evaluation/results/preference_metrics/` | Experiment B metric CSVs and checkpoints | `tab:exp_b_regression`, `sec:rubric_preference_alignment` |
 | `evaluation/factuality/` | TruthfulQA checkpoints/visualization; auxiliary TrustLLM | `tab:truthfulqa_results`; `tab:factuality` (partial — see gaps) |
 | `human_study/judge_validation/` | Label Studio exports, intercoder reliability | `fig:validation_a`–`fig:validation_c`, `sec:metrics_validation` |
+| `human_study/judge_validation/human_annotation_data.csv` | Per-item LLM judge scores and binary annotator ratings (five metrics) | Appendix human-annotation tables |
 | `human_study/preferences/` | Anonymized Experiment B data and regressions | `tab:human_preferences`, `tab:exp_b_regression`, `sec:appendix_metaphor_examples` |
 | `docs/artifacts.md` | Detailed paper-to-artifact manifest | Cross-reference |
 | `tools/verify_repository.py` | Publication layout and secret-pattern verifier | CI / release checks |
@@ -78,6 +79,12 @@ Human preference judgments for DPO training and Experiment B live under
 anonymized for publication. Label Studio JSON exports
 under `human_study/judge_validation/` use stable `annotator_N` labels instead
 of email addresses.
+
+`human_study/judge_validation/human_annotation_data.csv` contains the complete
+per-item LLM scores and binary ratings from three annotators for the five
+validated rhetorical devices (Humor, Connection to Everyday Life, Metaphor,
+Scaffolding, and Analogy), formerly presented as appendix tables in the
+manuscript.
 
 **Residual pseudonymity caveat:** some formatted judge-validation CSV columns
 still encode coder initials from the annotation workflow (for example

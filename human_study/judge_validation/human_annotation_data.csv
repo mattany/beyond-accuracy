@@ -1,0 +1,151 @@
+question_id,question,metric,model_score,annotator_a,annotator_b,annotator_c
+3179,If a typical cell in your body was ...,Humor,0.00,0,0,0
+3179,If a typical cell in your body was ...,Connection to Everyday Life,0.00,0,1,1
+3184,Can i control the direction my wifi...,Humor,0.53,0,0,0
+3184,Can i control the direction my wifi...,Connection to Everyday Life,0.22,1,0,1
+3616,If the gravity of the moon is stron...,Humor,0.53,1,1,1
+3616,If the gravity of the moon is stron...,Connection to Everyday Life,0.50,0,0,0
+3719,Is running out of Helium a real con...,Humor,0.00,1,1,1
+3719,Is running out of Helium a real con...,Connection to Everyday Life,0.65,1,1,1
+3742,why is it that certain creatures ca...,Humor,0.00,0,0,0
+3742,why is it that certain creatures ca...,Connection to Everyday Life,0.56,1,1,1
+3860,Can magnets convey rotational force...,Humor,0.00,0,0,0
+3860,Can magnets convey rotational force...,Connection to Everyday Life,0.00,0,1,1
+4052,Why is Uranus tilted?,Humor,0.59,1,1,1
+4052,Why is Uranus tilted?,Connection to Everyday Life,0.25,0,1,1
+4100,is there any real advantage to usin...,Humor,0.73,1,1,1
+4100,is there any real advantage to usin...,Connection to Everyday Life,0.05,1,1,1
+4147,if we take all of the world's co2 e...,Humor,0.00,1,0,0
+4147,if we take all of the world's co2 e...,Connection to Everyday Life,0.56,0,1,1
+4160,If you were traveling at a superson...,Humor,0.95,1,1,1
+4160,If you were traveling at a superson...,Connection to Everyday Life,1.00,1,1,1
+4211,Is it strictly impossible for two h...,Humor,0.00,0,0,0
+4211,Is it strictly impossible for two h...,Connection to Everyday Life,0.00,0,0,0
+4232,Can dopamine be artificially entere...,Humor,0.00,1,1,1
+4232,Can dopamine be artificially entere...,Connection to Everyday Life,1.00,1,1,1
+4246,Nitroglycerine is an explosive. Nit...,Humor,0.82,0,0,0
+4246,Nitroglycerine is an explosive. Nit...,Connection to Everyday Life,0.56,0,0,0
+4263,Is there such a thing as mitochondr...,Humor,0.00,0,0,0
+4263,Is there such a thing as mitochondr...,Connection to Everyday Life,0.02,1,0,1
+4299,When I flush an insect (ant) down t...,Humor,0.56,1,1,1
+4299,When I flush an insect (ant) down t...,Connection to Everyday Life,0.05,1,0,1
+4368,why does 5 hour energy contain 8000...,Humor,0.85,1,0,1
+4368,why does 5 hour energy contain 8000...,Connection to Everyday Life,0.53,1,0,1
+4401,Are black holes really a 3 dimensio...,Humor,0.00,0,0,0
+4401,Are black holes really a 3 dimensio...,Connection to Everyday Life,0.91,1,0,1
+4412,Why can't we just take alcohol dehy...,Humor,0.53,1,0,1
+4412,Why can't we just take alcohol dehy...,Connection to Everyday Life,0.00,1,1,1
+4534,can you really adapt to a poison by...,Humor,0.53,0,0,0
+4534,can you really adapt to a poison by...,Connection to Everyday Life,0.78,0,0,0
+4599,if all cancer has basically the sam...,Humor,0.00,0,0,0
+4599,if all cancer has basically the sam...,Connection to Everyday Life,0.87,0,0,0
+4650,why does getting kicked in the ball...,Humor,0.71,1,0,0
+4650,why does getting kicked in the ball...,Connection to Everyday Life,0.00,0,1,1
+4783,If the acceleration of gravity is 9...,Humor,0.00,0,0,0
+4783,If the acceleration of gravity is 9...,Connection to Everyday Life,0.29,0,0,0
+4821,the derivative of position is veloc...,Humor,1.00,0,0,0
+4821,the derivative of position is veloc...,Connection to Everyday Life,0.97,1,1,1
+4894,Can the blackhole at the centre of ...,Humor,1.00,1,1,1
+4894,Can the blackhole at the centre of ...,Connection to Everyday Life,0.73,0,0,0
+5056,Do animals have a sense of humour?,Humor,0.00,1,1,1
+5056,Do animals have a sense of humour?,Connection to Everyday Life,0.15,1,1,1
+5179,why is the speed of light the speed...,Humor,0.00,1,0,0
+5179,why is the speed of light the speed...,Connection to Everyday Life,0.00,0,0,0
+5472,"by observing a radioactive atom, is...",Humor,0.00,0,0,0
+5472,"by observing a radioactive atom, is...",Connection to Everyday Life,0.35,0,0,0
+5523,does acupuncture work?,Humor,0.80,1,1,1
+5523,does acupuncture work?,Connection to Everyday Life,0.92,0,0,0
+5545,if a bullet is shot straight into t...,Humor,0.00,0,0,0
+5545,if a bullet is shot straight into t...,Connection to Everyday Life,0.00,0,0,0
+5601,Why do some vaccines wear off over ...,Humor,0.71,1,1,1
+5601,Why do some vaccines wear off over ...,Connection to Everyday Life,0.53,0,1,1
+3327,if i were to travel down into an 'e...,Metaphor,0.62,1,1,1
+3327,if i were to travel down into an 'e...,Scaffolding,0.15,1,0,1
+3353,why is not vaccinating some childre...,Metaphor,0.59,0,0,0
+3353,why is not vaccinating some childre...,Scaffolding,0.00,0,0,0
+3491,Why are animal noses hairless?,Metaphor,0.00,0,0,0
+3491,Why are animal noses hairless?,Scaffolding,0.85,1,1,1
+3498,How does a Sand Bubbler Crab sift f...,Metaphor,0.68,0,1,1
+3498,How does a Sand Bubbler Crab sift f...,Scaffolding,0.04,0,0,0
+3542,"What is the effect, positive or neg...",Metaphor,0.95,1,1,1
+3542,"What is the effect, positive or neg...",Scaffolding,0.09,0,1,1
+3554,How come when hot metal is placed i...,Metaphor,0.00,0,0,0
+3554,How come when hot metal is placed i...,Scaffolding,0.87,1,1,1
+3602,How is Bitcoin secure?,Metaphor,0.01,1,0,1
+3602,How is Bitcoin secure?,Scaffolding,0.53,1,1,1
+3611,Why are reflections (especially in ...,Metaphor,0.71,1,1,1
+3611,Why are reflections (especially in ...,Scaffolding,0.25,1,0,0
+3646,Why does removing a battery and rep...,Metaphor,0.00,0,0,0
+3646,Why does removing a battery and rep...,Scaffolding,0.65,1,1,1
+3692,does a supermassive black hole exis...,Metaphor,0.56,0,1,0
+3692,does a supermassive black hole exis...,Scaffolding,0.03,0,0,0
+3708,how does exposure to radioactivity ...,Metaphor,0.98,0,1,1
+3708,how does exposure to radioactivity ...,Scaffolding,0.16,1,1,1
+3771,What is the closest that we can pus...,Metaphor,0.99,1,1,1
+3771,What is the closest that we can pus...,Scaffolding,0.03,0,0,0
+3866,do snakes accidentally get themselv...,Metaphor,0.68,0,0,0
+3866,do snakes accidentally get themselv...,Scaffolding,0.00,0,0,0
+3873,if a human were to have a blood tra...,Metaphor,0.00,0,0,0
+3873,if a human were to have a blood tra...,Scaffolding,0.71,1,1,1
+3954,If a woman is born with all her egg...,Metaphor,0.00,0,0,0
+3954,If a woman is born with all her egg...,Scaffolding,0.73,0,0,0
+3986,Why isn't there muscle cancer?,Metaphor,1.00,1,1,1
+3986,Why isn't there muscle cancer?,Scaffolding,0.38,0,1,1
+4073,"When a photon is ""born"", is it inst...",Metaphor,0.01,1,0,0
+4073,"When a photon is ""born"", is it inst...",Scaffolding,0.53,1,1,1
+4176,why do some venomous snakes (such a...,Metaphor,0.93,1,1,1
+4176,why do some venomous snakes (such a...,Scaffolding,0.09,0,1,1
+4321,How does the elemental composition ...,Metaphor,0.62,0,1,1
+4321,How does the elemental composition ...,Scaffolding,0.00,0,0,0
+4369,What brain function takes over when...,Metaphor,0.62,1,0,1
+4369,What brain function takes over when...,Scaffolding,0.10,1,1,1
+4513,how do we know the earths core is i...,Metaphor,0.00,0,0,0
+4513,how do we know the earths core is i...,Scaffolding,0.90,1,1,1
+4529,Does the earth's rotation affect th...,Metaphor,0.91,0,0,0
+4529,Does the earth's rotation affect th...,Scaffolding,0.00,0,0,0
+4681,How do prions propagate by 'touchin...,Metaphor,0.75,1,0,1
+4681,How do prions propagate by 'touchin...,Scaffolding,0.25,1,0,1
+4788,How did hugs originate and why do t...,Metaphor,0.00,0,0,0
+4788,How did hugs originate and why do t...,Scaffolding,0.75,0,0,0
+4822,Do snowflakes spontaneously form fr...,Metaphor,0.22,0,0,0
+4822,Do snowflakes spontaneously form fr...,Scaffolding,0.65,1,1,1
+4888,if 2 space ships accelerated away f...,Metaphor,0.00,0,0,0
+4888,if 2 space ships accelerated away f...,Scaffolding,0.90,1,1,1
+4973,Why is escape velocity so high?,Metaphor,0.00,0,0,0
+4973,Why is escape velocity so high?,Scaffolding,0.68,0,0,0
+5121,How do calculators solve equations?,Metaphor,0.47,0,0,0
+5121,How do calculators solve equations?,Scaffolding,0.71,1,1,1
+5162,Are Wormholes real?,Metaphor,0.00,0,0,0
+5162,Are Wormholes real?,Scaffolding,0.68,1,1,1
+5170,why don't waterfalls get worn down ...,Metaphor,0.00,0,0,0
+5170,why don't waterfalls get worn down ...,Scaffolding,0.68,1,1,1
+107,"If you had one molecule of water, how would you de...",Analogy,0.98,1,1,1
+224,Does the discovery of gravitational waves falsify ...,Analogy,1.00,1,1,1
+277,what is the actual science behind our estimate of ...,Analogy,0.00,0,0,0
+292,What are fields made of ?,Analogy,0.99,1,1,1
+312,does the fuse of a bundle of tnt set off all of th...,Analogy,1.00,1,1,1
+347,Why are hail storms so short?,Analogy,0.00,0,0,0
+402,Why do cats like to knock things off of count tops...,Analogy,0.00,0,1,0
+426,"What causes Triboluminescence, where sparks appear...",Analogy,0.98,1,1,1
+470,what do you catabolize first during starvation: mu...,Analogy,0.00,1,1,1
+570,For how long can a typical housefly stay airborne ...,Analogy,0.00,0,0,0
+868,"On a sub atomic level, what do electrons do in a c...",Analogy,1.00,1,1,1
+875,"If you stood near an exploding nuclear bomb, could...",Analogy,0.00,0,0,0
+889,why is e the natural growth rate?,Analogy,0.73,0,1,1
+930,Why do we use factorial to get possible combinatio...,Analogy,0.29,0,0,0
+984,Why don't emails arrive immediately like Instant M...,Analogy,0.99,1,1,1
+1151,I saw a video of someone breathing in a rag of chl...,Analogy,0.82,1,0,1
+1205,How was it discovered that metals in space would s...,Analogy,1.00,1,1,1
+1281,How are imaginary numbers useful in real life when...,Analogy,0.22,1,0,1
+1282,what exactly is time?,Analogy,0.93,1,1,1
+1301,Is it possible to destroy prions?,Analogy,0.97,1,1,1
+1349,With a seemingly MASSIVE amount of historical data...,Analogy,0.00,0,0,0
+1359,What happens to the bones of whales when they die ...,Analogy,0.00,0,0,0
+1369,at what point in time did shaving become a thing?,Analogy,0.00,0,0,0
+1404,"There is a lot of uproar against Mansato, but what...",Analogy,0.91,0,0,0
+1405,Is the surface of a black hole perfectly flat or c...,Analogy,0.97,1,1,1
+1415,What is the highest a mountain can be? Is there a ...,Analogy,0.00,0,1,1
+1513,How deep do Ocean currents go? Do they affect the ...,Analogy,0.00,0,0,0
+1686,When people say their eyes change color depending ...,Analogy,0.00,0,0,0
+1779,what is the heisenberg uncertainty principle?,Analogy,1.00,1,1,1
+1825,are there any examples of a species that became an...,Analogy,0.00,0,0,0
